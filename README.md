@@ -34,10 +34,10 @@ Video input
 
 ## Quick Start
 
-### 1. Set up the fastvlm conda env (one-time)
+
+### 1. install fastvlm models (one-time)
 ```bash
-# Already set up at /opt/homebrew/Caskroom/miniforge/base/envs/fastvlm
-# If missing, follow the FastVLM installation instructions.
+bash fastvlm_install_models.sh
 ```
 
 ### 2. Set up the Python venvs (one-time)
