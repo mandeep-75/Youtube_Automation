@@ -42,14 +42,19 @@ Video input
 
 ### 2. Set up the Python venvs (one-time)
 ```bash
-bash setup_all_venvs.sh
+bash setup_all_venvs.sh    # script will wipe & recreate any existing venvs and also rebuild the 'fastvlm' conda environment
 ```
 
-This builds both `venvs/faster_whisper` and `venvs/chatterbox` automatically.
+The script now directly creates the two environments from the requirement
+files (`requirements_chatterbox.txt` and `requirements_whisper.txt`) and
+always starts from a clean state. Re-run the command if you ever need to
+rebuild the venvs.
 
-> **Note**: `chatterbox-tts` requires **Python 3.11**. The setup script
-> auto-detects `python3.11` (Homebrew). Install it if missing:
-> `brew install python@3.11`
+> ⚠️ **Python 3.11 required.** `chatterbox-tts` depends on features only
+> available in 3.11. The bootstrap script will search for a suitable
+> interpreter (e.g. `python3.11`, `python3` or `python`) and will abort if
+> none of them report 3.11.  On macOS you can install it via:
+> `brew install python@3.11`.
 
 ### 3. Run the full pipeline
 ```bash

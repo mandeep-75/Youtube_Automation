@@ -9,7 +9,11 @@ import torch
 import soundfile as sf
 from chatterbox.tts import ChatterboxTTS
 
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+# Better device detection (supports MPS on Mac)
+if torch.cuda.is_available():
+    DEVICE = "cuda"
+else:
+    DEVICE = "cpu"
 
 
 def generate_voice(script_text: str, output_path: str = "outputs/voice.wav", ref_audio: str | None = None) -> None:
@@ -17,9 +21,8 @@ def generate_voice(script_text: str, output_path: str = "outputs/voice.wav", ref
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
 
     print(f"[tts] Loading ChatterboxTTS on device: {DEVICE}")
-    model = ChatterboxTTS.from_pretrained(DEVICE)
+    model = ChatterboxTTS.from_pretrained(device=DEVICE)
 
-    # Call `generate` with audio_prompt_path if provided
     print(f"[tts] Generating audio for {len(script_text)} characters ...")
     wav = model.generate(
         script_text,

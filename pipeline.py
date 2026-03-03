@@ -7,7 +7,8 @@ Step 1b  – FastVLM describe        → fastvlm   conda env
 Step 2   – LLM script generation   → chatterbox venv  (has Gemini/OpenAI client)
 Step 3   – ChatterboxTTS voice     → chatterbox venv  (TTS engine)
 Step 3.5 – Merge TTS audio + video → faster_whisper venv (ffmpeg)
-Step 4   – Transcribe + subtitles  → faster_whisper venv (faster-whisper + MoviePy)
+Step 4   – Transcribe to SRT       → faster_whisper venv (faster-whisper)
+Step 4.5 – Burn subtitles          → faster_whisper venv (FFmpeg + pysubs2)
 """
 
 import os
@@ -160,40 +161,97 @@ def run_merge_audio_video(
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# Step 4 – Transcribe + burn subtitles (faster_whisper venv, subprocess)
+# Step 4 – Transcribe to SRT (faster_whisper venv, subprocess)
 # ══════════════════════════════════════════════════════════════════════════
 
 def run_transcribe_subtitles(
     video_path: str,
-    output_path: str,
     model: str = "base",
     language: str | None = None,
     srt_path: str | None = None,
-) -> None:
+) -> str:
     """
-    Transcribes the video with faster-whisper and burns timed subtitles
-    directly onto the output video.
+    Transcribes the video with faster-whisper and exports to SRT.
+    Returns the path to the generated SRT file.
+    
+    Subtitle burning is now handled separately by burn_subtitles.py
+    for better modularity and customization options.
     Runs inside the isolated `venvs/faster_whisper` venv.
 
     Args:
-        video_path:  Input video (the voice-over video from step 3, or any mp4).
-        output_path: Where to write the final subtitled mp4.
+        video_path:  Input video file.
         model:       Whisper model size (tiny/base/small/medium/large-v3).
         language:    Force a language code, e.g. "en". None = auto-detect.
-        srt_path:    Optional path to also save a .srt file.
+        srt_path:    Path where to save the SRT subtitle file.
     """
+    if not srt_path:
+        raise ValueError("srt_path is required for subtitle export")
+    
     cmd = [
         FASTER_WHISPER_PYTHON, "./src/transcribe_subtitles.py",
         "--video",  video_path,
-        "--output", output_path,
         "--model",  model,
+        "--srt",    srt_path,
     ]
     if language:
         cmd += ["--language", language]
-    if srt_path:
-        cmd += ["--srt", srt_path]
 
     print(f"  [transcribe_subtitles] Running: {' '.join(cmd)}")
+    subprocess.run(cmd, check=True)
+    return srt_path
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# Step 4.5 – Burn subtitles (faster_whisper venv, subprocess)
+# ══════════════════════════════════════════════════════════════════════════
+
+def run_burn_subtitles(
+    video_path: str,
+    subtitle_path: str,
+    output_path: str,
+    font_name: str = "Arial",
+    font_size: int = 24,
+    font_color: str = "FFFFFF",
+    border_color: str = "000000",
+    border_width: int = 1,
+    soft: bool = False,
+    preset: str = "fast",
+) -> None:
+    """
+    Burn subtitles into a video with customizable styling.
+    Useful for re-burning subtitles with different fonts/colors or
+    burning pre-existing subtitle files (SRT, ASS, VTT, etc.).
+    Runs inside the `venvs/faster_whisper` venv.
+
+    Args:
+        video_path:      Input video file.
+        subtitle_path:   Input subtitle file (SRT, ASS, VTT, SUB, etc.).
+        output_path:     Output video with burned subtitles.
+        font_name:       Font name for subtitles (default: Arial).
+        font_size:       Font size in pixels (default: 24).
+        font_color:      Font color in hex (default: FFFFFF = white).
+        border_color:    Border/outline color in hex (default: 000000 = black).
+        border_width:    Border width in pixels (default: 1).
+        soft:            If True, embed as soft subs (toggleable, faster).
+                         If False, hard burn (permanent, slower).
+        preset:          FFmpeg encoding preset (ultrafast/fast/medium/slow).
+    """
+    cmd = [
+        FASTER_WHISPER_PYTHON, "./src/burn_subtitles.py",
+        video_path,
+        subtitle_path,
+        "-o", output_path,
+        "--font-name", font_name,
+        "--font-size", str(font_size),
+        "--font-color", font_color,
+        "--border-color", border_color,
+        "--border-width", str(border_width),
+        "--preset", preset,
+    ]
+    if soft:
+        cmd.append("--soft")
+
+    print(f"  [burn_subtitles] Running: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
 
 
@@ -201,7 +259,12 @@ def run_transcribe_subtitles(
 # Main pipeline
 # ══════════════════════════════════════════════════════════════════════════
 
-def main(video_path: str) -> None:
+def main(
+    video_path: str,
+    burn_style: bool = False,
+    custom_font: str | None = None,
+    custom_font_size: int | None = None,
+) -> None:
     os.makedirs("outputs", exist_ok=True)
 
     frames_file        = "outputs/frames.txt"
@@ -209,9 +272,12 @@ def main(video_path: str) -> None:
     voice_file         = "outputs/voice.wav"
     # Step 3.5 output: original video + TTS audio baked in
     video_with_tts     = "outputs/video_with_tts.mp4"
-    # Step 4 output: subtitled final video
-    subtitled_video    = "outputs/final_video.mp4"
+    # Step 4 output: SRT subtitle file
     srt_file           = "outputs/subtitles.srt"
+    # Step 4.5 output: video with burned subtitles
+    subtitled_video    = "outputs/final_video.mp4"
+    # Step 4.5 output (optional): re-styled subtitled video
+    styled_video       = "outputs/final_video_styled.mp4"
 
     # ---------- 1a. Extract frames ----------
     print("\n──── Step 1a: Extracting frames (chatterbox venv) ────")
@@ -238,27 +304,85 @@ def main(video_path: str) -> None:
         mix=False,   # True = mix with original audio; False = replace it
     )
 
-    # ---------- 4. Transcribe merged video + burn subtitles ----------
-    print("\n──── Step 4: Transcribing & burning subtitles (faster_whisper venv) ────")
+    # ---------- 4. Transcribe merged video + export subtitles ----------
+    print("\n──── Step 4: Transcribing video & exporting SRT (faster_whisper venv) ────")
     # We transcribe *video_with_tts* — it has the TTS audio so subtitles
     # will match exactly what the voice-over says.
     run_transcribe_subtitles(
         video_path=video_with_tts,
-        output_path=subtitled_video,
         model="base",    # change to "small" or "medium" for higher accuracy
         language=None,   # None = auto-detect
         srt_path=srt_file,
     )
 
+    # ---------- 4.5. Burn subtitles onto video ----------
+    print("\n──── Step 4.5: Burning subtitles onto video (faster_whisper venv) ────")
+    # Determine final output based on styling flag
+    final_output = styled_video if burn_style else subtitled_video
+    
+    run_burn_subtitles(
+        video_path=video_with_tts,
+        subtitle_path=srt_file,
+        output_path=final_output,
+        font_name=custom_font or "Arial",
+        font_size=custom_font_size or 24,
+        font_color="FFFFFF",      # white
+        border_color="000000",    # black
+        border_width=2,
+        soft=False,              # hard burn for final output
+        preset="fast",
+    )
+
     print(f"\n✅  Pipeline complete!")
     print(f"    Merged (video+TTS) : {video_with_tts}")
-    print(f"    Final subtitled    : {subtitled_video}")
-    print(f"    SRT file           : {srt_file}")
+    print(f"    SRT subtitles      : {srt_file}")
+    print(f"    Final output       : {final_output}")
     print(f"    Voice-over         : {voice_file}")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python pipeline.py <video_path>")
-        sys.exit(1)
-    main(sys.argv[1])
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Full YT automation pipeline: frames → LLM → voice-over → subtitles",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Run full pipeline
+  python pipeline.py input_video.mp4
+
+  # Run pipeline with custom subtitle styling
+  python pipeline.py input_video.mp4 --burn-style --font "DejaVu Sans" --font-size 28
+
+  # Quiet mode (default)
+  python pipeline.py input_video.mp4
+        """,
+    )
+
+    parser.add_argument("video", help="Input video file")
+    parser.add_argument(
+        "--burn-style",
+        action="store_true",
+        help="Apply custom subtitle styling after transcription (Step 4.5)",
+    )
+    parser.add_argument(
+        "--font",
+        type=str,
+        default=None,
+        help="Font name for custom subtitle styling (default: Arial)",
+    )
+    parser.add_argument(
+        "--font-size",
+        type=int,
+        default=None,
+        help="Font size for custom subtitle styling (default: 24)",
+    )
+
+    args = parser.parse_args()
+
+    main(
+        video_path=args.video,
+        burn_style=args.burn_style,
+        custom_font=args.font,
+        custom_font_size=args.font_size,
+    )
