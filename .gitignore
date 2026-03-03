@@ -1,0 +1,36 @@
+# ── Python ───────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── Virtual environments (never commit these) ────────────────────────────
+venvs/faster_whisper/bin/
+venvs/faster_whisper/lib/
+venvs/faster_whisper/include/
+venvs/faster_whisper/pyvenv.cfg
+venvs/faster_whisper/share/
+
+venvs/chatterbox/bin/
+venvs/chatterbox/lib/
+venvs/chatterbox/include/
+venvs/chatterbox/pyvenv.cfg
+venvs/chatterbox/share/
+
+# ── Model checkpoints (large binaries – use Git LFS or download script) ──
+checkpoints/
+
+# ── Generated outputs ─────────────────────────────────────────────────────
+outputs/
+
+# ── Misc ──────────────────────────────────────────────────────────────────
+.DS_Store
+*.mp4
+*.wav
+*.srt
+*.log
+.env
