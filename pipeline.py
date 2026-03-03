@@ -22,6 +22,7 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 # FastVLM lives in a separate conda env (no cv2 conflict)
 FASTVLM_PYTHON = "/opt/homebrew/Caskroom/miniforge/base/envs/fastvlm/bin/python"
 
+
 # Chatterbox venv (TTS + frame extraction + LLM calls)
 CHATTERBOX_PYTHON = os.path.join(PROJECT_ROOT, "venvs", "chatterbox", "bin", "python")
 # Fallback: if the venv hasn't been built yet, stay in the current interpreter
@@ -120,6 +121,7 @@ def run_tts(script_file: str, voice_output: str) -> None:
         CHATTERBOX_PYTHON, "./src/tts_generate.py",
         "--script", script_file,
         "--output", voice_output,
+        "--ref-audio", "./samples/1.mp3",  # Optional: add an audio prompt to influence the voice
     ]
     print(f"  [tts] Running: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
