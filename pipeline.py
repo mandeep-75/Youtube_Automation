@@ -210,32 +210,21 @@ def run_burn_subtitles(
     subtitle_path: str,
     output_path: str,
     font_name: str = "Arial",
-    font_size: int = 24,
+    font_size: int = 36,
     font_color: str = "FFFFFF",
     border_color: str = "000000",
-    border_width: int = 1,
-    soft: bool = False,
-    preset: str = "fast",
+    border_width: int = 2,
+    karaoke: bool = False,
+    word_per_line: bool = False,
 ) -> None:
     """
-    Burn subtitles into a video with customizable styling.
-    Useful for re-burning subtitles with different fonts/colors or
-    burning pre-existing subtitle files (SRT, ASS, VTT, etc.).
-    Runs inside the `venvs/faster_whisper` venv.
-
-    Args:
-        video_path:      Input video file.
-        subtitle_path:   Input subtitle file (SRT, ASS, VTT, SUB, etc.).
-        output_path:     Output video with burned subtitles.
-        font_name:       Font name for subtitles (default: Arial).
-        font_size:       Font size in pixels (default: 24).
-        font_color:      Font color in hex (default: FFFFFF = white).
-        border_color:    Border/outline color in hex (default: 000000 = black).
-        border_width:    Border width in pixels (default: 1).
-        soft:            If True, embed as soft subs (toggleable, faster).
-                         If False, hard burn (permanent, slower).
-        preset:          FFmpeg encoding preset (ultrafast/fast/medium/slow).
+    Burn subtitles using burn_subtitles.py
+    Supports:
+        - Normal grouped
+        - Karaoke mode
+        - Word-per-line mode
     """
+
     cmd = [
         FASTER_WHISPER_PYTHON, "./src/burn_subtitles.py",
         video_path,
@@ -243,17 +232,21 @@ def run_burn_subtitles(
         "-o", output_path,
         "--font-name", font_name,
         "--font-size", str(font_size),
-        "--font-color", font_color,
-        "--border-color", border_color,
+        "--font-color", f"#{font_color}",
+        "--highlight-color", "#FFFF00",
+        "--border-color", f"#{border_color}",
         "--border-width", str(border_width),
-        "--preset", preset,
+        "--margin-v", "80",
     ]
-    if soft:
-        cmd.append("--soft")
+
+    if karaoke:
+        cmd.append("--karaoke")
+
+    if word_per_line:
+        cmd.append("--word-per-line")
 
     print(f"  [burn_subtitles] Running: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
-
 
 # ══════════════════════════════════════════════════════════════════════════
 # Main pipeline

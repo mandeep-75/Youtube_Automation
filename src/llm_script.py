@@ -2,7 +2,19 @@
 import requests
 
 YOUTUBE_SHORTS_PROMPT = """
-Rewrite the following frame descriptions into a cinematic, high-retention YouTube Shorts script. Start with a powerful hook that begins with words like “This man…”, “Those men…”, “These women…” to immediately create tension or curiosity. Make the narration slightly dramatic and emotionally intense, but still believable. Exaggerate the stakes just enough to make it feel urgent and critical. Use vivid, immersive language as if narrating a suspenseful scene. Build tension continuously throughout the paragraph, keeping it as one flowing narrative—do not break into multiple paragraphs or include timestamps or scene labels. End with a strong, memorable line that leaves the viewer with a warning or life lesson. Keep the entire script short enough to be read in under 60 seconds.
+Rewrite the following frame descriptions into a cinematic,
+high-retention YouTube Shorts script. Start with a powerful 
+hook that begins with words like “This man…”, “Those men…”, 
+These women…” to immediately create tension or curiosity. Make
+the narration slightly dramatic and emotionally intense.Explain what is
+happing in video in a way that is easy to understand, but also engaging and vivid.
+Exaggerate the stakes just enough to make it 
+feel urgent and critical. Use vivid, immersive language as if 
+narrating a suspenseful scene. Build tension continuously throughout
+the paragraph, keeping it as one flowing narrative—do not break into
+multiple paragraphs or include timestamps or scene labels. End with a strong,
+memorable line that leaves the viewer with a warning or life lesson. 
+Keep the entire script short enough to be read in under 60 seconds.
 Here are the frame descriptions to rewrite:
 {vision_text}
 
