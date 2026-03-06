@@ -5,18 +5,26 @@ from pathlib import Path
 
 from config import (
     PROJECT_ROOT,
+    OLLAMA_URL,
     FRAME_INTERVAL,
     VISION_MODEL,
     VISION_PROMPT,
     WHISPER_MODEL,
     WHISPER_LANG,
+    WHISPER_BEAM_SIZE,
+    WHISPER_COMPUTE_TYPE,
     LLM_MODEL,
     TTS_REF_AUDIO,
+    TTS_EXAGGERATION,
+    TTS_TEMPERATURE,
+    TTS_CFG_WEIGHT,
+    TTS_REPETITION_PENALTY,
     MERGE_MIX_AUDIO,
     ORIGINAL_AUDIO_VOLUME,
     SUBTITLE_FONT_NAME,
     SUBTITLE_FONT_SIZE,
     SUBTITLE_FONT_COLOR,
+    SUBTITLE_HIGHLIGHT_COLOR,
     SUBTITLE_BORDER_COLOR,
     SUBTITLE_BORDER_WIDTH,
     SUBTITLE_MAX_WORDS,
@@ -51,14 +59,17 @@ def step2_vision_describe(manifest_path: str, output_file: str):
         "--model",        VISION_MODEL,
         "--prompt",       VISION_PROMPT,
         "--output-file",  output_file,
+        "--ollama-url",   OLLAMA_URL,
     ], check=True)
 
 def step3_transcribe_original(video_path: str, output_file: str):
     cmd = [
         FASTER_WHISPER_PYTHON, "./src/step3_transcribe_original.py",
-        "--video",  video_path,
-        "--output", output_file,
-        "--model",  WHISPER_MODEL,
+        "--video",        video_path,
+        "--output",       output_file,
+        "--model",        WHISPER_MODEL,
+        "--beam-size",    str(WHISPER_BEAM_SIZE),
+        "--compute-type", WHISPER_COMPUTE_TYPE,
     ]
     if WHISPER_LANG:
         cmd += ["--language", WHISPER_LANG]
@@ -67,9 +78,10 @@ def step3_transcribe_original(video_path: str, output_file: str):
 def step4_llm_script(frames_file: str, transcript_file: str, script_output: str):
     cmd = [
         CHATTERBOX_PYTHON, "./src/step4_llm_script.py",
-        "--input",  frames_file,
-        "--output", script_output,
-        "--model",  LLM_MODEL,
+        "--input",      frames_file,
+        "--output",     script_output,
+        "--model",      LLM_MODEL,
+        "--ollama-url", OLLAMA_URL,
     ]
     if transcript_file and os.path.isfile(transcript_file):
         cmd += ["--transcript", transcript_file]
@@ -78,9 +90,13 @@ def step4_llm_script(frames_file: str, transcript_file: str, script_output: str)
 def step5_tts(script_file: str, voice_output: str):
     subprocess.run([
         CHATTERBOX_PYTHON, "./src/step5_tts.py",
-        "--script",    script_file,
-        "--output",    voice_output,
-        "--ref-audio", TTS_REF_AUDIO,
+        "--script",             script_file,
+        "--output",             voice_output,
+        "--ref-audio",          TTS_REF_AUDIO,
+        "--exaggeration",       str(TTS_EXAGGERATION),
+        "--temperature",        str(TTS_TEMPERATURE),
+        "--cfg-weight",         str(TTS_CFG_WEIGHT),
+        "--repetition-penalty", str(TTS_REPETITION_PENALTY),
     ], check=True)
 
 def step6_merge_av(video_path: str, audio_path: str, output_path: str):
@@ -98,9 +114,11 @@ def step6_merge_av(video_path: str, audio_path: str, output_path: str):
 def step7_transcribe_subtitles(video_path: str, srt_path: str):
     cmd = [
         FASTER_WHISPER_PYTHON, "./src/step7_transcribe_subtitles.py",
-        "--video", video_path,
-        "--model", WHISPER_MODEL,
-        "--srt",   srt_path,
+        "--video",        video_path,
+        "--model",        WHISPER_MODEL,
+        "--srt",          srt_path,
+        "--beam-size",    str(WHISPER_BEAM_SIZE),
+        "--compute-type", WHISPER_COMPUTE_TYPE,
     ]
     if WHISPER_LANG:
         cmd += ["--language", WHISPER_LANG]
@@ -110,13 +128,14 @@ def step8_burn_subtitles(video_path: str, subtitle_path: str, output_path: str):
     subprocess.run([
         FASTER_WHISPER_PYTHON, "./src/step8_burn_subtitles.py",
         video_path, subtitle_path,
-        "-o",             output_path,
-        "--font-name",    SUBTITLE_FONT_NAME,
-        "--font-size",    SUBTITLE_FONT_SIZE,
-        "--font-color",   SUBTITLE_FONT_COLOR,
-        "--border-color", SUBTITLE_BORDER_COLOR,
-        "--border-width", SUBTITLE_BORDER_WIDTH,
-        "--max-words",    SUBTITLE_MAX_WORDS,
+        "-o",               output_path,
+        "--font-name",       SUBTITLE_FONT_NAME,
+        "--font-size",       str(SUBTITLE_FONT_SIZE),
+        "--font-color",      SUBTITLE_FONT_COLOR,
+        "--highlight-color", SUBTITLE_HIGHLIGHT_COLOR,
+        "--border-color",    SUBTITLE_BORDER_COLOR,
+        "--border-width",    str(SUBTITLE_BORDER_WIDTH),
+        "--max-words",       str(SUBTITLE_MAX_WORDS),
     ], check=True)
 
 def run_pipeline(video_path: str):

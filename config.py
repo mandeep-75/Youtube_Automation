@@ -11,6 +11,13 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 0. GLOBAL / COMMON SETTINGS
+# ─────────────────────────────────────────────────────────────────────────────
+
+OLLAMA_URL = "http://localhost:11434/api/generate"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 1. FRAME EXTRACTION
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -36,8 +43,10 @@ VISION_PROMPT = "Describe this frame in one sentence."
 # 3. WHISPER  — used in Step 3 (original audio) and Step 7 (TTS subtitles)
 # ─────────────────────────────────────────────────────────────────────────────
 
-WHISPER_MODEL = "base"          # tiny | base | small | medium | large-v3
-WHISPER_LANG  = None            # e.g. "en" to force English, or None for auto-detect
+WHISPER_MODEL        = "base"          # tiny | base | small | medium | large-v3
+WHISPER_LANG         = None            # e.g. "en" to force English, or None for auto-detect
+WHISPER_BEAM_SIZE    = 5
+WHISPER_COMPUTE_TYPE = "int8"          # int8 | float16 | float32
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -51,11 +60,17 @@ LLM_MODEL = "qwen3.5:9b"       # any model installed in your local Ollama instan
 # 5. TTS  — Chatterbox voice synthesis
 # ─────────────────────────────────────────────────────────────────────────────
 
-TTS_REF_AUDIO = "./samples/1.mp3"   # reference voice clip (short, clear speech)
+TTS_REF_AUDIO = "./samples/me.mp3"   # reference voice clip (short, clear speech)
+
+# Voice characteristics
+TTS_EXAGGERATION      = 0.6
+TTS_TEMPERATURE       = 0.05
+TTS_CFG_WEIGHT        = 0.5
+TTS_REPETITION_PENALTY = 1.2
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 6. MERGE  — how TTS audio is mixed wi th the original video audio
+# 6. MERGE  — how TTS audio is mixed with the original video audio
 # ─────────────────────────────────────────────────────────────────────────────
 
 MERGE_MIX_AUDIO = False         # True  = mix TTS + original audio together
@@ -69,12 +84,13 @@ ORIGINAL_AUDIO_VOLUME = 0.5    # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
 # 7 & 8. SUBTITLES  — burn-in styling
 # ─────────────────────────────────────────────────────────────────────────────
 
-SUBTITLE_FONT_NAME    = "Arial"
-SUBTITLE_FONT_SIZE    = "12"
-SUBTITLE_FONT_COLOR   = "#FFFFFF"    # text colour (white)
-SUBTITLE_BORDER_COLOR = "#000000"    # outline colour (black)
-SUBTITLE_BORDER_WIDTH = "0"
-SUBTITLE_MAX_WORDS    = "1"          # words visible on screen at once
+SUBTITLE_FONT_NAME      = "Arial"
+SUBTITLE_FONT_SIZE      = 12
+SUBTITLE_FONT_COLOR     = "#FFFFFF"    # text colour (white)
+SUBTITLE_HIGHLIGHT_COLOR = "#FFFF00"    # active word colour (yellow-ish)
+SUBTITLE_BORDER_COLOR   = "#000000"    # outline colour (black)
+SUBTITLE_BORDER_WIDTH   = 0
+SUBTITLE_MAX_WORDS      = 1          # words visible on screen at once
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -111,6 +111,14 @@ class SubtitleBurner:
 
         ass.styles["Default"] = style
 
+        # Convert hex to ASS format (&HBBGGRR&)
+        def hex_to_ass(h):
+            r_val, g_val, b_val = hex_to_rgb(h)
+            return f"&H{b_val:02X}{g_val:02X}{r_val:02X}&"
+
+        ass_font_color = hex_to_ass(self.font_color)
+        ass_highlight_color = hex_to_ass(self.highlight_color)
+
         lines = []
         current = []
 
@@ -131,9 +139,9 @@ class SubtitleBurner:
                 text_parts = []
                 for j, w in enumerate(line):
                     if i == j:
-                        part = "{\\c&H00FFFF&}" + w["text"] + "{\\r}"
+                        part = "{\\c" + ass_highlight_color + "}" + w["text"] + "{\\r}"
                     else:
-                        part = "{\\c&HFFFFFF&}" + w["text"]
+                        part = "{\\c" + ass_font_color + "}" + w["text"]
 
                     text_parts.append(part)
 
@@ -179,8 +187,8 @@ def main():
     parser.add_argument("--font-color",       default="#FFFFFF")
     parser.add_argument("--highlight-color",  default="#FFFF00")
     parser.add_argument("--border-color",     default="#000000")
-    parser.add_argument("--border-width",     type=int, default=4)
-    parser.add_argument("--max-words",        type=int, default=3)
+    parser.add_argument("--border-width",     type=int, default=0)
+    parser.add_argument("--max-words",        type=int, default=1)
     args = parser.parse_args()
 
     SubtitleBurner(

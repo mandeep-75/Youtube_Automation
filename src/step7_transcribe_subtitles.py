@@ -53,6 +53,7 @@ def transcribe(
     device: str = DEFAULT_DEVICE,
     compute_type: str = DEFAULT_COMPUTE,
     language: str | None = None,
+    beam_size: int = 5,
 ) -> list[dict]:
     if not has_audio(video_path):
         print(f"[transcribe] ⚠️ No audio stream found. Returning empty.")
@@ -71,7 +72,7 @@ def transcribe(
         segments_iter, info = model.transcribe(
             wav_path,
             language=language,
-            beam_size=5,
+            beam_size=beam_size,
             word_timestamps=True,
         )
 
@@ -127,11 +128,13 @@ def transcribe_and_export_srt(
     model_size: str = DEFAULT_MODEL,
     language: str | None = None,
     srt_path: str | None = None,
+    beam_size: int = 5,
+    compute_type: str = DEFAULT_COMPUTE,
 ) -> str:
     if srt_path:
         os.makedirs(os.path.dirname(srt_path) or ".", exist_ok=True)
 
-    segments = transcribe(video_path, model_size=model_size, language=language)
+    segments = transcribe(video_path, model_size=model_size, language=language, beam_size=beam_size, compute_type=compute_type)
 
     if srt_path:
         segments_to_srt(segments, srt_path)
@@ -142,11 +145,13 @@ def transcribe_and_export_srt(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--video",    required=True)
-    parser.add_argument("--output",   help="Deprecated: use --srt instead")
-    parser.add_argument("--model",    default=DEFAULT_MODEL)
-    parser.add_argument("--language", default=None)
-    parser.add_argument("--srt",      default=None)
+    parser.add_argument("--video",        required=True)
+    parser.add_argument("--output",       help="Deprecated: use --srt instead")
+    parser.add_argument("--model",        default=DEFAULT_MODEL)
+    parser.add_argument("--language",     default=None)
+    parser.add_argument("--srt",          default=None)
+    parser.add_argument("--beam-size",    type=int, default=5)
+    parser.add_argument("--compute-type", default=DEFAULT_COMPUTE)
     args = parser.parse_args()
 
     srt_path = args.srt or args.output
@@ -160,4 +165,6 @@ if __name__ == "__main__":
         model_size=args.model,
         language=args.language,
         srt_path=srt_path,
+        beam_size=args.beam_size,
+        compute_type=args.compute_type,
     )

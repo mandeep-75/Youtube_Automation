@@ -50,6 +50,8 @@ def transcribe_to_txt(
     output_path: str,
     model_size: str = "base",
     language: str | None = None,
+    beam_size: int = 5,
+    compute_type: str = "int8",
 ) -> str:
     if not _has_audio(video_path):
         print("[transcribe_original] ⚠️  No audio stream found – writing empty transcript.")
@@ -64,13 +66,13 @@ def transcribe_to_txt(
         _extract_audio(video_path, wav_path)
 
         print(f"[transcribe_original] Loading Whisper '{model_size}' ...")
-        model = WhisperModel(model_size, device="auto", compute_type="int8")
+        model = WhisperModel(model_size, device="auto", compute_type=compute_type)
 
         print("[transcribe_original] Transcribing ...")
         segments_iter, info = model.transcribe(
             wav_path,
             language=language,
-            beam_size=5,
+            beam_size=beam_size,
             word_timestamps=False,
         )
         print(f"[transcribe_original] Detected language: {info.language} "
@@ -95,10 +97,12 @@ def transcribe_to_txt(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--video",    required=True)
-    parser.add_argument("--output",   required=True)
-    parser.add_argument("--model",    default="base")
-    parser.add_argument("--language", default=None)
+    parser.add_argument("--video",        required=True)
+    parser.add_argument("--output",       required=True)
+    parser.add_argument("--model",        default="base")
+    parser.add_argument("--language",     default=None)
+    parser.add_argument("--beam-size",    type=int, default=5)
+    parser.add_argument("--compute-type", default="int8")
     args = parser.parse_args()
 
     transcribe_to_txt(
@@ -106,4 +110,6 @@ if __name__ == "__main__":
         output_path=args.output,
         model_size=args.model,
         language=args.language,
+        beam_size=args.beam_size,
+        compute_type=args.compute_type,
     )

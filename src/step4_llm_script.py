@@ -46,7 +46,7 @@ Return ONLY the narration script. No preamble, no explanation.
 
 
 def generate_script(vision_text: str, transcript_text: str | None = None,
-                    model: str = "qwen3.5:9b") -> str:
+                    model: str = "qwen3.5:9b", ollama_url: str = OLLAMA_URL) -> str:
     if transcript_text and transcript_text.strip():
         print("[step4_llm_script] Mode: frames + transcript (combined)")
         prompt = COMBINED_PROMPT.format(
@@ -60,7 +60,7 @@ def generate_script(vision_text: str, transcript_text: str | None = None,
     try:
         print()
         response = requests.post(
-            OLLAMA_URL,
+            ollama_url,
             json={"model": model, "prompt": prompt, "stream": True},
             stream=True,
         )
@@ -90,6 +90,7 @@ if __name__ == "__main__":
     parser.add_argument("--transcript", default=None)
     parser.add_argument("--output",     required=True)
     parser.add_argument("--model",      default="qwen3.5:9b")
+    parser.add_argument("--ollama-url", default=OLLAMA_URL)
     args = parser.parse_args()
 
     with open(args.input, "r", encoding="utf-8") as f:
@@ -104,7 +105,7 @@ if __name__ == "__main__":
         print("[step4_llm_script] No transcript — frames-only mode.")
 
     print(f"[step4_llm_script] Generating script ...")
-    script = generate_script(vision_text, transcript_text, model=args.model)
+    script = generate_script(vision_text, transcript_text, model=args.model, ollama_url=args.ollama_url)
 
     with open(args.output, "w", encoding="utf-8") as f:
         f.write(script)
