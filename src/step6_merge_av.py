@@ -43,6 +43,7 @@ def merge_audio_video(
     output_path: str,
     *,
     replace_original_audio: bool = True,
+    original_volume: float = 1.0,
 ) -> str:
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
 
@@ -95,7 +96,7 @@ def merge_audio_video(
                 "-i", video_path,
                 "-i", normalised_audio,
                 "-filter_complex",
-                "[0:a][1:a]amix=inputs=2:duration=first:dropout_transition=2[aout]",
+                f"[0:a]volume={original_volume}[a_org];[a_org][1:a]amix=inputs=2:duration=first:dropout_transition=2[aout]",
                 "-map", "0:v",
                 "-map", "[aout]",
                 "-c:v", "copy",
@@ -118,6 +119,7 @@ if __name__ == "__main__":
     parser.add_argument("--audio",  required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--mix", action="store_true")
+    parser.add_argument("--volume", type=float, default=1.0)
     args = parser.parse_args()
 
     merge_audio_video(
@@ -125,4 +127,5 @@ if __name__ == "__main__":
         audio_path=args.audio,
         output_path=args.output,
         replace_original_audio=not args.mix,
+        original_volume=args.volume,
     )

@@ -99,15 +99,13 @@ def main(args):
                     image_sizes=[image.size],
                     do_sample=True,
                     temperature=0.2,
-                    top_p=0.8,
+                    top_p=None,
                     num_beams=1,
-                    max_new_tokens=120,
-                    repetition_penalty=1.3,
+                    max_new_tokens=256,
                     eos_token_id=tokenizer.eos_token_id,
                     pad_token_id=tokenizer.pad_token_id,
                     use_cache=True,
                 )
-
             new_tokens = output_ids[:, input_token_len:]
             text_output = tokenizer.batch_decode(
                 new_tokens,

@@ -131,25 +131,24 @@ class SubtitleBurner:
                 text_parts = []
                 for j, w in enumerate(line):
                     if i == j:
-                        part = (
-                            "{\\c&H00FFFF&\\fscx115\\fscy115"
-                            "\\t(0,150,\\fscx100\\fscy100)}"
-                            + w["text"] +
-                            "{\\r}"
-                        )
+                        part = "{\\c&H00FFFF&}" + w["text"] + "{\\r}"
                     else:
                         part = "{\\c&HFFFFFF&}" + w["text"]
+
                     text_parts.append(part)
 
                 full_text = " ".join(text_parts)
                 ass.events.append(pysubs2.SSAEvent(start=start, end=end, text=full_text))
 
-        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".ass")
-        tmp.close()
-        ass.save(tmp.name)
+        output_dir = Path("outputs")
+        output_dir.mkdir(exist_ok=True)
 
-        logger.info(f"ASS created: {tmp.name}")
-        return Path(tmp.name)
+        ass_path = output_dir / "subtitles.ass"
+
+        ass.save(str(ass_path))
+
+        logger.info(f"ASS created: {ass_path}")
+        return ass_path
 
     def burn(self):
         logger.info("Hard burn mode")
@@ -165,9 +164,6 @@ class SubtitleBurner:
             ]
             subprocess.run(cmd, check=True)
             logger.info(f"Done: {self.output_video}")
-        finally:
-            if ass_file.exists():
-                os.unlink(ass_file)
 
 
 def main():

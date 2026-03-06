@@ -26,7 +26,7 @@ FASTVLM_MODEL_PATH = os.path.join(
 )
 
 # Prompt sent to FastVLM for every frame (do NOT include <image> — added automatically)
-FASTVLM_PROMPT = "Describe what is happening in this frame in two sentences."
+FASTVLM_PROMPT = "Describe this frame in one sentence."
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -52,11 +52,14 @@ TTS_REF_AUDIO = "./samples/1.mp3"   # reference voice clip (short, clear speech)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 6. MERGE  — how TTS audio is mixed with the original video audio
+# 6. MERGE  — how TTS audio is mixed wi th the original video audio
 # ─────────────────────────────────────────────────────────────────────────────
 
 MERGE_MIX_AUDIO = False         # True  = mix TTS + original audio together
                                 # False = replace original audio with TTS only
+
+ORIGINAL_AUDIO_VOLUME = 0.5    # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
+                                # Only used if MERGE_MIX_AUDIO is True.
 
 
 # ─────────────────────────────────────────────────────────────────────────────

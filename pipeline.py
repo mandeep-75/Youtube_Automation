@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 from config import (
     PROJECT_ROOT,
@@ -12,6 +13,7 @@ from config import (
     LLM_MODEL,
     TTS_REF_AUDIO,
     MERGE_MIX_AUDIO,
+    ORIGINAL_AUDIO_VOLUME,
     SUBTITLE_FONT_NAME,
     SUBTITLE_FONT_SIZE,
     SUBTITLE_FONT_COLOR,
@@ -32,27 +34,16 @@ if not os.path.isfile(FASTER_WHISPER_PYTHON):
         "Run:  bash venvs/faster_whisper/setup.sh"
     )
 
-FRAMES_DIR      = os.path.join(PROJECT_ROOT, "outputs", "frames")
-FRAMES_FILE     = "outputs/frames.txt"
-TRANSCRIPT_FILE = "outputs/transcript.txt"
-SCRIPT_FILE     = "outputs/script.txt"
-VOICE_FILE      = "outputs/voice.wav"
-VIDEO_TTS       = "outputs/video_with_tts.mp4"
-SRT_FILE        = "outputs/subtitles.srt"
-FINAL_VIDEO     = "outputs/final_video.mp4"
-
-
-def step1_extract_frames(video_path: str) -> str:
-    os.makedirs(FRAMES_DIR, exist_ok=True)
-    manifest_path = os.path.join(FRAMES_DIR, "manifest.json")
+def step1_extract_frames(video_path: str, frames_dir: str) -> str:
+    os.makedirs(frames_dir, exist_ok=True)
+    manifest_path = os.path.join(frames_dir, "manifest.json")
     subprocess.run([
         CHATTERBOX_PYTHON, "./src/step1_extract_frames.py",
         "--video-file", video_path,
         "--interval",   FRAME_INTERVAL,
-        "--output-dir", FRAMES_DIR,
+        "--output-dir", frames_dir,
     ], check=True)
     return manifest_path
-
 
 def step2_fastvlm(manifest_path: str, output_file: str):
     subprocess.run([
@@ -62,7 +53,6 @@ def step2_fastvlm(manifest_path: str, output_file: str):
         "--output-file", output_file,
         "--prompt",      FASTVLM_PROMPT,
     ], check=True)
-
 
 def step3_transcribe_original(video_path: str, output_file: str):
     cmd = [
@@ -75,7 +65,6 @@ def step3_transcribe_original(video_path: str, output_file: str):
         cmd += ["--language", WHISPER_LANG]
     subprocess.run(cmd, check=True)
 
-
 def step4_llm_script(frames_file: str, transcript_file: str, script_output: str):
     cmd = [
         CHATTERBOX_PYTHON, "./src/step4_llm_script.py",
@@ -87,7 +76,6 @@ def step4_llm_script(frames_file: str, transcript_file: str, script_output: str)
         cmd += ["--transcript", transcript_file]
     subprocess.run(cmd, check=True)
 
-
 def step5_tts(script_file: str, voice_output: str):
     subprocess.run([
         CHATTERBOX_PYTHON, "./src/step5_tts.py",
@@ -96,18 +84,17 @@ def step5_tts(script_file: str, voice_output: str):
         "--ref-audio", TTS_REF_AUDIO,
     ], check=True)
 
-
 def step6_merge_av(video_path: str, audio_path: str, output_path: str):
     cmd = [
         FASTER_WHISPER_PYTHON, "./src/step6_merge_av.py",
         "--video",  video_path,
         "--audio",  audio_path,
         "--output", output_path,
+        "--volume", str(ORIGINAL_AUDIO_VOLUME),
     ]
     if MERGE_MIX_AUDIO:
         cmd.append("--mix")
     subprocess.run(cmd, check=True)
-
 
 def step7_transcribe_subtitles(video_path: str, srt_path: str):
     cmd = [
@@ -119,7 +106,6 @@ def step7_transcribe_subtitles(video_path: str, srt_path: str):
     if WHISPER_LANG:
         cmd += ["--language", WHISPER_LANG]
     subprocess.run(cmd, check=True)
-
 
 def step8_burn_subtitles(video_path: str, subtitle_path: str, output_path: str):
     subprocess.run([
@@ -134,40 +120,61 @@ def step8_burn_subtitles(video_path: str, subtitle_path: str, output_path: str):
         "--max-words",    SUBTITLE_MAX_WORDS,
     ], check=True)
 
+def run_pipeline(video_path: str):
+    video_name = Path(video_path).stem
+    out_dir = os.path.join(PROJECT_ROOT, "outputs", video_name)
+    os.makedirs(out_dir, exist_ok=True)
 
-def main(video_path: str):
-    os.makedirs("outputs", exist_ok=True)
+    frames_dir      = os.path.join(out_dir, "frames")
+    frames_file     = os.path.join(out_dir, "frames.txt")
+    transcript_file = os.path.join(out_dir, "transcript.txt")
+    script_file     = os.path.join(out_dir, "script.txt")
+    voice_file      = os.path.join(out_dir, "voice.wav")
+    video_tts       = os.path.join(out_dir, "video_with_tts.mp4")
+    srt_file        = os.path.join(out_dir, "subtitles.srt")
+    final_video     = os.path.join(out_dir, "final_video.mp4")
+
+    print(f"\n🚀 Processing video: {video_path}")
+    print(f"📂 Output directory: {out_dir}")
 
     print("\n─── Step 1  Extract frames ───────────────────────────────────")
-    manifest = step1_extract_frames(video_path)
+    manifest = step1_extract_frames(video_path, frames_dir)
 
     print("\n─── Step 2  FastVLM frame descriptions ───────────────────────")
-    step2_fastvlm(manifest, FRAMES_FILE)
+    step2_fastvlm(manifest, frames_file)
 
     print("\n─── Step 3  Transcribe original audio ────────────────────────")
-    step3_transcribe_original(video_path, TRANSCRIPT_FILE)
+    step3_transcribe_original(video_path, transcript_file)
 
     print("\n─── Step 4  Generate narration script ────────────────────────")
-    step4_llm_script(FRAMES_FILE, TRANSCRIPT_FILE, SCRIPT_FILE)
+    step4_llm_script(frames_file, transcript_file, script_file)
 
     print("\n─── Step 5  Text-to-speech ───────────────────────────────────")
-    step5_tts(SCRIPT_FILE, VOICE_FILE)
+    step5_tts(script_file, voice_file)
 
     print("\n─── Step 6  Merge TTS audio onto video ───────────────────────")
-    step6_merge_av(video_path, VOICE_FILE, VIDEO_TTS)
+    step6_merge_av(video_path, voice_file, video_tts)
 
     print("\n─── Step 7  Transcribe TTS for subtitles ─────────────────────")
-    step7_transcribe_subtitles(VIDEO_TTS, SRT_FILE)
+    step7_transcribe_subtitles(video_tts, srt_file)
 
     print("\n─── Step 8  Burn subtitles ───────────────────────────────────")
-    step8_burn_subtitles(VIDEO_TTS, SRT_FILE, FINAL_VIDEO)
+    step8_burn_subtitles(video_tts, srt_file, final_video)
 
-    print("\n✅ Pipeline finished!")
-    print("   Final video:", FINAL_VIDEO)
-
+    print(f"\n✅ Finished processing: {video_path}")
+    print(f"   Final video: {final_video}")
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="YouTube automation pipeline")
-    parser.add_argument("video", help="Input video file")
-    main(parser.parse_args().video)
+    parser.add_argument("videos", nargs="+", help="Input video file(s)")
+    args = parser.parse_args()
+
+    for video in args.videos:
+        try:
+            run_pipeline(video)
+        except Exception as e:
+            print(f"\n❌ Error processing {video}: {e}")
+            continue
+
+    print("\n🎯 All videos processed!")
