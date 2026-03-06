@@ -67,10 +67,11 @@ def main(args):
 
     frames, timestamps = load_frames_from_manifest(args.manifest)
 
-  
-  
-    
-    prompt = DEFAULT_IMAGE_TOKEN + "\nDescribe this image in one concise sentence."
+    # Strip any leading <image> token from args.prompt — build_prompt() inserts it
+    prompt_text = args.prompt.replace(DEFAULT_IMAGE_TOKEN, "").lstrip()
+
+    # build_prompt wraps the text in the correct qwen_2 chat template
+    prompt = build_prompt(prompt_text, model, args.conv_mode)
     input_ids = tokenizer_image_token(
         prompt,
         tokenizer,
@@ -102,11 +103,11 @@ def main(args):
 
 
                     do_sample=True,
-                    temperature=0.7,
-                    top_p=0.92,
+                    temperature=0.2,
+                    top_p=0.9,
                     num_beams=1,
                     max_new_tokens=120,
-                    repetition_penalty=1.2,
+                    repetition_penalty=1.3,
                     eos_token_id=tokenizer.eos_token_id,
                     pad_token_id=tokenizer.pad_token_id,
 
@@ -134,10 +135,10 @@ if __name__ == "__main__":
         description="Run FastVLM inference on pre-extracted frames."
     )
     parser.add_argument(
-    "--prompt",
-    type=str,
-    default="Describe this image in one concise sentence. Do not repeat yourself.",
-    help="Custom prompt for image description."
+        "--prompt",
+        type=str,
+        default="Describe what is happening in this frame in two sentences.",
+        help="Custom prompt for image description (without <image> token, it is added automatically)."
     )
 
     parser.add_argument("--manifest", type=str, required=True,

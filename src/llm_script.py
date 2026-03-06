@@ -1,57 +1,119 @@
-
 import requests
-
-YOUTUBE_SHORTS_PROMPT = """
-Rewrite the following frame descriptions into a cinematic,
-high-retention YouTube Shorts script. Start with a powerful 
-hook that begins with words like “This man…”, “Those men…”, 
-These women…” to immediately create tension or curiosity. Make
-the narration slightly dramatic and emotionally intense.Explain what is
-happing in video in a way that is easy to understand, but also engaging and vivid.
-Exaggerate the stakes just enough to make it 
-feel urgent and critical. Use vivid, immersive language as if 
-narrating a suspenseful scene. Build tension continuously throughout
-the paragraph, keeping it as one flowing narrative—do not break into
-multiple paragraphs or include timestamps or scene labels. End with a strong,
-memorable line that leaves the viewer with a warning or life lesson. 
-Keep the entire script short enough to be read in under 60 seconds.
-Here are the frame descriptions to rewrite:
-{vision_text}
-
-"""
+import argparse
+import os
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "qwen2.5:7b"
+MODEL = "qwen3.5:9b"
 
-import argparse
+# ── Frames-only fallback (original behaviour) ────────────────────────────────
+FRAMES_ONLY_PROMPT = """\
+Rewrite the following frame descriptions into a cinematic, high-retention YouTube Shorts narration script.
+Start with a powerful hook that begins with phrases like "This man...", "Those men...", "This person...", "These people...", or "This moment..." to immediately create curiosity and tension.
+The narration should feel dramatic, suspenseful, and emotionally intense, like a storyteller describing a shocking moment. Focus on actions, emotions, danger, and unfolding events, rather than naming specific objects or items that might appear in the scene.
+Explain what seems to be happening in a way that is clear, vivid, and engaging. Slightly exaggerate the stakes so the moment feels urgent and meaningful.
+Use immersive, cinematic language. The script must be one continuous paragraph, with no timestamps, scene labels, bullet points, or line breaks.
+End with a strong, memorable closing line that leaves the viewer with a warning, realization, or life lesson.
+The entire narration should be short enough to be read in under 60 seconds (approximately 120-150 words).
 
-def generate_script(vision_text: str) -> str:
-    prompt = YOUTUBE_SHORTS_PROMPT.format(vision_text=vision_text)
+FRAME DESCRIPTIONS:
+{vision_text}
+"""
+
+# ── Combined frames + transcript prompt ──────────────────────────────────────
+COMBINED_PROMPT = """\
+You are a professional YouTube Shorts scriptwriter who specialises in high-retention, cinematic narration.
+
+You have two sources of information about a video:
+
+1. ORIGINAL DIALOGUE (what was actually said in the video, with timestamps):
+{transcript_text}
+
+2. VISUAL FRAME DESCRIPTIONS (what the AI vision model saw in each frame):
+{vision_text}
+
+Using BOTH sources:
+- Let the original dialogue anchor you to what is really happening in the video.
+- Use the frame descriptions to add vivid visual detail and atmosphere.
+- Prioritise accurate story facts from the dialogue; use frames for colour and drama.
+
+Write a single, continuous narration paragraph (no timestamps, no bullet points, no scene labels).
+- Open with a powerful hook: "This man...", "These people...", "This moment...", or similar.
+- Build tension steadily. Keep the tone dramatic, suspenseful, emotionally intense.
+- Translate any specific technical objects or jargon into plain, universal language.
+- End with a strong closing line — a warning, a realisation, or a life lesson.
+- Target length: 120-150 words (readable in under 60 seconds).
+
+Return ONLY the narration script. No preamble, no explanation.
+"""
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# Core generation
+# ══════════════════════════════════════════════════════════════════════════
+
+def generate_script(vision_text: str, transcript_text: str | None = None) -> str:
+    """
+    Generate a YouTube Shorts narration script.
+
+    If `transcript_text` is provided (and non-empty), uses the combined
+    prompt that fuses visual descriptions with the original spoken dialogue.
+    Otherwise falls back to the frames-only prompt.
+    """
+    if transcript_text and transcript_text.strip():
+        print("[llm_script] Mode: frames + transcript (combined)")
+        prompt = COMBINED_PROMPT.format(
+            transcript_text=transcript_text.strip(),
+            vision_text=vision_text.strip(),
+        )
+    else:
+        print("[llm_script] Mode: frames only (no transcript provided)")
+        prompt = FRAMES_ONLY_PROMPT.format(vision_text=vision_text.strip())
+
     try:
         response = requests.post(
             OLLAMA_URL,
             json={"model": MODEL, "prompt": prompt, "stream": False},
-            timeout=60
+            timeout=120,
         )
         response.raise_for_status()
         return response.json()["response"]
     except Exception as e:
-        print(f"Error calling LLM: {e}")
-        # fallback to original text if LLM fails
+        print(f"[llm_script] Error calling LLM: {e}")
+        # Fallback: return original vision text so the pipeline can continue
         return vision_text
 
+
+# ══════════════════════════════════════════════════════════════════════════
+# CLI
+# ══════════════════════════════════════════════════════════════════════════
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input", required=True)
-    parser.add_argument("--output", required=True)
+    parser = argparse.ArgumentParser(
+        description="Generate a YouTube Shorts script from frame descriptions + transcript."
+    )
+    parser.add_argument("--input",      required=True,
+                        help="Path to frame descriptions txt (frames.txt)")
+    parser.add_argument("--transcript", default=None,
+                        help="Path to original video transcript txt (transcript.txt). "
+                             "If omitted, falls back to frames-only mode.")
+    parser.add_argument("--output",     required=True,
+                        help="Path to write the generated script")
     args = parser.parse_args()
-    
-    with open(args.input, "r") as f:
-        descriptions = f.read()
-    
-    print(f"Generating script from {args.input}...")
-    script = generate_script(descriptions)
-    
-    with open(args.output, "w") as f:
+
+    with open(args.input, "r", encoding="utf-8") as f:
+        vision_text = f.read()
+
+    transcript_text = None
+    if args.transcript and os.path.isfile(args.transcript):
+        with open(args.transcript, "r", encoding="utf-8") as f:
+            transcript_text = f.read()
+        print(f"[llm_script] Loaded transcript: {args.transcript}")
+    else:
+        print("[llm_script] No transcript file — running in frames-only mode.")
+
+    print(f"[llm_script] Generating script from {args.input} ...")
+    script = generate_script(vision_text, transcript_text)
+
+    with open(args.output, "w", encoding="utf-8") as f:
         f.write(script)
-    print(f"Script saved to {args.output}")
+    print(f"[llm_script] Script saved to {args.output}")
