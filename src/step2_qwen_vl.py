@@ -17,12 +17,43 @@ def describe_image(image_path, model, prompt, ollama_url):
         "model": model,
         "prompt": prompt,
         "images": [base64_image],
-        "stream": False
+        "stream": True
     }
+    
+    thinking_text = []
+    response_text = []
+    last_was_thinking = False
+
     try:
-        response = requests.post(ollama_url, json=payload, timeout=60)
+        response = requests.post(ollama_url, json=payload, timeout=120, stream=True)
         response.raise_for_status()
-        return response.json().get("response", "").strip()
+
+        for line in response.iter_lines():
+            if not line:
+                continue
+            chunk = json.loads(line)
+            
+            # 1. Capture Thinking (if model supports it)
+            thought = chunk.get("thinking", "")
+            if thought:
+                if not last_was_thinking:
+                    print("\n    [Thinking] ", end="", flush=True)
+                    last_was_thinking = True
+                print(thought, end="", flush=True)
+                thinking_text.append(thought)
+            
+            # 2. Capture Response
+            token = chunk.get("response", "")
+            if token:
+                if last_was_thinking:
+                    print("\n    [Result] ", end="", flush=True)
+                    last_was_thinking = False
+                response_text.append(token)
+                
+            if chunk.get("done"):
+                break
+
+        return "".join(response_text).strip()
     except Exception as e:
         return f"[Error: {e}]"
 
@@ -41,10 +72,12 @@ def main(args):
             image_path = entry["path"]
             timestamp  = entry["timestamp"]
             
+            print(f"\n[{timestamp}] Processing {os.path.basename(image_path)}...")
             description = describe_image(image_path, args.model, args.prompt, args.ollama_url)
-            line = f"{timestamp} - {description}"
             
-            print(" →", line, flush=True)
+            line = f"{timestamp} - {description}"
+            print(f"    → {description}", flush=True)
+            
             f.write(line + "\n")
             f.flush()
 
