@@ -1,5 +1,6 @@
 import requests
 import argparse
+import json
 import os
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
@@ -57,15 +58,29 @@ def generate_script(vision_text: str, transcript_text: str | None = None,
         prompt = FRAMES_ONLY_PROMPT.format(vision_text=vision_text.strip())
 
     try:
+        print()
         response = requests.post(
             OLLAMA_URL,
-            json={"model": model, "prompt": prompt, "stream": False},
-            timeout=120,
+            json={"model": model, "prompt": prompt, "stream": True},
+            stream=True,
         )
         response.raise_for_status()
-        return response.json()["response"]
+
+        full_text = []
+        for line in response.iter_lines():
+            if not line:
+                continue
+            chunk = json.loads(line)
+            token = chunk.get("response", "")
+            print(token, end="", flush=True)
+            full_text.append(token)
+            if chunk.get("done"):
+                break
+
+        print()
+        return "".join(full_text)
     except Exception as e:
-        print(f"[step4_llm_script] Error calling LLM: {e}")
+        print(f"\n[step4_llm_script] Error calling LLM: {e}")
         return vision_text
 
 
