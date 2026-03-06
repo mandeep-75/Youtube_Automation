@@ -104,7 +104,7 @@ def main(args):
 
                     do_sample=True,
                     temperature=0.2,
-                    top_p=0.9,
+                    top_p=0.8,
                     num_beams=1,
                     max_new_tokens=120,
                     repetition_penalty=1.3,

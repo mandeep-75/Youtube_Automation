@@ -3,7 +3,6 @@ import argparse
 import os
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "qwen3.5:9b"
 
 # ── Frames-only fallback (original behaviour) ────────────────────────────────
 FRAMES_ONLY_PROMPT = """\
@@ -51,7 +50,8 @@ Return ONLY the narration script. No preamble, no explanation.
 # Core generation
 # ══════════════════════════════════════════════════════════════════════════
 
-def generate_script(vision_text: str, transcript_text: str | None = None) -> str:
+def generate_script(vision_text: str, transcript_text: str | None = None,
+                    model: str = "qwen3.5:9b") -> str:
     """
     Generate a YouTube Shorts narration script.
 
@@ -60,26 +60,25 @@ def generate_script(vision_text: str, transcript_text: str | None = None) -> str
     Otherwise falls back to the frames-only prompt.
     """
     if transcript_text and transcript_text.strip():
-        print("[llm_script] Mode: frames + transcript (combined)")
+        print("[step4_llm_script] Mode: frames + transcript (combined)")
         prompt = COMBINED_PROMPT.format(
             transcript_text=transcript_text.strip(),
             vision_text=vision_text.strip(),
         )
     else:
-        print("[llm_script] Mode: frames only (no transcript provided)")
+        print("[step4_llm_script] Mode: frames only (no transcript provided)")
         prompt = FRAMES_ONLY_PROMPT.format(vision_text=vision_text.strip())
 
     try:
         response = requests.post(
             OLLAMA_URL,
-            json={"model": MODEL, "prompt": prompt, "stream": False},
+            json={"model": model, "prompt": prompt, "stream": False},
             timeout=120,
         )
         response.raise_for_status()
         return response.json()["response"]
     except Exception as e:
-        print(f"[llm_script] Error calling LLM: {e}")
-        # Fallback: return original vision text so the pipeline can continue
+        print(f"[step4_llm_script] Error calling LLM: {e}")
         return vision_text
 
 
@@ -94,10 +93,12 @@ if __name__ == "__main__":
     parser.add_argument("--input",      required=True,
                         help="Path to frame descriptions txt (frames.txt)")
     parser.add_argument("--transcript", default=None,
-                        help="Path to original video transcript txt (transcript.txt). "
+                        help="Path to original video transcript txt. "
                              "If omitted, falls back to frames-only mode.")
     parser.add_argument("--output",     required=True,
                         help="Path to write the generated script")
+    parser.add_argument("--model",      default="qwen3.5:9b",
+                        help="Ollama model name (default: qwen3.5:9b)")
     args = parser.parse_args()
 
     with open(args.input, "r", encoding="utf-8") as f:
@@ -107,13 +108,13 @@ if __name__ == "__main__":
     if args.transcript and os.path.isfile(args.transcript):
         with open(args.transcript, "r", encoding="utf-8") as f:
             transcript_text = f.read()
-        print(f"[llm_script] Loaded transcript: {args.transcript}")
+        print(f"[step4_llm_script] Loaded transcript: {args.transcript}")
     else:
-        print("[llm_script] No transcript file — running in frames-only mode.")
+        print("[step4_llm_script] No transcript file — running in frames-only mode.")
 
-    print(f"[llm_script] Generating script from {args.input} ...")
-    script = generate_script(vision_text, transcript_text)
+    print(f"[step4_llm_script] Generating script from {args.input} ...")
+    script = generate_script(vision_text, transcript_text, model=args.model)
 
     with open(args.output, "w", encoding="utf-8") as f:
         f.write(script)
-    print(f"[llm_script] Script saved to {args.output}")
+    print(f"[step4_llm_script] Script saved to {args.output}")
