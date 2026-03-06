@@ -164,6 +164,9 @@ class SubtitleBurner:
             ]
             subprocess.run(cmd, check=True)
             logger.info(f"Done: {self.output_video}")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"FFmpeg failed with exit code {e.returncode}: {e.stderr}")
+            raise
 
 
 def main():
