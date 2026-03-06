@@ -4,7 +4,6 @@ import os
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
-# ── Frames-only fallback (original behaviour) ────────────────────────────────
 FRAMES_ONLY_PROMPT = """\
 Rewrite the following frame descriptions into a cinematic, high-retention YouTube Shorts narration script.
 Start with a powerful hook that begins with phrases like "This man...", "Those men...", "This person...", "These people...", or "This moment..." to immediately create curiosity and tension.
@@ -18,7 +17,6 @@ FRAME DESCRIPTIONS:
 {vision_text}
 """
 
-# ── Combined frames + transcript prompt ──────────────────────────────────────
 COMBINED_PROMPT = """\
 You are a professional YouTube Shorts scriptwriter who specialises in high-retention, cinematic narration.
 
@@ -46,19 +44,8 @@ Return ONLY the narration script. No preamble, no explanation.
 """
 
 
-# ══════════════════════════════════════════════════════════════════════════
-# Core generation
-# ══════════════════════════════════════════════════════════════════════════
-
 def generate_script(vision_text: str, transcript_text: str | None = None,
                     model: str = "qwen3.5:9b") -> str:
-    """
-    Generate a YouTube Shorts narration script.
-
-    If `transcript_text` is provided (and non-empty), uses the combined
-    prompt that fuses visual descriptions with the original spoken dialogue.
-    Otherwise falls back to the frames-only prompt.
-    """
     if transcript_text and transcript_text.strip():
         print("[step4_llm_script] Mode: frames + transcript (combined)")
         prompt = COMBINED_PROMPT.format(
@@ -66,7 +53,7 @@ def generate_script(vision_text: str, transcript_text: str | None = None,
             vision_text=vision_text.strip(),
         )
     else:
-        print("[step4_llm_script] Mode: frames only (no transcript provided)")
+        print("[step4_llm_script] Mode: frames only")
         prompt = FRAMES_ONLY_PROMPT.format(vision_text=vision_text.strip())
 
     try:
@@ -82,23 +69,12 @@ def generate_script(vision_text: str, transcript_text: str | None = None,
         return vision_text
 
 
-# ══════════════════════════════════════════════════════════════════════════
-# CLI
-# ══════════════════════════════════════════════════════════════════════════
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Generate a YouTube Shorts script from frame descriptions + transcript."
-    )
-    parser.add_argument("--input",      required=True,
-                        help="Path to frame descriptions txt (frames.txt)")
-    parser.add_argument("--transcript", default=None,
-                        help="Path to original video transcript txt. "
-                             "If omitted, falls back to frames-only mode.")
-    parser.add_argument("--output",     required=True,
-                        help="Path to write the generated script")
-    parser.add_argument("--model",      default="qwen3.5:9b",
-                        help="Ollama model name (default: qwen3.5:9b)")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input",      required=True)
+    parser.add_argument("--transcript", default=None)
+    parser.add_argument("--output",     required=True)
+    parser.add_argument("--model",      default="qwen3.5:9b")
     args = parser.parse_args()
 
     with open(args.input, "r", encoding="utf-8") as f:
@@ -110,9 +86,9 @@ if __name__ == "__main__":
             transcript_text = f.read()
         print(f"[step4_llm_script] Loaded transcript: {args.transcript}")
     else:
-        print("[step4_llm_script] No transcript file — running in frames-only mode.")
+        print("[step4_llm_script] No transcript — frames-only mode.")
 
-    print(f"[step4_llm_script] Generating script from {args.input} ...")
+    print(f"[step4_llm_script] Generating script ...")
     script = generate_script(vision_text, transcript_text, model=args.model)
 
     with open(args.output, "w", encoding="utf-8") as f:

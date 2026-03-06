@@ -1,77 +1,36 @@
-# pipeline.py
-"""
-Full YouTube-automation pipeline
-----------------------------------
-Step 1  – Extract frames from video
-Step 2  – FastVLM: describe each frame  (fastvlm env)
-Step 3  – Whisper: transcribe original audio
-Step 4  – LLM: generate narration script
-Step 5  – Chatterbox TTS: synthesise voice
-Step 6  – Merge TTS audio onto video
-Step 7  – Whisper: transcribe TTS for subtitles
-Step 8  – Burn subtitles onto final video
-"""
-
 import os
 import subprocess
 import sys
 
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-
-
-# ══════════════════════════════════════════════════════════════════════════
-# ⚙️  SETTINGS – change these to customise the pipeline
-# ══════════════════════════════════════════════════════════════════════════
-
-# -- Frame extraction ---------------------------------------------------------
-FRAME_INTERVAL = "2.0"          # seconds between extracted frames
-
-# -- FastVLM ------------------------------------------------------------------
-FASTVLM_MODEL_PATH = os.path.join(
-    PROJECT_ROOT, "checkpoints", "llava-fastvithd_1.5b_stage3"
+from config import (
+    PROJECT_ROOT,
+    FRAME_INTERVAL,
+    FASTVLM_MODEL_PATH,
+    FASTVLM_PROMPT,
+    WHISPER_MODEL,
+    WHISPER_LANG,
+    LLM_MODEL,
+    TTS_REF_AUDIO,
+    MERGE_MIX_AUDIO,
+    SUBTITLE_FONT_NAME,
+    SUBTITLE_FONT_SIZE,
+    SUBTITLE_FONT_COLOR,
+    SUBTITLE_BORDER_COLOR,
+    SUBTITLE_BORDER_WIDTH,
+    SUBTITLE_MAX_WORDS,
+    FASTVLM_PYTHON,
+    CHATTERBOX_PYTHON,
+    FASTER_WHISPER_PYTHON,
 )
-FASTVLM_PROMPT = "Describe what is happening in this frame in two sentences."
 
-# -- Whisper (used in both step 3 and step 7) ---------------------------------
-WHISPER_MODEL   = "base"        # tiny | base | small | medium | large-v3
-WHISPER_LANG    = None          # e.g. "en", or None for auto-detect
-
-# -- LLM (Ollama) -------------------------------------------------------------
-LLM_MODEL       = "qwen3.5:9b" # any model available in your Ollama instance
-
-# -- TTS (Chatterbox) ---------------------------------------------------------
-TTS_REF_AUDIO   = "./samples/1.mp3"   # reference voice clip
-
-# -- Subtitle styling ---------------------------------------------------------
-SUBTITLE_FONT_NAME    = "Arial"
-SUBTITLE_FONT_SIZE    = "24"
-SUBTITLE_FONT_COLOR   = "#FFFFFF"
-SUBTITLE_BORDER_COLOR = "#000000"
-SUBTITLE_BORDER_WIDTH = "2"
-SUBTITLE_MAX_WORDS    = "3"     # words shown at once
-
-# ══════════════════════════════════════════════════════════════════════════
-# Python interpreters – one per virtual environment
-# ══════════════════════════════════════════════════════════════════════════
-
-FASTVLM_PYTHON = "/opt/homebrew/Caskroom/miniforge/base/envs/fastvlm/bin/python"
-
-CHATTERBOX_PYTHON = os.path.join(PROJECT_ROOT, "venvs", "chatterbox", "bin", "python")
 if not os.path.isfile(CHATTERBOX_PYTHON):
     CHATTERBOX_PYTHON = sys.executable
 
-FASTER_WHISPER_PYTHON = os.path.join(
-    PROJECT_ROOT, "venvs", "faster_whisper", "bin", "python"
-)
 if not os.path.isfile(FASTER_WHISPER_PYTHON):
     raise FileNotFoundError(
         f"\n[pipeline] faster_whisper venv not found at:\n  {FASTER_WHISPER_PYTHON}\n"
-        "Run this first:\n  bash venvs/faster_whisper/setup.sh"
+        "Run:  bash venvs/faster_whisper/setup.sh"
     )
-
-# ══════════════════════════════════════════════════════════════════════════
-# Output paths
-# ══════════════════════════════════════════════════════════════════════════
 
 FRAMES_DIR      = os.path.join(PROJECT_ROOT, "outputs", "frames")
 FRAMES_FILE     = "outputs/frames.txt"
@@ -82,10 +41,6 @@ VIDEO_TTS       = "outputs/video_with_tts.mp4"
 SRT_FILE        = "outputs/subtitles.srt"
 FINAL_VIDEO     = "outputs/final_video.mp4"
 
-
-# ══════════════════════════════════════════════════════════════════════════
-# Step runners
-# ══════════════════════════════════════════════════════════════════════════
 
 def step1_extract_frames(video_path: str) -> str:
     os.makedirs(FRAMES_DIR, exist_ok=True)
@@ -142,14 +97,14 @@ def step5_tts(script_file: str, voice_output: str):
     ], check=True)
 
 
-def step6_merge_av(video_path: str, audio_path: str, output_path: str, mix: bool = False):
+def step6_merge_av(video_path: str, audio_path: str, output_path: str):
     cmd = [
         FASTER_WHISPER_PYTHON, "./src/step6_merge_av.py",
         "--video",  video_path,
         "--audio",  audio_path,
         "--output", output_path,
     ]
-    if mix:
+    if MERGE_MIX_AUDIO:
         cmd.append("--mix")
     subprocess.run(cmd, check=True)
 
@@ -170,19 +125,15 @@ def step8_burn_subtitles(video_path: str, subtitle_path: str, output_path: str):
     subprocess.run([
         FASTER_WHISPER_PYTHON, "./src/step8_burn_subtitles.py",
         video_path, subtitle_path,
-        "-o",               output_path,
-        "--font-name",      SUBTITLE_FONT_NAME,
-        "--font-size",      SUBTITLE_FONT_SIZE,
-        "--font-color",     SUBTITLE_FONT_COLOR,
-        "--border-color",   SUBTITLE_BORDER_COLOR,
-        "--border-width",   SUBTITLE_BORDER_WIDTH,
-        "--max-words",      SUBTITLE_MAX_WORDS,
+        "-o",             output_path,
+        "--font-name",    SUBTITLE_FONT_NAME,
+        "--font-size",    SUBTITLE_FONT_SIZE,
+        "--font-color",   SUBTITLE_FONT_COLOR,
+        "--border-color", SUBTITLE_BORDER_COLOR,
+        "--border-width", SUBTITLE_BORDER_WIDTH,
+        "--max-words",    SUBTITLE_MAX_WORDS,
     ], check=True)
 
-
-# ══════════════════════════════════════════════════════════════════════════
-# Main
-# ══════════════════════════════════════════════════════════════════════════
 
 def main(video_path: str):
     os.makedirs("outputs", exist_ok=True)
@@ -214,8 +165,6 @@ def main(video_path: str):
     print("\n✅ Pipeline finished!")
     print("   Final video:", FINAL_VIDEO)
 
-
-# ══════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
     import argparse

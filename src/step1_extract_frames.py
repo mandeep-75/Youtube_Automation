@@ -1,9 +1,3 @@
-# extract_frames.py
-# Purpose: Extract frames from a video using cv2 (OpenCV).
-# Run this with the environment that has cv2 installed (e.g. chatterbox env).
-# It saves frames as PNG images and timestamps to a JSON manifest file.
-# The fastvlm_describe.py script then reads those files.
-
 import os
 import argparse
 import json
@@ -12,11 +6,6 @@ from datetime import timedelta
 
 
 def extract_frames(video_path: str, interval_sec: float, output_dir: str) -> str:
-    """
-    Extracts frames from `video_path` every `interval_sec` seconds.
-    Saves each frame as a numbered PNG inside `output_dir`.
-    Returns the path to a JSON manifest with frame paths and timestamps.
-    """
     os.makedirs(output_dir, exist_ok=True)
 
     cap = cv2.VideoCapture(video_path)
@@ -56,12 +45,10 @@ def extract_frames(video_path: str, interval_sec: float, output_dir: str) -> str
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Extract frames from a video using cv2 (run in the env that has OpenCV)."
-    )
-    parser.add_argument("--video-file", type=str, required=True, help="Path to the input video file.")
-    parser.add_argument("--interval", type=float, default=2.0, help="Interval in seconds between extracted frames.")
-    parser.add_argument("--output-dir", type=str, default="outputs/frames", help="Directory to save extracted frames.")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--video-file", type=str, required=True)
+    parser.add_argument("--interval", type=float, default=2.0)
+    parser.add_argument("--output-dir", type=str, default="outputs/frames")
     args = parser.parse_args()
 
     extract_frames(args.video_file, args.interval, args.output_dir)

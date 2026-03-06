@@ -1,11 +1,4 @@
 #!/usr/bin/env python3
-"""
-Hard Burn Subtitle Tool
-- YouTube/TikTok style word highlight
-- One active word at a time
-- Smooth zoom animation
-- Centered vertically
-"""
 
 import argparse
 import subprocess
@@ -20,10 +13,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("subtitle-burner")
 
 
-# -------------------------------------------------
-# Helpers
-# -------------------------------------------------
-
 def hex_to_rgb(hex_color: str):
     hex_color = hex_color.lstrip("#")
     r = int(hex_color[0:2], 16)
@@ -31,10 +20,6 @@ def hex_to_rgb(hex_color: str):
     b = int(hex_color[4:6], 16)
     return r, g, b
 
-
-# -------------------------------------------------
-# Core
-# -------------------------------------------------
 
 class SubtitleBurner:
 
@@ -51,7 +36,6 @@ class SubtitleBurner:
         border_width: int,
         max_words: int,
     ):
-
         if not input_video.exists():
             raise FileNotFoundError(input_video)
 
@@ -61,7 +45,6 @@ class SubtitleBurner:
         self.input_video = input_video
         self.subtitle_file = subtitle_file
         self.output_video = output_video
-
         self.font_name = font_name
         self.font_size = font_size
         self.font_color = font_color
@@ -77,8 +60,6 @@ class SubtitleBurner:
             raise RuntimeError("FFmpeg not found in tools/ folder")
 
         self.ffmpeg = str(ffmpeg_path)
-
-    # -------------------------------------------------
 
     def _load_word_segments(self) -> List[Dict]:
         subs = pysubs2.load(self.subtitle_file)
@@ -102,10 +83,7 @@ class SubtitleBurner:
 
         return words
 
-    # -------------------------------------------------
-
     def _generate_ass(self) -> Path:
-
         words = self._load_word_segments()
 
         if not words:
@@ -113,7 +91,6 @@ class SubtitleBurner:
 
         ass = pysubs2.SSAFile()
 
-        # ---------------- STYLE ----------------
         style = pysubs2.SSAStyle()
         style.fontname = self.font_name
         style.fontsize = self.font_size
@@ -129,14 +106,11 @@ class SubtitleBurner:
 
         style.outline = self.border_width
         style.shadow = 0
-
-        # Vertical + horizontal center
-        style.alignment = 5  # center-center
+        style.alignment = 5
         style.marginv = 0
 
         ass.styles["Default"] = style
 
-        # ---------------- GROUP WORDS ----------------
         lines = []
         current = []
 
@@ -149,20 +123,14 @@ class SubtitleBurner:
         if current:
             lines.append(current)
 
-        # ---------------- BUILD EVENTS ----------------
         for line in lines:
-
             for i, active_word in enumerate(line):
-
                 start = int(active_word["start"] * 1000)
                 end = int(active_word["end"] * 1000)
 
                 text_parts = []
-
                 for j, w in enumerate(line):
-
                     if i == j:
-                        # Active word (yellow + smooth zoom)
                         part = (
                             "{\\c&H00FFFF&\\fscx115\\fscy115"
                             "\\t(0,150,\\fscx100\\fscy100)}"
@@ -170,22 +138,12 @@ class SubtitleBurner:
                             "{\\r}"
                         )
                     else:
-                        # Inactive word (white)
                         part = "{\\c&HFFFFFF&}" + w["text"]
-
                     text_parts.append(part)
 
                 full_text = " ".join(text_parts)
+                ass.events.append(pysubs2.SSAEvent(start=start, end=end, text=full_text))
 
-                ass.events.append(
-                    pysubs2.SSAEvent(
-                        start=start,
-                        end=end,
-                        text=full_text
-                    )
-                )
-
-        # ---------------- SAVE ----------------
         tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".ass")
         tmp.close()
         ass.save(tmp.name)
@@ -193,55 +151,40 @@ class SubtitleBurner:
         logger.info(f"ASS created: {tmp.name}")
         return Path(tmp.name)
 
-    # -------------------------------------------------
-
     def burn(self):
-
         logger.info("Hard burn mode")
-
         ass_file = self._generate_ass()
 
         try:
             cmd = [
-                self.ffmpeg,
-                "-y",
+                self.ffmpeg, "-y",
                 "-i", str(self.input_video),
                 "-vf", f"subtitles='{ass_file}'",
                 "-c:a", "copy",
                 str(self.output_video)
             ]
-
             subprocess.run(cmd, check=True)
             logger.info(f"Done: {self.output_video}")
-
         finally:
             if ass_file.exists():
                 os.unlink(ass_file)
 
 
-# -------------------------------------------------
-# CLI
-# -------------------------------------------------
-
 def main():
     parser = argparse.ArgumentParser()
-
     parser.add_argument("input_video")
     parser.add_argument("subtitle_file")
     parser.add_argument("-o", "--output", default="output.mp4")
-
-    parser.add_argument("--font-name", default="Arial")
-    parser.add_argument("--font-size", type=int, default=12)
-    parser.add_argument("--font-color", default="#FFFFFF")
-    parser.add_argument("--highlight-color", default="#FFFF00")
-    parser.add_argument("--border-color", default="#000000")
-    parser.add_argument("--border-width", type=int, default=4)
-
-    parser.add_argument("--max-words", type=int, default=3)
-
+    parser.add_argument("--font-name",       default="Arial")
+    parser.add_argument("--font-size",        type=int, default=12)
+    parser.add_argument("--font-color",       default="#FFFFFF")
+    parser.add_argument("--highlight-color",  default="#FFFF00")
+    parser.add_argument("--border-color",     default="#000000")
+    parser.add_argument("--border-width",     type=int, default=4)
+    parser.add_argument("--max-words",        type=int, default=3)
     args = parser.parse_args()
 
-    burner = SubtitleBurner(
+    SubtitleBurner(
         Path(args.input_video),
         Path(args.subtitle_file),
         Path(args.output),
@@ -252,9 +195,7 @@ def main():
         args.border_color,
         args.border_width,
         args.max_words,
-    )
-
-    burner.burn()
+    ).burn()
 
 
 if __name__ == "__main__":

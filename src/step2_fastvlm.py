@@ -67,10 +67,7 @@ def main(args):
 
     frames, timestamps = load_frames_from_manifest(args.manifest)
 
-    # Strip any leading <image> token from args.prompt — build_prompt() inserts it
     prompt_text = args.prompt.replace(DEFAULT_IMAGE_TOKEN, "").lstrip()
-
-    # build_prompt wraps the text in the correct qwen_2 chat template
     prompt = build_prompt(prompt_text, model, args.conv_mode)
     input_ids = tokenizer_image_token(
         prompt,
@@ -100,8 +97,6 @@ def main(args):
                         if device.type != "cpu"
                         else image_tensor.unsqueeze(0).to(device),
                     image_sizes=[image.size],
-
-
                     do_sample=True,
                     temperature=0.2,
                     top_p=0.8,
@@ -110,11 +105,9 @@ def main(args):
                     repetition_penalty=1.3,
                     eos_token_id=tokenizer.eos_token_id,
                     pad_token_id=tokenizer.pad_token_id,
-
                     use_cache=True,
                 )
 
-          
             new_tokens = output_ids[:, input_token_len:]
             text_output = tokenizer.batch_decode(
                 new_tokens,
@@ -122,7 +115,6 @@ def main(args):
             )[0].strip()
 
             line = f"{timestamps[idx]} - {text_output}"
-
             print("→", line, flush=True)
             f.write(line + "\n")
             f.flush()
@@ -131,25 +123,14 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Run FastVLM inference on pre-extracted frames."
-    )
-    parser.add_argument(
-        "--prompt",
-        type=str,
-        default="Describe what is happening in this frame in two sentences.",
-        help="Custom prompt for image description (without <image> token, it is added automatically)."
-    )
-
-    parser.add_argument("--manifest", type=str, required=True,
-                        help="Path to manifest.json.")
-    parser.add_argument("--model-path", type=str, required=True,
-                        help="Path to FastVLM checkpoint.")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--prompt", type=str,
+                        default="Describe this frame in two sentences.")
+    parser.add_argument("--manifest", type=str, required=True)
+    parser.add_argument("--model-path", type=str, required=True)
     parser.add_argument("--model-base", type=str, default=None)
     parser.add_argument("--conv-mode", type=str, default="qwen_2")
-
-    parser.add_argument("--output-file", type=str,
-                        default="outputs/frames.txt")
+    parser.add_argument("--output-file", type=str, default="outputs/frames.txt")
 
     args = parser.parse_args()
     main(args)
