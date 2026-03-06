@@ -70,11 +70,11 @@ ORIGINAL_AUDIO_VOLUME = 0.5    # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
 # ─────────────────────────────────────────────────────────────────────────────
 
 SUBTITLE_FONT_NAME    = "Arial"
-SUBTITLE_FONT_SIZE    = "24"
+SUBTITLE_FONT_SIZE    = "12"
 SUBTITLE_FONT_COLOR   = "#FFFFFF"    # text colour (white)
 SUBTITLE_BORDER_COLOR = "#000000"    # outline colour (black)
-SUBTITLE_BORDER_WIDTH = "2"
-SUBTITLE_MAX_WORDS    = "3"          # words visible on screen at once
+SUBTITLE_BORDER_WIDTH = "0"
+SUBTITLE_MAX_WORDS    = "1"          # words visible on screen at once
 
 
 # ─────────────────────────────────────────────────────────────────────────────
