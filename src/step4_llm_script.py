@@ -5,39 +5,24 @@ import os
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
-FRAMES_ONLY_PROMPT = """\
-Rewrite the following frame descriptions into a cinematic, high-retention YouTube Shorts narration script.
-Start with a powerful hook that begins with phrases like "This man...", "Those men...", "This person...", "These people...", or "This moment..." to immediately create curiosity and tension.
-The narration should feel dramatic, suspenseful, and emotionally intense, like a storyteller describing a shocking moment. Focus on actions, emotions, danger, and unfolding events, rather than naming specific objects or items that might appear in the scene.
-Explain what seems to be happening in a way that is clear, vivid, and engaging. Slightly exaggerate the stakes so the moment feels urgent and meaningful.
-Use immersive, cinematic language. The script must be one continuous paragraph, with no timestamps, scene labels, bullet points, or line breaks.
-End with a strong, memorable closing line that leaves the viewer with a warning, realization, or life lesson.
-The entire narration should be short enough to be read in under 60 seconds (approximately 120-150 words).
-
-FRAME DESCRIPTIONS:
-{vision_text}
-"""
-
-COMBINED_PROMPT = """\
+UNIFIED_PROMPT = """\
 You are a professional YouTube Shorts scriptwriter who specialises in high-retention, cinematic narration.
 
-You have two sources of information about a video:
-
-1. ORIGINAL DIALOGUE (what was actually said in the video, with timestamps):
+DATA SOURCES:
+1. ORIGINAL DIALOGUE (if any):
 {transcript_text}
 
-2. VISUAL FRAME DESCRIPTIONS (what the AI vision model saw in each frame):
+2. VISUAL FRAME DESCRIPTIONS (AI vision observations):
 {vision_text}
 
-Using BOTH sources:
-- Let the original dialogue anchor you to what is really happening in the video.
-- Use the frame descriptions to add vivid visual detail and atmosphere.
-- Prioritise accurate story facts from the dialogue; use frames for colour and drama.
-
-Write a single, continuous narration paragraph (no timestamps, no bullet points, no scene labels).
+INSTRUCTIONS:
+- Use BOTH sources if available. If dialogue is present, use it as the anchor for the story's facts.
+- Use visual descriptions to add atmosphere, tension, and vivid cinematic detail.
+- If NO dialogue is provided, craft a compelling narrative purely from the visual action.
+- Write a single, continuous narration paragraph (no timestamps, no bullet points, no scene labels).
 - Open with a powerful hook: "This man...", "These people...", "This moment...", or similar.
-- Build tension steadily. Keep the tone dramatic, suspenseful, emotionally intense.
-- Translate any specific technical objects or jargon into plain, universal language.
+- Build tension steadily. Keep the tone dramatic, suspenseful, and emotionally intense.
+- Translate specific technical objects or jargon into plain, universal language.
 - End with a strong closing line — a warning, a realisation, or a life lesson.
 - Target length: 120-150 words (readable in under 60 seconds).
 
@@ -46,16 +31,15 @@ Return ONLY the narration script. No preamble, no explanation.
 
 
 def generate_script(vision_text: str, transcript_text: str | None = None,
-                    model: str = "qwen3.5:9b", ollama_url: str = OLLAMA_URL) -> str:
-    if transcript_text and transcript_text.strip():
-        print("[step4_llm_script] Mode: frames + transcript (combined)")
-        prompt = COMBINED_PROMPT.format(
-            transcript_text=transcript_text.strip(),
-            vision_text=vision_text.strip(),
-        )
-    else:
-        print("[step4_llm_script] Mode: frames only")
-        prompt = FRAMES_ONLY_PROMPT.format(vision_text=vision_text.strip())
+                    model: str = "qwen3.5:9b", ollama_url: str = OLLAMA_URL) -> tuple[str, str]:
+    
+    transcript_val = transcript_text.strip() if transcript_text and transcript_text.strip() else "[No audio script available for this video]"
+    
+    print(f"[step4_llm_script] Generating script using unified prompt...")
+    prompt = UNIFIED_PROMPT.format(
+        transcript_text=transcript_val,
+        vision_text=vision_text.strip(),
+    )
 
     try:
         print()
@@ -66,22 +50,54 @@ def generate_script(vision_text: str, transcript_text: str | None = None,
         )
         response.raise_for_status()
 
-        full_text = []
+        thinking_text = []
+        response_text = []
+        
+        last_was_thinking = False
+
         for line in response.iter_lines():
             if not line:
                 continue
             chunk = json.loads(line)
+            
+            # 1. Native Thinking (for models like DeepSeek-R1, Qwen-Reasoning)
+            thought = chunk.get("thinking", "")
+            if thought:
+                if not last_was_thinking:
+                    print("\n--- Model is thinking ---\n", end="", flush=True)
+                    last_was_thinking = True
+                print(thought, end="", flush=True)
+                thinking_text.append(thought)
+            
+            # 2. Final Response
             token = chunk.get("response", "")
-            print(token, end="", flush=True)
-            full_text.append(token)
+            if token:
+                if last_was_thinking:
+                    print("\n\n--- Final Script ---\n", end="", flush=True)
+                    last_was_thinking = False
+                print(token, end="", flush=True)
+                response_text.append(token)
+                
             if chunk.get("done"):
                 break
 
         print()
-        return "".join(full_text)
+        
+        final_script = "".join(response_text).strip()
+        final_thinking = "".join(thinking_text).strip()
+        
+        # If the model didn't use native 'thinking' field but used <think> tags in response
+        if not final_thinking and "<think>" in final_script:
+            if "</think>" in final_script:
+                parts = final_script.split("</think>")
+                final_thinking = parts[0].replace("<think>", "").strip()
+                final_script = parts[1].strip()
+            
+        return final_script, final_thinking
+
     except Exception as e:
         print(f"\n[step4_llm_script] Error calling LLM: {e}")
-        return vision_text
+        return vision_text, ""
 
 
 if __name__ == "__main__":
@@ -105,8 +121,16 @@ if __name__ == "__main__":
         print("[step4_llm_script] No transcript — frames-only mode.")
 
     print(f"[step4_llm_script] Generating script ...")
-    script = generate_script(vision_text, transcript_text, model=args.model, ollama_url=args.ollama_url)
+    script, thinking = generate_script(vision_text, transcript_text, model=args.model, ollama_url=args.ollama_url)
 
+    # Save final script
     with open(args.output, "w", encoding="utf-8") as f:
         f.write(script)
     print(f"[step4_llm_script] Script saved to {args.output}")
+
+    # Save thinking log if it exists
+    if thinking:
+        think_path = args.output.replace(".txt", ".thinking.txt")
+        with open(think_path, "w", encoding="utf-8") as f:
+            f.write(thinking)
+        print(f"[step4_llm_script] Thinking log saved to {think_path}")

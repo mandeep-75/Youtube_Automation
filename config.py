@@ -33,7 +33,7 @@ VISION_MODEL  = "qwen3-vl:8b" # Model name in Ollama
 VISION_PROMPT = "Describe this frame in one sentence."
 
 # VISION_PROMPT = """Describe the actions happening in this image.
-#                 Explain what the people or animals are doing and why.
+#                 Explain what the people or animals are doing .
 #                 Focus on activities, tasks, and interactions.
 #                 Write 2 clear sentences."""
 
