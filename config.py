@@ -18,15 +18,12 @@ FRAME_INTERVAL = "2.0"          # seconds between extracted frames (lower = more
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 2. FASTVLM  — visual frame description
+# 2. VISION MODEL  — visual frame description (via Ollama)
 # ─────────────────────────────────────────────────────────────────────────────
 
-FASTVLM_MODEL_PATH = os.path.join(
-    PROJECT_ROOT, "checkpoints", "llava-fastvithd_1.5b_stage3"
-)
+VISION_MODEL  = "qwen3-vl:8b" # Model name in Ollama
+VISION_PROMPT = "Describe this frame in one sentence."
 
-# Prompt sent to FastVLM for every frame (do NOT include <image> — added automatically)
-FASTVLM_PROMPT = "Describe this frame in one sentence."
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -79,7 +76,6 @@ SUBTITLE_MAX_WORDS    = "3"          # words visible on screen at once
 # Only change if your conda / venv paths differ from the defaults.
 # ─────────────────────────────────────────────────────────────────────────────
 
-FASTVLM_PYTHON = "/opt/homebrew/Caskroom/miniforge/base/envs/fastvlm/bin/python"
 
 CHATTERBOX_PYTHON = os.path.join(PROJECT_ROOT, "venvs", "chatterbox", "bin", "python")
 

@@ -6,8 +6,8 @@ from pathlib import Path
 from config import (
     PROJECT_ROOT,
     FRAME_INTERVAL,
-    FASTVLM_MODEL_PATH,
-    FASTVLM_PROMPT,
+    VISION_MODEL,
+    VISION_PROMPT,
     WHISPER_MODEL,
     WHISPER_LANG,
     LLM_MODEL,
@@ -20,7 +20,6 @@ from config import (
     SUBTITLE_BORDER_COLOR,
     SUBTITLE_BORDER_WIDTH,
     SUBTITLE_MAX_WORDS,
-    FASTVLM_PYTHON,
     CHATTERBOX_PYTHON,
     FASTER_WHISPER_PYTHON,
 )
@@ -45,13 +44,13 @@ def step1_extract_frames(video_path: str, frames_dir: str) -> str:
     ], check=True)
     return manifest_path
 
-def step2_fastvlm(manifest_path: str, output_file: str):
+def step2_vision_describe(manifest_path: str, output_file: str):
     subprocess.run([
-        FASTVLM_PYTHON, "./src/step2_fastvlm.py",
-        "--manifest",    manifest_path,
-        "--model-path",  FASTVLM_MODEL_PATH,
-        "--output-file", output_file,
-        "--prompt",      FASTVLM_PROMPT,
+        CHATTERBOX_PYTHON, "./src/step2_qwen_vl.py",
+        "--manifest",     manifest_path,
+        "--model",        VISION_MODEL,
+        "--prompt",       VISION_PROMPT,
+        "--output-file",  output_file,
     ], check=True)
 
 def step3_transcribe_original(video_path: str, output_file: str):
@@ -140,8 +139,8 @@ def run_pipeline(video_path: str):
     print("\n─── Step 1  Extract frames ───────────────────────────────────")
     manifest = step1_extract_frames(video_path, frames_dir)
 
-    print("\n─── Step 2  FastVLM frame descriptions ───────────────────────")
-    step2_fastvlm(manifest, frames_file)
+    print("\n─── Step 2  Vision frame descriptions ────────────────────────")
+    step2_vision_describe(manifest, frames_file)
 
     print("\n─── Step 3  Transcribe original audio ────────────────────────")
     step3_transcribe_original(video_path, transcript_file)
