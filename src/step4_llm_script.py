@@ -1,103 +1,149 @@
-import requests
+import ollama
 import argparse
-import json
 import os
+import re
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_URL = "http://localhost:11434"
 
+# Enhanced prompt for better high-retention scriptwriting and clear output separation
 UNIFIED_PROMPT = """\
-You are a professional YouTube Shorts scriptwriter who specialises in high-retention, cinematic narration.
+You are a professional YouTube Shorts scriptwriter specializing in high-retention, cinematic narration.
 
 DATA SOURCES:
 1. ORIGINAL DIALOGUE (if any):
 {transcript_text}
 
-2. VISUAL FRAME DESCRIPTIONS (AI vision observations):
+2. VISUAL FRAME DESCRIPTIONS:
 {vision_text}
 
 INSTRUCTIONS:
-- Use BOTH sources if available. If dialogue is present, use it as the anchor for the story's facts.
+- Create a compelling narrative that feels dramatic, suspenseful, and emotionally intense.
+- If dialogue is provided, use it as the anchor for the story's facts.
 - Use visual descriptions to add atmosphere, tension, and vivid cinematic detail.
-- If NO dialogue is provided, craft a compelling narrative purely from the visual action.
-- Write a single, continuous narration paragraph (no timestamps, no bullet points, no scene labels).
-- Open with a powerful hook: "This man...", "These people...", "This moment...", or similar.
-- Build tension steadily. Keep the tone dramatic, suspenseful, and emotionally intense.
-- Translate specific technical objects or jargon into plain, universal language.
-- End with a strong closing line — a warning, a realisation, or a life lesson.
-- Target length: 120-150 words (readable in under 60 seconds).
+- Target length: 120-180 words (readable in under 60 seconds).
+- OUTPUT FORMAT: Provide only the final narration script as ONE continuous paragraph.
+- DO NOT include timestamps, scene labels, or character names.
+- OPEN with a powerful hook and END with a strong closing line/life lesson.
+- If you use a reasoning/thinking process, YOU MUST provide the final script after your thinking is complete.
 
-Return ONLY the narration script. No preamble, no explanation.
+FINAL SCRIPT:
 """
 
+
+def extract_fallback_script(thinking_text: str) -> str:
+    """
+    If the model puts its final answer inside the thinking block, attempt to find it.
+    Look for common markers or the last long paragraph.
+    """
+    # Look for common final markers
+    markers = [
+        "FINAL SCRIPT:", "NARRATION SCRIPT:", "Final Script:", "Final Draft:",
+        "DRAFT 8:", "Draft:", "Script:", "Result:"
+    ]
+    for marker in markers:
+        if marker in thinking_text:
+            parts = thinking_text.split(marker)
+            potential = parts[-1].strip()
+            if len(potential) > 50: # Likely the script
+                return potential
+
+    # Fallback: Find the last continuous block of text that looks like a paragraph (no list numbers)
+    stripped = thinking_text.strip()
+    if not stripped:
+        return ""
+    
+    # Split by double newlines or large breaks
+    blocks = [b.strip() for b in re.split(r'\n\s*\n', stripped) if b.strip()]
+    if blocks:
+        # Check from end to find something that doesn't look like a numbered item or short label
+        for block in reversed(blocks):
+            if len(block) > 100 and not block.startswith(("1.", "2.", "Step", "Count", "Word")):
+                return block
+                
+    return ""
 
 def generate_script(vision_text: str, transcript_text: str | None = None,
                     model: str = "qwen3.5:9b", ollama_url: str = OLLAMA_URL) -> tuple[str, str]:
     
-    transcript_val = transcript_text.strip() if transcript_text and transcript_text.strip() else "[No audio script available for this video]"
+    # Clean up empty strings or placeholders
+    transcript_val = transcript_text.strip() if transcript_text and transcript_text.strip() else "[No audio script available]"
     
-    print(f"[step4_llm_script] Generating script using unified prompt...")
-    prompt = UNIFIED_PROMPT.format(
+    # Prepare the prompt
+    prompt_content = UNIFIED_PROMPT.format(
         transcript_text=transcript_val,
         vision_text=vision_text.strip(),
     )
 
     try:
-        print()
-        response = requests.post(
-            ollama_url,
-            json={"model": model, "prompt": prompt, "stream": True},
+        # Initialize the official Ollama client
+        # Note: ollama_url might be "http://localhost:11434/api/generate", 
+        # but the SDK Client usually just takes the base host.
+        base_host = ollama_url.split("/api")[0] if "/api" in ollama_url else ollama_url
+        client = ollama.Client(host=base_host)
+        
+        print(f"[step4_llm_script] Calling model {model} via SDK...")
+        
+        stream = client.chat(
+            model=model,
+            messages=[{'role': 'user', 'content': prompt_content}],
             stream=True,
+            options={
+                "num_ctx": 16384,
+                "temperature": 0.7,
+            }
         )
-        response.raise_for_status()
 
-        thinking_text = []
-        response_text = []
-        
-        last_was_thinking = False
+        accumulated_thinking = []
+        accumulated_content = []
+        in_thinking = False
 
-        for line in response.iter_lines():
-            if not line:
-                continue
-            chunk = json.loads(line)
+        for chunk in stream:
+            # Check for thinking field (native support in SDK)
+            if hasattr(chunk.message, 'thinking') and chunk.message.thinking:
+                if not in_thinking:
+                    in_thinking = True
+                    print("\n[Thinking] ", end="", flush=True)
+                print(chunk.message.thinking, end="", flush=True)
+                accumulated_thinking.append(chunk.message.thinking)
             
-            # 1. Native Thinking (for models like DeepSeek-R1, Qwen-Reasoning)
-            thought = chunk.get("thinking", "")
-            if thought:
-                if not last_was_thinking:
-                    print("\n--- Model is thinking ---\n", end="", flush=True)
-                    last_was_thinking = True
-                print(thought, end="", flush=True)
-                thinking_text.append(thought)
-            
-            # 2. Final Response
-            token = chunk.get("response", "")
-            if token:
-                if last_was_thinking:
-                    print("\n\n--- Final Script ---\n", end="", flush=True)
-                    last_was_thinking = False
-                print(token, end="", flush=True)
-                response_text.append(token)
-                
-            if chunk.get("done"):
-                break
+            # Check for content field
+            elif hasattr(chunk.message, 'content') and chunk.message.content:
+                if in_thinking:
+                    in_thinking = False
+                    print("\n\n[Script Output] ", end="", flush=True)
+                print(chunk.message.content, end="", flush=True)
+                accumulated_content.append(chunk.message.content)
 
-        print()
+        print("\n")
         
-        final_script = "".join(response_text).strip()
-        final_thinking = "".join(thinking_text).strip()
+        final_script = "".join(accumulated_content).strip()
+        final_thinking = "".join(accumulated_thinking).strip()
         
-        # If the model didn't use native 'thinking' field but used <think> tags in response
+        # Handle models that use <think> tags inside the response field instead of the field
         if not final_thinking and "<think>" in final_script:
             if "</think>" in final_script:
                 parts = final_script.split("</think>")
                 final_thinking = parts[0].replace("<think>", "").strip()
                 final_script = parts[1].strip()
-            
+            else:
+                final_thinking = final_script.replace("<think>", "").strip()
+                final_script = ""
+
+        # FALLBACK: If final_script is empty but thinking is not, try to extract a script
+        if not final_script and final_thinking:
+            print("[step4_llm_script] Warning: Final script empty. Attempting to extract from thinking process...")
+            extracted = extract_fallback_script(final_thinking)
+            if extracted:
+                print(f"[step4_llm_script] Extracted {len(extracted)} characters from thinking block.")
+                final_script = extracted
+            else:
+                print("[step4_llm_script] Failed to extract clean script from thinking process.")
+
         return final_script, final_thinking
 
     except Exception as e:
-        print(f"\n[step4_llm_script] Error calling LLM: {e}")
-        return vision_text, ""
+        print(f"\n[step4_llm_script] Error calling Ollama SDK: {e}")
+        return "", f"Error: {e}"
 
 
 if __name__ == "__main__":
@@ -109,28 +155,28 @@ if __name__ == "__main__":
     parser.add_argument("--ollama-url", default=OLLAMA_URL)
     args = parser.parse_args()
 
+    # Load Vision Descriptions
     with open(args.input, "r", encoding="utf-8") as f:
-        vision_text = f.read()
+        vision_data = f.read()
 
-    transcript_text = None
+    # Load Transcript
+    transcript_data = None
     if args.transcript and os.path.isfile(args.transcript):
         with open(args.transcript, "r", encoding="utf-8") as f:
-            transcript_text = f.read()
+            transcript_data = f.read()
         print(f"[step4_llm_script] Loaded transcript: {args.transcript}")
-    else:
-        print("[step4_llm_script] No transcript — frames-only mode.")
 
-    print(f"[step4_llm_script] Generating script ...")
-    script, thinking = generate_script(vision_text, transcript_text, model=args.model, ollama_url=args.ollama_url)
+    # Generate
+    script, thinking = generate_script(vision_data, transcript_data, model=args.model, ollama_url=args.ollama_url)
 
-    # Save final script
+    # Save script
     with open(args.output, "w", encoding="utf-8") as f:
-        f.write(script)
-    print(f"[step4_llm_script] Script saved to {args.output}")
+        f.write(script or "[Error: Could not generate script from model response]")
+    print(f"[step4_llm_script] Script saved to {args.output} ({len(script)} chars)")
 
-    # Save thinking log if it exists
+    # Save thinking (if any)
     if thinking:
         think_path = args.output.replace(".txt", ".thinking.txt")
         with open(think_path, "w", encoding="utf-8") as f:
             f.write(thinking)
-        print(f"[step4_llm_script] Thinking log saved to {think_path}")
+        print(f"[step4_llm_script] Thinking process log saved to {think_path}")

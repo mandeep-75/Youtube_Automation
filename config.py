@@ -23,7 +23,6 @@ OLLAMA_URL = "http://localhost:11434/api/generate"
 
 FRAME_INTERVAL = "2.0"          # seconds between extracted frames (lower = more frames)
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. VISION MODEL  — visual frame description (via Ollama)
 # ─────────────────────────────────────────────────────────────────────────────
