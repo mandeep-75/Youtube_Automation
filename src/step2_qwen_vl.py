@@ -41,8 +41,6 @@ def describe_image(client, image_path, model, prompt):
                     print("\n\nAnswer:\n", end="", flush=True)
                     in_thinking = False
 
-                response_text.append(token)
-                print(token, end="", flush=True)
 
         print()  # newline after completion
         return "".join(response_text).strip()
