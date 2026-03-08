@@ -87,37 +87,26 @@ def generate_script(vision_text: str, transcript_text: str | None = None,
             model=model,
             messages=[{'role': 'user', 'content': prompt_content}],
             stream=True,
+            think=False,
             options={
                 "num_ctx": 16384,
                 "temperature": 0.7,
             }
         )
 
-        accumulated_thinking = []
         accumulated_content = []
-        in_thinking = False
 
         for chunk in stream:
-            # Check for thinking field (native support in SDK)
-            if hasattr(chunk.message, 'thinking') and chunk.message.thinking:
-                if not in_thinking:
-                    in_thinking = True
-                    print("\n[Thinking] ", end="", flush=True)
-                print(chunk.message.thinking, end="", flush=True)
-                accumulated_thinking.append(chunk.message.thinking)
-            
             # Check for content field
-            elif hasattr(chunk.message, 'content') and chunk.message.content:
-                if in_thinking:
-                    in_thinking = False
-                    print("\n\n[Script Output] ", end="", flush=True)
-                print(chunk.message.content, end="", flush=True)
-                accumulated_content.append(chunk.message.content)
+            token = getattr(chunk.message, 'content', '')
+            if token:
+                accumulated_content.append(token)
+                # print(token, end="", flush=True) # Optional: comment out for silent progress
 
         print("\n")
         
         final_script = "".join(accumulated_content).strip()
-        final_thinking = "".join(accumulated_thinking).strip()
+        final_thinking = "" # Since we disabled it
         
         # Handle models that use <think> tags inside the response field instead of the field
         if not final_thinking and "<think>" in final_script:

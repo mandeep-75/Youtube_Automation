@@ -22,27 +22,28 @@ def describe_image(image_path, model, prompt, ollama_url):
             model=model,
             prompt=prompt,
             images=[image_path],
-            stream=True
+            stream=True,
+            think=True
         )
 
         response_text = []
-        last_was_thinking = False
+        in_thinking = False
 
         for chunk in stream:
             # SDK maps 'thinking' field if model supports reasoning
             thought = getattr(chunk, 'thinking', '')
             if thought:
-                if not last_was_thinking:
-                    tqdm.write("\n    [Thinking] ", end="")
-                    last_was_thinking = True
+                if not in_thinking:
+                    tqdm.write('Thinking:\n', end='')
+                    in_thinking = True
                 tqdm.write(thought, end="")
             
             # Content of the response
             token = getattr(chunk, 'response', '')
             if token:
-                if last_was_thinking:
-                    tqdm.write("\n    [Result] ", end="")
-                    last_was_thinking = False
+                if in_thinking:
+                    tqdm.write('\n\nAnswer:\n', end='')
+                    in_thinking = False
                 response_text.append(token)
                 tqdm.write(token, end="")
 
