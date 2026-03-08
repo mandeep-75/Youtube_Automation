@@ -27,7 +27,7 @@ FRAME_INTERVAL = "2.0"          # seconds between extracted frames (lower = more
 # 2. VISION MODEL  — visual frame description (via Ollama)
 # ─────────────────────────────────────────────────────────────────────────────
 
-VISION_MODEL  = "qwen3-vl:8b" # Model name in Ollama
+VISION_MODEL  = "qwen3-vl:2b" # Model name in Ollama
 
 VISION_PROMPT = "Describe this frame in one sentence."
 
