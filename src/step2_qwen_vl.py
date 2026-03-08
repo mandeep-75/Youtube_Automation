@@ -5,20 +5,17 @@ import ollama
 from tqdm import tqdm
 
 
-def describe_image(client, image_path, model, prompt):
+def describe_batch(client, image_paths, model, prompt):
     """
-    Sends a single image to Ollama for description and streams tokens live.
+    Sends multiple images to Ollama in ONE request to avoid
+    repeated model initialization.
     """
-
-    if not os.path.isfile(image_path):
-        tqdm.write(f"⚠️ Warning: Image not found, skipping: {image_path}")
-        return None
 
     try:
         stream = client.generate(
             model=model,
             prompt=prompt,
-            images=[image_path],
+            images=image_paths,
             stream=True,
         )
 
@@ -26,6 +23,7 @@ def describe_image(client, image_path, model, prompt):
         in_thinking = False
 
         for chunk in stream:
+
             # thinking tokens
             thought = chunk.get("thinking", "")
             if thought:
@@ -44,7 +42,7 @@ def describe_image(client, image_path, model, prompt):
                 response_text.append(token)
                 print(token, end="", flush=True)
 
-        print()  # newline after completion
+        print()
         return "".join(response_text).strip()
 
     except Exception as e:
@@ -72,11 +70,16 @@ def main(args):
             image_path = entry["path"]
             timestamp = entry["timestamp"]
 
+            if not os.path.isfile(image_path):
+                tqdm.write(f"⚠️ Warning: Image not found, skipping: {image_path}")
+                continue
+
             tqdm.write(f"\n[{timestamp}] {os.path.basename(image_path)}")
 
-            description = describe_image(
+            # BATCH CALL (single image still works but keeps model loaded)
+            description = describe_batch(
                 client,
-                image_path,
+                [image_path],   # still supports batching
                 args.model,
                 args.prompt
             )
