@@ -67,7 +67,7 @@ def generate_script(vision_text, transcript_text=None,
     stream = client.chat(
         model=model,
         messages=[{'role': 'user', 'content': prompt_content}],
-        stream=True,
+        stream=False,
         options={
             "num_ctx": 16384,
             "temperature": 0.7,
