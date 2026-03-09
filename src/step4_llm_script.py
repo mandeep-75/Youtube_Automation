@@ -16,17 +16,26 @@ DATA SOURCES:
 {vision_text}
 
 INSTRUCTIONS:
-- Create a compelling narrative that feels dramatic, suspenseful, and emotionally intense.
-- If dialogue is provided, use it as the anchor for the story's facts.
-- Use visual descriptions to add atmosphere, tension, and vivid cinematic detail.
-- Target length: 120-180 words (readable in under 60 seconds).
-- OUTPUT FORMAT: Provide only the final narration script as ONE continuous paragraph.
-- DO NOT include timestamps, scene labels, or character names.
-- OPEN with a powerful hook and END with a strong closing line/life lesson.
+- Create a dramatic, suspenseful, and emotionally engaging narrative suitable for a viral YouTube Shorts video.
+- If dialogue is provided, treat it as the factual backbone of the story.
+- Use the visual descriptions to add cinematic detail, atmosphere, tension, and emotional context.
+- The FIRST sentence MUST start with: "This man", "This woman", or "This".
+- Write in a storytelling style that builds curiosity and keeps viewers watching.
+- Target length: 120–180 words, but a variation of ±20–30 words is acceptable if it improves storytelling flow.
+- The narration must read naturally in under ~60 seconds.
+
+OUTPUT FORMAT:
+- Output ONLY the final narration script.
+- Write it as ONE continuous paragraph.
+- Do NOT include timestamps, scene labels, bullet points, or character names.
+
+STRUCTURE GUIDELINE:
+- Start with a strong hook.
+- Build tension and curiosity in the middle.
+- End with a powerful closing line, twist, or life lesson.
 
 FINAL SCRIPT:
 """
-
 
 def extract_fallback_script(thinking_text: str) -> str:
     markers = [
@@ -59,15 +68,15 @@ def generate_script(vision_text, transcript_text=None,
         vision_text=vision_text.strip(),
     )
 
-    base_host = ollama_url.split("/api")[0] if "/api" in ollama_url else ollama_url
-    client = ollama.Client(host=base_host)
+    client = ollama.Client(host=ollama_url)
 
     print(f"[step4_llm_script] Calling model {model}...")
 
     stream = client.chat(
         model=model,
         messages=[{'role': 'user', 'content': prompt_content}],
-        stream=False,
+        think=True,          # ✅ ENABLE THINKING
+        stream=True,         # ✅ ENABLE STREAM
         options={
             "num_ctx": 16384,
             "temperature": 0.7,
@@ -77,30 +86,33 @@ def generate_script(vision_text, transcript_text=None,
     accumulated_content = []
     accumulated_thinking = []
 
-    print("\n[THINKING]\n", end="", flush=True)
+    in_thinking = False
 
     for chunk in stream:
+
         message = chunk.get("message", {})
 
-        reasoning = (
-            chunk.get("thinking")
-            or message.get("reasoning_content")
-            or message.get("thinking")
-            or ""
-        )
+        thinking = message.get("thinking")
+        content = message.get("content")
 
-        if reasoning:
-            accumulated_thinking.append(reasoning)
-            print(reasoning, end="", flush=True)
+        if thinking:
+            if not in_thinking:
+                print("\n[THINKING]\n", end="", flush=True)
+                in_thinking = True
+
+            accumulated_thinking.append(thinking)
+            print(thinking, end="", flush=True)
             continue
 
-        token = message.get("content", "")
-        if token:
-            if not accumulated_content:
+        if content:
+            if in_thinking:
                 print("\n\n[RESPONSE]\n", end="", flush=True)
+                in_thinking = False
+            elif not accumulated_content:
+                print("\n[RESPONSE]\n", end="", flush=True)
 
-            accumulated_content.append(token)
-            print(token, end="", flush=True)
+            accumulated_content.append(content)
+            print(content, end="", flush=True)
 
     print("\n")
 
@@ -148,6 +160,7 @@ if __name__ == "__main__":
 
     if thinking:
         think_path = args.output.replace(".txt", ".thinking.txt")
+
         with open(think_path, "w", encoding="utf-8") as f:
             f.write(thinking)
 

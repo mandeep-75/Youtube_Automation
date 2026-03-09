@@ -14,7 +14,7 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 # 0. GLOBAL / COMMON SETTINGS
 # ─────────────────────────────────────────────────────────────────────────────
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_URL = "http://localhost:11434"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -83,12 +83,12 @@ ORIGINAL_AUDIO_VOLUME = 0.5    # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
 # 7 & 8. SUBTITLES  — burn-in styling
 # ─────────────────────────────────────────────────────────────────────────────
 
-SUBTITLE_FONT_NAME      = "Arial"
+SUBTITLE_FONT_NAME      = "Bebas Neue"
 SUBTITLE_FONT_SIZE      = 12
 SUBTITLE_FONT_COLOR     = "#FFFFFF"    # text colour (white)
 SUBTITLE_HIGHLIGHT_COLOR = "#FFFF00"    # active word colour (yellow-ish)
 SUBTITLE_BORDER_COLOR   = "#000000"    # outline colour (black)
-SUBTITLE_BORDER_WIDTH   = 0
+SUBTITLE_BORDER_WIDTH   = 2
 SUBTITLE_MAX_WORDS      = 1          # words visible on screen at once
 
 
