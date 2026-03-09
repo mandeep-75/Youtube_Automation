@@ -37,6 +37,7 @@ STRUCTURE GUIDELINE:
 FINAL SCRIPT:
 """
 
+
 def extract_fallback_script(thinking_text: str) -> str:
     markers = [
         "FINAL SCRIPT:", "NARRATION SCRIPT:", "Final Script:",
@@ -75,8 +76,8 @@ def generate_script(vision_text, transcript_text=None,
     stream = client.chat(
         model=model,
         messages=[{'role': 'user', 'content': prompt_content}],
-        think=True,          # ✅ ENABLE THINKING
-        stream=True,         # ✅ ENABLE STREAM
+        think=False,        # Safe even if disabled
+        stream=True,
         options={
             "num_ctx": 16384,
             "temperature": 0.7,
@@ -85,17 +86,23 @@ def generate_script(vision_text, transcript_text=None,
 
     accumulated_content = []
     accumulated_thinking = []
-
     in_thinking = False
 
     for chunk in stream:
 
-        message = chunk.get("message", {})
+        if not chunk:
+            continue
 
-        thinking = message.get("thinking")
-        content = message.get("content")
+        message = chunk.get("message")
+        if not message:
+            continue
 
-        if thinking:
+        thinking = message.get("thinking", None)
+        content = message.get("content", None)
+
+        # ---- Thinking stream ----
+        if thinking is not None:
+
             if not in_thinking:
                 print("\n[THINKING]\n", end="", flush=True)
                 in_thinking = True
@@ -104,7 +111,9 @@ def generate_script(vision_text, transcript_text=None,
             print(thinking, end="", flush=True)
             continue
 
-        if content:
+        # ---- Response stream ----
+        if content is not None:
+
             if in_thinking:
                 print("\n\n[RESPONSE]\n", end="", flush=True)
                 in_thinking = False
