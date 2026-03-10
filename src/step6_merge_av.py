@@ -20,7 +20,7 @@ else:
 def _video_duration(path: str) -> float:
     ffprobe = FFMPEG_BIN.replace("ffmpeg", "ffprobe")
     if not os.path.isfile(ffprobe):
-        ffprobe = shutil.which("ffprobe") or "ffprobe"
+        ffprobe = shutil.which("ffprobe") or "/opt/homebrew/bin/ffprobe"
     result = subprocess.run(
         [ffprobe, "-v", "error", "-show_entries", "format=duration",
          "-of", "csv=p=0", path],
