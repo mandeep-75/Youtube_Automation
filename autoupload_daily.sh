@@ -52,9 +52,7 @@ fi
 
 # ── Find oldest un-uploaded folder in upload_queue/ ───────────────────────
 CHOSEN=""
-for folder in $(ls -1 "$QUEUE" | sort); do
-    full="$QUEUE/$folder"
-
+for full in "$QUEUE"/*; do
     # Skip README and non-directories
     if [ ! -d "$full" ]; then
         continue
