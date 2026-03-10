@@ -58,17 +58,20 @@ create_venv() {
     "$PROJECT_ROOT/venvs/$name/bin/python" -m pip install -r "$reqfile"
 }
 
-# build the two project venvs
+# build the project venvs
 create_venv chatterbox "$PROJECT_ROOT/requirements_chatterbox.txt"
 create_venv faster_whisper "$PROJECT_ROOT/requirements_whisper.txt"
+create_venv uploader "$PROJECT_ROOT/requirements_uploader.txt"
 
 echo "✅  All environments are ready!"
 echo "Note: the venv directories under 'venvs/' are purposely gitignored."
 echo "      You can re-run this script on any fresh clone without errors."
 echo ""
 echo "Available interpreters:"
-echo "  faster_whisper : venvs/faster_whisper/bin/python"
-echo "  chatterbox     : venvs/chatterbox/bin/python"
+echo "  faster_whisper : venvs/faster_whisper/bin/python
+  chatterbox     : venvs/chatterbox/bin/python
+  uploader       : venvs/uploader/bin/python
+"
 echo ""
 echo "Run the pipeline:"
 echo "    python pipeline.py <your_video.mp4>"

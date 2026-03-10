@@ -1,0 +1,9 @@
+# requirements_uploader.txt
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
+ollama
+pysubs2
+curses-menu
+resemble-perth==1.0.1
+# Added for uploader and general script support

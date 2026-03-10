@@ -1,0 +1,2 @@
+[console_scripts]
+perth = perth.cli.watermark_cli:main

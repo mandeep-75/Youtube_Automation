@@ -1,0 +1,6 @@
+#!/Users/mandeep/development/youtube_automation/venvs/uploader/bin/python3
+import sys
+from perth.cli.watermark_cli import main
+if __name__ == '__main__':
+    sys.argv[0] = sys.argv[0].removesuffix('.exe')
+    sys.exit(main())
