@@ -36,3 +36,4 @@ outputs/
 .env
 client_secret.json
 youtube_token.pickle
+.venv
