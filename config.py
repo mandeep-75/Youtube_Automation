@@ -21,7 +21,7 @@ OLLAMA_URL = "http://localhost:11434"
 # 1. FRAME EXTRACTION
 # ─────────────────────────────────────────────────────────────────────────────
 
-FRAME_INTERVAL = "2.0"          # seconds between extracted frames (lower = more frames)
+FRAME_INTERVAL = "1.0"          # seconds between extracted frames (lower = more frames)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. VISION MODEL  — visual frame description (via Ollama)
@@ -29,7 +29,24 @@ FRAME_INTERVAL = "2.0"          # seconds between extracted frames (lower = more
 
 VISION_MODEL  = "qwen3-vl:2b" # Model name in Ollama
 
-VISION_PROMPT = "Describe this frame in one sentence."
+VISION_PROMPT = """You are analyzing a single frame from a video.
+
+Describe the frame in ONE clear sentence.
+
+Structure your description like this:
+- Main subject: who or what is the primary focus
+- Action: what the subject is doing
+- Foreground: objects close to the camera
+- Background: environment or distant elements
+
+Rules:
+- Focus on visible facts only.
+- Clearly distinguish between subject, foreground, and background.
+- Keep the sentence concise but descriptive.
+- Avoid speculation.
+
+Example format:
+"A man holding a flashlight stands in the foreground while a dark forest and mountains appear in the background."""
 
 # VISION_PROMPT = """Describe the actions happening in this image.
 #                 Explain what the people or animals are doing .
@@ -52,8 +69,9 @@ WHISPER_COMPUTE_TYPE = "int8"          # int8 | float16 | float32
 # 4. LLM SCRIPT  — Ollama model for narration script generation
 # ─────────────────────────────────────────────────────────────────────────────
 
-LLM_MODEL = "qwen3.5:9b"       # any model installed in your local Ollama instance
+# LLM_MODEL = "qwen3.5:9b"       # any model installed in your local Ollama instance
 
+LLM_MODEL = "jaahas/qwen3.5-uncensored:9b"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 5. TTS  — Chatterbox voice synthesis
@@ -88,7 +106,7 @@ SUBTITLE_FONT_SIZE      = 20
 SUBTITLE_FONT_COLOR     = "#FFFFFF"
 SUBTITLE_HIGHLIGHT_COLOR = "#00FFAA"
 SUBTITLE_OUTLINE_COLOR   = "#000000"
-SUBTITLE_OUTLINE_WIDTH   = 2
+SUBTITLE_OUTLINE_WIDTH   = 1
 SUBTITLE_MAX_WORDS      = 1
 SUBTITLE_BOLD           = True
 SUBTITLE_ITALIC         = False
