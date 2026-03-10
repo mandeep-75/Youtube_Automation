@@ -34,3 +34,4 @@ venvs/uploader
 venv
 upload_queue
 uploaded
+watcher.lock

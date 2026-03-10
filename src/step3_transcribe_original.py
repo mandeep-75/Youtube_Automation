@@ -7,11 +7,18 @@ import tempfile
 
 from faster_whisper import WhisperModel
 
-try:
-    import imageio_ffmpeg
-    FFMPEG_BIN = imageio_ffmpeg.get_ffmpeg_exe()
-except Exception:
-    FFMPEG_BIN = shutil.which("ffmpeg") or "ffmpeg"
+# Prefer the bundled tools/ffmpeg binary (project root/tools/ffmpeg)
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_LOCAL_FFMPEG = os.path.join(_PROJECT_ROOT, "tools", "ffmpeg")
+
+if os.path.isfile(_LOCAL_FFMPEG) and os.access(_LOCAL_FFMPEG, os.X_OK):
+    FFMPEG_BIN = _LOCAL_FFMPEG
+else:
+    try:
+        import imageio_ffmpeg
+        FFMPEG_BIN = imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        FFMPEG_BIN = shutil.which("ffmpeg") or "ffmpeg"
 
 
 def _has_audio(video_path: str) -> bool:

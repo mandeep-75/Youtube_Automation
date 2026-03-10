@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import time
 import shutil
 import subprocess
@@ -17,8 +18,8 @@ SUPPORTED_EXTENSIONS = {".mp4", ".mov", ".mkv", ".avi"}
 # Link to the main pipeline
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PIPELINE_SCRIPT = os.path.join(PROJECT_ROOT, "pipeline.py")
-import sys
-PYTHON_EXE = sys.executable # Use the same interpreter we are running on
+PYTHON_EXE = sys.executable  # Use the same interpreter we are running on
+LOCK_FILE = os.path.join(PROJECT_ROOT, "watcher.lock")
 
 def is_file_stable(filepath):
     """Check if the file size is stable (not being written)."""
@@ -51,11 +52,31 @@ def process_video(video_path):
     except Exception as e:
         print(f"⚠️ Error: {e}")
 
+def acquire_lock():
+    """Write our PID to lock file. Exit if another instance is already running."""
+    if os.path.exists(LOCK_FILE):
+        try:
+            existing_pid = int(Path(LOCK_FILE).read_text().strip())
+            # Check if that process is still alive
+            os.kill(existing_pid, 0)
+            print(f"❌ Watcher already running (PID {existing_pid}). Exiting.")
+            sys.exit(1)
+        except (ProcessLookupError, ValueError):
+            pass  # Stale lock file — safe to overwrite
+    Path(LOCK_FILE).write_text(str(os.getpid()))
+
+def release_lock():
+    try:
+        os.remove(LOCK_FILE)
+    except FileNotFoundError:
+        pass
+
 def main():
+    acquire_lock()
     # Ensure dirs exist
     os.makedirs(PROCESSED_DIR, exist_ok=True)
     os.makedirs(FAILED_DIR, exist_ok=True)
-    
+
     print(f"👀 Watching folder: {WATCH_DIR}")
     print("Press Ctrl+C to stop.")
     
@@ -82,6 +103,8 @@ def main():
             
     except KeyboardInterrupt:
         print("\nStopping watcher...")
+    finally:
+        release_lock()
 
 if __name__ == "__main__":
     main()
