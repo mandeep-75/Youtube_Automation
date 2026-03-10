@@ -9,17 +9,10 @@ build/
 *.egg
 
 # ── Virtual environments (never commit these) ────────────────────────────
-venvs/faster_whisper/bin/
-venvs/faster_whisper/lib/
-venvs/faster_whisper/include/
-venvs/faster_whisper/pyvenv.cfg
-venvs/faster_whisper/share/
-
-venvs/chatterbox/bin/
-venvs/chatterbox/lib/
-venvs/chatterbox/include/
-venvs/chatterbox/pyvenv.cfg
-venvs/chatterbox/share/
+venvs/uploader
+venvs/faster_whisper
+venvs/chatterbox
+venvs
 
 # ── Model checkpoints (large binaries – use Git LFS or download script) ──
 checkpoints/
@@ -37,3 +30,5 @@ outputs/
 client_secret.json
 youtube_token.pickle
 .venv
+venvs/uploader
+venvs
