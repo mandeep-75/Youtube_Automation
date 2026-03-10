@@ -34,3 +34,5 @@ outputs/
 *.srt
 *.log
 .env
+client_secret.json
+youtube_token.pickle

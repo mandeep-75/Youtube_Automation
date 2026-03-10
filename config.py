@@ -113,6 +113,18 @@ SUBTITLE_ITALIC         = False
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 9. YOUTUBE UPLOAD SETTINGS
+# ─────────────────────────────────────────────────────────────────────────────
+
+YOUTUBE_CATEGORY_ID = "22"      # 22 = People & Blogs, 27 = Education, 24 = Entertainment
+YOUTUBE_PRIVACY_STATUS = "public" # public | private | unlisted
+
+# Path to your YouTube API secrets file (downloaded from Google Cloud Console)
+YOUTUBE_CLIENT_SECRETS = os.path.join(PROJECT_ROOT, "client_secrets.json")
+YOUTUBE_TOKEN_FILE = os.path.join(PROJECT_ROOT, "youtube_token.pickle")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # PYTHON INTERPRETERS  — one per virtual environment
 # Only change if your conda / venv paths differ from the defaults.
 # ─────────────────────────────────────────────────────────────────────────────
