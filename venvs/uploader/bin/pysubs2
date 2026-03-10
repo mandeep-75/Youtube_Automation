@@ -1,4 +1,4 @@
-#!/Users/mandeep/development/youtube_automation/venvs/uploader/bin/python3
+#!/Users/mandeep/development/youtube_automation/venvs/uploader/bin/python
 import sys
 from pysubs2.cli import __main__
 if __name__ == '__main__':

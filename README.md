@@ -1,134 +1,113 @@
-# Full YT Automation Pipeline
+# YouTube Automation Pipeline
 
-Automated pipeline that takes a raw video and produces a fully subtitled,
-voice-over narrated YouTube-ready output.
+A modular, automated pipeline for converting raw video footage into fully narrated, subtitled, and YouTube-ready Shorts/videos.
 
 ---
 
-## Pipeline Overview
+## 🚀 Pipeline Overview
+
+The pipeline executes an 8-step process to transform your video:
 
 ```
 Video input
    │
-   ├─ Step 1a  Extract frames          (chatterbox venv – OpenCV)
-   ├─ Step 1b  Describe frames         (fastvlm conda env – LLaVA)
-   ├─ Step 2   Generate script         (chatterbox venv – LLM)
-   ├─ Step 3   Text-to-speech          (chatterbox venv – ChatterboxTTS)
-   ├─ Step 3.5 Merge TTS audio + video (faster_whisper venv – ffmpeg)
-   └─ Step 4   Transcribe + subtitles  (faster_whisper venv – faster-whisper + MoviePy)
+   ├─ Step 1  Extract Frames           (OpenCV) - Captures visual highlights
+   ├─ Step 2  Vision Analysis          (Ollama + Qwen3-VL) - Describes the action
+   ├─ Step 3  Transcribe Original      (Faster-Whisper) - Captures background context
+   ├─ Step 4  Generate Script          (Ollama + LLM) - Writes a viral narration script
+   ├─ Step 5  Text-to-Speech           (Chatterbox-TTS) - Generates professional voice-over
+   ├─ Step 6  Merge Audio + Video      (FFmpeg) - Mixes original audio + new TTS
+   ├─ Step 7  Transcribe Subtitles     (Faster-Whisper) - Perfect timing for captions
+   └─ Step 8  Burn Subtitles           (MoviePy/FFmpeg) - Stylish, high-engagement captions
                     │
-                    └─► outputs/final_video.mp4  +  outputs/subtitles.srt
+                    └─► outputs/[video_name]/final_video.mp4
 ```
 
 ---
 
-## Environments
+## 🛠 Prerequisites
 
-| Environment | Location | Purpose |
-|---|---|---|
-| `fastvlm` | conda env (miniforge) | FastVLM / LLaVA frame description |
-| `chatterbox` | `venvs/chatterbox/` | Frame extraction (cv2), LLM, ChatterboxTTS |
-| `faster_whisper` | `venvs/faster_whisper/` | Transcription (faster-whisper) + subtitle burning |
-
----
-
-## Quick Start
-
-
-### 1. install fastvlm models (one-time)
-```bash
-bash fastvlm_install_models.sh
-```
-
-### 2. Set up the Python venvs (one-time)
-```bash
-bash setup_all_venvs.sh    # script will wipe & recreate any existing venvs and also rebuild the 'fastvlm' conda environment
-```
-
-The script now directly creates the two environments from the requirement
-files (`requirements_chatterbox.txt` and `requirements_whisper.txt`) and
-always starts from a clean state. Re-run the command if you ever need to
-rebuild the venvs.
-
-> ⚠️ **Python 3.11 required.** `chatterbox-tts` depends on features only
-> available in 3.11. The bootstrap script will search for a suitable
-> interpreter (e.g. `python3.11`, `python3` or `python`) and will abort if
-> none of them report 3.11.  On macOS you can install it via:
-> `brew install python@3.11`.
-
-### 3. Run the full pipeline
-```bash
-python pipeline.py <your_video.mp4>
-```
-
-Outputs:
-- `outputs/final_video.mp4`    — subtitled final video
-- `outputs/video_with_tts.mp4` — video with TTS audio (merged)
-- `outputs/subtitles.srt`      — SRT subtitle file
-- `outputs/voice.wav`          — ChatterboxTTS voice-over
-- `outputs/script.txt`         — Generated narration script
-- `outputs/frames.txt`         — Frame descriptions
+- **macOS** (Optimized for Apple Silicon)
+- **Python 3.11** (Required for Chatterbox-TTS)
+- **FFmpeg** (`brew install ffmpeg`)
+- **Ollama** installed and running locally
+- **Ollama Models**:
+  - `qwen3-vl:2b` (Vision)
+  - `jaahas/qwen3.5-uncensored:9b` (LLM) — *or your preferred model*
 
 ---
 
-## Run merge TTS audio + video standalone
+## 📦 Installation
 
+### 1. Model Setup (Ollama)
+Ensure your Ollama instance is running and pull the required models:
 ```bash
-venvs/faster_whisper/bin/python src/merge_audio_video.py \
-    --video  input.mp4 \
-    --audio  outputs/voice.wav \
-    --output outputs/video_with_tts.mp4
+ollama pull qwen3-vl:2b
+ollama pull jaahas/qwen3.5-uncensored:9b
+```
+
+### 2. Virtual Environments
+The project uses three isolated virtual environments for stability. Initialize them all with one command:
+```bash
+bash setup_all_venvs.sh
 ```
 
 ---
 
-## Run transcription + subtitles standalone
+## 🎮 Usage
 
+### ⚙️ Configuration
+All settings (prompts, models, subtitle styles, volume levels) are centralized in `config.py`. Edit this file to customize your pipeline.
+
+### 🎥 Run the Pipeline
+Process one or more videos:
 ```bash
-# Transcribe a video and burn subtitles onto it
-venvs/faster_whisper/bin/python src/transcribe_subtitles.py \
-    --video  my_video.mp4 \
-    --output my_video_subtitled.mp4 \
-    --model  base \
-    --srt    my_subtitles.srt
-
-# Available model sizes (larger = more accurate, slower):
-#   tiny | base | small | medium | large-v2 | large-v3
+python pipeline.py path/to/video.mp4
 ```
+Outputs are saved to `outputs/[video_name]/`.
+
+### 📂 Watch Folder (Automatic Processing)
+Monitor a directory (e.g., your Desktop) and process videos as they are dropped in:
+```bash
+venvs/chatterbox/bin/python src/watcher.py --watch-dir ~/Desktop/to_process --output-dir outputs
+```
+
+### 📤 YouTube Uploader
+Launch an interactive menu to generate SEO metadata and upload finished videos:
+```bash
+venvs/uploader/bin/python youtube_upload.py
+```
+*Requires `client_secret.json` from Google Cloud Console.*
 
 ---
 
-## Run TTS standalone
-
-```bash
-venvs/chatterbox/bin/python src/tts_generate.py \
-    --script outputs/script.txt \
-    --output outputs/voice.wav
-```
-
----
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-Full_yt_automation/
-├── pipeline.py                  # Orchestrates all steps
-├── setup_all_venvs.sh           # One-command venv builder
+youtube_automation/
+├── config.py              # Central configuration hub
+├── pipeline.py            # Main entry point (orchestrator)
+├── youtube_upload.py      # Interactive uploader menu
+├── setup_all_venvs.sh     # Automation setup script
 ├── src/
-│   ├── extract_frames.py        # Frame extraction (cv2)
-│   ├── fastvlm_describe.py      # FastVLM frame descriptions
-│   ├── llm_script.py            # LLM narration script generation
-│   ├── tts_generate.py          # ChatterboxTTS voice-over
-│   ├── merge_audio_video.py     # Merges TTS audio with video
-│   ├── add_subtitles.py         # (legacy) static subtitle overlay
-│   └── transcribe_subtitles.py  # faster-whisper transcription + subtitle burn
-├── venvs/
-│   ├── faster_whisper/
-│   │   ├── requirements.txt
-│   │   └── setup.sh
-│   └── chatterbox/
-│       ├── requirements.txt
-│       └── setup.sh
-├── checkpoints/                 # FastVLM model weights (not committed)
-└── outputs/                     # All generated files (not committed)
+│   ├── step1_extract_frames.py
+│   ├── step2_qwen_vl.py
+│   ├── step3_transcribe_original.py
+│   ├── step4_llm_script.py
+│   ├── step5_tts.py
+│   ├── step6_merge_av.py
+│   ├── step7_transcribe_subtitles.py
+│   ├── step8_burn_subtitles.py
+│   └── watcher.py
+├── venvs/                 # Isolated Python environments (gitignored)
+├── samples/               # Reference audio for TTS cloning
+└── outputs/               # Finished videos and intermediate logs
 ```
+
+---
+
+## 🔧 Troubleshooting
+
+- **Python Version**: If `setup_all_venvs.sh` fails, ensure `python3.11` is in your PATH. 
+- **Ollama Connection**: Ensure `OLLAMA_URL` in `config.py` matches your Ollama port (default: `11434`).
+- **Curses Error**: If the uploader crashes with `addwstr()`, ensure your terminal window is sufficiently large.

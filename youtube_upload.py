@@ -62,7 +62,9 @@ def get_videos():
     for name in sorted(os.listdir(OUTPUT_DIR)):
         folder = os.path.join(OUTPUT_DIR, name)
         if os.path.isdir(folder) and os.path.exists(os.path.join(folder, "final_video.mp4")):
-            videos.append(name)
+            # Check if uploaded
+            is_uploaded = os.path.exists(os.path.join(folder, "youtube_id.txt"))
+            videos.append({"name": name, "uploaded": is_uploaded})
     return videos
 
 
@@ -72,11 +74,30 @@ def get_videos():
 
 def draw_border(window, y, x, height, width, title=""):
     """Draw a bordered box with optional title."""
-    window.attron(curses.color_pair(2))
-    window.border(0)
-    if title:
-        window.addstr(y, x + 2, f" {title} ")
-    window.attroff(curses.color_pair(2))
+    try:
+        window.attron(curses.color_pair(2))
+        window.border(0)
+        if title:
+            # Title is drawn on the top border (y=0)
+            safe_addstr(window, 0, 2, f" {title} ")
+        window.attroff(curses.color_pair(2))
+    except curses.error:
+        pass
+
+
+def safe_addstr(window, y, x, text, attr=0):
+    """Safely add a string to a curses window, handling bounds and potential ERR."""
+    try:
+        h, w = window.getmaxyx()
+        if y < 0 or y >= h or x < 0 or x >= w:
+            return
+        # Truncate to fit width
+        max_len = w - x - 1
+        if max_len <= 0:
+            return
+        window.addstr(y, x, text[:max_len], attr)
+    except curses.error:
+        pass
 
 
 def select_video(stdscr):
@@ -89,7 +110,7 @@ def select_video(stdscr):
 
     videos = get_videos()
     if not videos:
-        stdscr.addstr(2, 2, "No videos found in outputs/")
+        safe_addstr(stdscr, 2, 2, "No videos found in outputs/")
         stdscr.refresh()
         stdscr.getch()
         return None
@@ -97,23 +118,37 @@ def select_video(stdscr):
     selected = 0
     while True:
         stdscr.clear()
-        draw_border(stdscr, 0, 0, curses.LINES - 1, curses.COLS - 1, " Select Video to Upload ")
+        h, w = stdscr.getmaxyx()
 
-        for i, video in enumerate(videos):
+        if h < 8 or w < 40:
+            safe_addstr(stdscr, 0, 0, "Terminal too small!")
+            safe_addstr(stdscr, 1, 0, "Please enlarge window.")
+            stdscr.refresh()
+            key = stdscr.getch()
+            if key == ord('q'): return None
+            continue
+
+        draw_border(stdscr, 0, 0, h - 1, w - 1, " Select Video to Upload ")
+
+        for i, video_data in enumerate(videos):
+            video = video_data["name"]
+            uploaded = video_data["uploaded"]
+            status_tag = " [OK]" if uploaded else ""
+            
             y = 3 + i
-            if y >= curses.LINES - 3:
+            if y >= h - 4:
+                safe_addstr(stdscr, y, 6, "... more videos ...")
                 break
+
             if i == selected:
-                stdscr.attron(curses.color_pair(1))
-                stdscr.addstr(y, 4, f"▶ {video}")
-                stdscr.attroff(curses.color_pair(1))
+                safe_addstr(stdscr, y, 4, f"> {video}{status_tag}", curses.color_pair(1))
             else:
-                stdscr.addstr(y, 6, f"{video}")
+                safe_addstr(stdscr, y, 6, f"{video}{status_tag}")
 
         # Footer
-        stdscr.addstr(curses.LINES - 3, 2, f"Total: {len(videos)}")
-        stdscr.addstr(curses.LINES - 2, 2,
-                      "[↑/↓ or j/k] navigate  [Enter] select  [q] quit")
+        safe_addstr(stdscr, h - 3, 2, f"Total: {len(videos)}")
+        footer_text = "[UP/DOWN or j/k] move  [Enter] select  [q] quit"
+        safe_addstr(stdscr, h - 2, 2, footer_text)
 
         stdscr.refresh()
 
@@ -123,7 +158,7 @@ def select_video(stdscr):
         elif key in (curses.KEY_DOWN, ord('j')):
             selected = (selected + 1) % len(videos)
         elif key in (10, 13):
-            return videos[selected]
+            return videos[selected]["name"]
         elif key == ord('q'):
             return None
 
@@ -133,9 +168,17 @@ def select_video(stdscr):
 # ===============================
 
 def extract_json(text):
-    match = re.search(r"\{.*\}", text, re.DOTALL)
+    # Try to find the last occurrence of } to be safe if model adds junk
+    match = re.search(r"(\{.*\})", text, re.DOTALL)
     if match:
-        return json.loads(match.group())
+        try:
+            return json.loads(match.group(1))
+        except json.JSONDecodeError:
+            # Try to fix common trailing issues
+            content = match.group(1)
+            if content.count('{') > content.count('}'):
+                content += '}' * (content.count('{') - content.count('}'))
+            return json.loads(content)
     raise ValueError("No valid JSON found in response")
 
 
@@ -178,10 +221,16 @@ def get_authenticated_service():
             creds = pickle.load(token)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+            except Exception as e:
+                print(f"⚠️ Token refresh failed ({e}). Re-authenticating...")
+                creds = None
+        
+        if not creds or not creds.valid:
             flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
             creds = flow.run_local_server(port=0)
+            
         with open(TOKEN_FILE, "wb") as token:
             pickle.dump(creds, token)
     return build("youtube", "v3", credentials=creds)
@@ -210,6 +259,11 @@ def upload_video(youtube, video_file, metadata):
             print(f"Upload {int(status.progress() * 100)}%")
     print("\n✅ Upload Complete")
     print("Video ID:", response["id"])
+    
+    # Save video ID to log file in the folder
+    folder_path = os.path.dirname(video_file)
+    with open(os.path.join(folder_path, "youtube_id.txt"), "w") as f:
+        f.write(response["id"])
 
 
 # ===============================
@@ -226,7 +280,8 @@ def main(stdscr):
     script = os.path.join(folder, "script.txt")
 
     if not os.path.exists(script):
-        stdscr.addstr(curses.LINES - 2, 2, "❌ script.txt missing. Press any key.")
+        h, w = stdscr.getmaxyx()
+        safe_addstr(stdscr, h - 2, 2, "X script.txt missing. Press any key.")
         stdscr.getch()
         return
 
@@ -246,8 +301,13 @@ def main(stdscr):
 
     # Automatically upload without confirmation
     print("\nAuthenticating YouTube...")
-    youtube = get_authenticated_service()
-    upload_video(youtube, video, metadata)
+    try:
+        youtube = get_authenticated_service()
+        if youtube:
+            upload_video(youtube, video, metadata)
+    except Exception as e:
+        print(f"❌ Upload failed: {e}")
+        input("\nPress Enter to exit...")
 
 
 if __name__ == "__main__":

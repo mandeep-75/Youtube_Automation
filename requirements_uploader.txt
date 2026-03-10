@@ -5,5 +5,5 @@ google-auth-httplib2
 ollama
 pysubs2
 curses-menu
+tqdm
 resemble-perth==1.0.1
-# Added for uploader and general script support

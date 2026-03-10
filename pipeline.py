@@ -29,7 +29,7 @@ def step1_extract_frames(video_path: str, frames_dir: str) -> str:
 
 def step2_vision_describe(manifest_path: str, output_file: str):
     subprocess.run([
-        config.CHATTERBOX_PYTHON, "./src/step2_qwen_vl.py",
+        config.UPLOADER_PYTHON, "./src/step2_qwen_vl.py",
         "--manifest",     manifest_path,
         "--model",        config.VISION_MODEL,
         "--prompt",       config.VISION_PROMPT,
@@ -52,7 +52,7 @@ def step3_transcribe_original(video_path: str, output_file: str):
 
 def step4_llm_script(frames_file: str, transcript_file: str, script_output: str):
     cmd = [
-        config.CHATTERBOX_PYTHON, "./src/step4_llm_script.py",
+        config.UPLOADER_PYTHON, "./src/step4_llm_script.py",
         "--input",      frames_file,
         "--output",     script_output,
         "--model",      config.LLM_MODEL,

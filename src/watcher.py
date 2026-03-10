@@ -17,7 +17,8 @@ SUPPORTED_EXTENSIONS = {".mp4", ".mov", ".mkv", ".avi"}
 # Link to the main pipeline
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PIPELINE_SCRIPT = os.path.join(PROJECT_ROOT, "pipeline.py")
-PYTHON_EXE = "python3" # Using system python to launch pipeline.py which manages its own venvs
+import sys
+PYTHON_EXE = sys.executable # Use the same interpreter we are running on
 
 def is_file_stable(filepath):
     """Check if the file size is stable (not being written)."""
