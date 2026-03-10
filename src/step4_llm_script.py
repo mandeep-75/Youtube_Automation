@@ -15,13 +15,31 @@ DATA SOURCES:
 2. VISUAL FRAME DESCRIPTIONS:
 {vision_text}
 
+IMPORTANT CONTEXT:
+- The visual descriptions come from frames of ONE continuous video.
+- The frames are extracted in chronological order.
+- They represent moments from the SAME scene or sequence.
+- Your job is to mentally reconstruct what is happening in the video and turn it into a coherent story.
+- Do NOT treat each frame as a separate event.
+- Connect the frames together logically and choose the most plausible interpretation of the events.
+
 INSTRUCTIONS:
 - Create a dramatic, suspenseful, and emotionally engaging narrative suitable for a viral YouTube Shorts video.
 - If dialogue is provided, treat it as the factual backbone of the story.
 - Use the visual descriptions to add cinematic detail, atmosphere, tension, and emotional context.
+- Infer the most likely actions and progression happening between frames.
+- If something is unclear, choose the most believable interpretation rather than listing possibilities.
+
+STORY RULES:
 - The FIRST sentence MUST start with: "This man", "This woman", or "This".
 - Write in a storytelling style that builds curiosity and keeps viewers watching.
-- Target length: 120–180 words, but a variation of ±20–30 words is acceptable if it improves storytelling flow.
+- Maintain a smooth narrative flow as if the viewer is watching the video unfold.
+- Avoid repeating the same visual details multiple times.
+- Focus on the key events and emotional tension.
+
+LENGTH:
+- Target length: 120–180 words.
+- A variation of ±20–30 words is acceptable if it improves storytelling flow.
 - The narration must read naturally in under ~60 seconds.
 
 OUTPUT FORMAT:
@@ -76,8 +94,9 @@ def generate_script(vision_text, transcript_text=None,
     stream = client.chat(
         model=model,
         messages=[{'role': 'user', 'content': prompt_content}],
-        think=False,        # Safe even if disabled
+        think=False,       
         stream=True,
+        keep_alive="5s",
         options={
             "num_ctx": 16384,
             "temperature": 0.7,

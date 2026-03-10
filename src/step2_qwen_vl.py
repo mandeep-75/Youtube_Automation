@@ -15,6 +15,7 @@ def describe_batch(client, image_paths, model, prompt):
         stream = client.generate(
             model=model,
             prompt=prompt,
+            keep_alive="15s",
             images=image_paths,
             stream=True,
         )

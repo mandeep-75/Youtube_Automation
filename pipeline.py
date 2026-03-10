@@ -100,7 +100,7 @@ def step7_transcribe_subtitles(video_path: str, srt_path: str):
     subprocess.run(cmd, check=True)
 
 def step8_burn_subtitles(video_path: str, subtitle_path: str, output_path: str):
-    subprocess.run([
+    cmd = [
         config.FASTER_WHISPER_PYTHON, "./src/step8_burn_subtitles.py",
         video_path, subtitle_path,
         "-o",               output_path,
@@ -108,10 +108,19 @@ def step8_burn_subtitles(video_path: str, subtitle_path: str, output_path: str):
         "--font-size",       str(config.SUBTITLE_FONT_SIZE),
         "--font-color",      config.SUBTITLE_FONT_COLOR,
         "--highlight-color", config.SUBTITLE_HIGHLIGHT_COLOR,
-        "--border-color",    config.SUBTITLE_BORDER_COLOR,
-        "--border-width",    str(config.SUBTITLE_BORDER_WIDTH),
+        "--border-color",    config.SUBTITLE_OUTLINE_COLOR,
+        "--border-width",    str(config.SUBTITLE_OUTLINE_WIDTH),
         "--max-words",       str(config.SUBTITLE_MAX_WORDS),
-    ], check=True)
+    ]
+    if config.SUBTITLE_BOLD:
+        cmd.append("--bold")
+    else:
+        cmd.append("--no-bold")
+        
+    if config.SUBTITLE_ITALIC:
+        cmd.append("--italic")
+    
+    subprocess.run(cmd, check=True)
 
 def run_pipeline(video_path: str):
     video_name = Path(video_path).stem
