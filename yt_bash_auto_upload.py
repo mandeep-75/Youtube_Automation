@@ -20,6 +20,7 @@ import sys
 import json
 import pickle
 import re
+import shutil
 
 import ollama
 
@@ -38,6 +39,7 @@ OLLAMA_MODEL        = "jaahas/qwen3.5-uncensored:9b"
 SCOPES              = ["https://www.googleapis.com/auth/youtube.upload"]
 CLIENT_SECRET_FILE  = os.path.join(BASE_DIR, "client_secret.json")
 TOKEN_FILE          = os.path.join(BASE_DIR, "youtube_token.pickle")
+UPLOADED_DIR        = os.path.join(BASE_DIR, "uploaded")
 
 METADATA_PROMPT = """
 You are a YouTube Shorts SEO expert.
@@ -227,6 +229,17 @@ def main() -> int:
     with open(id_file, "w") as f:
         f.write(video_id)
     print(f"📝 Video ID saved → {id_file}")
+
+    # ── Move folder to uploaded/ ───────────────────────────────────────────
+    os.makedirs(UPLOADED_DIR, exist_ok=True)
+    folder_name = os.path.basename(os.path.abspath(folder))
+    dest = os.path.join(UPLOADED_DIR, folder_name)
+    try:
+        shutil.move(folder, dest)
+        print(f"📦 Moved → uploaded/{folder_name}")
+    except Exception as e:
+        print(f"⚠️  Could not move folder to uploaded/: {e}")
+        # Non-fatal — upload succeeded, just log the warning
 
     return 0
 

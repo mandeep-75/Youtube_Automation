@@ -90,10 +90,11 @@ TTS_REPETITION_PENALTY = 1.2
 # 6. MERGE  — how TTS audio is mixed with the original video audio
 # ─────────────────────────────────────────────────────────────────────────────
 
+# enabling this may cause copyright issues
 MERGE_MIX_AUDIO = False         # True  = mix TTS + original audio together
                                 # False = replace original audio with TTS only
 
-ORIGINAL_AUDIO_VOLUME = 0.5    # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
+ORIGINAL_AUDIO_VOLUME = 0.4    # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
                                 # Only used if MERGE_MIX_AUDIO is True.
 
 

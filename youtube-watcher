@@ -1,0 +1,9 @@
+#!/bin/bash
+cd "/Users/mandeep/development/youtube_automation"
+echo "----------------------------------------"
+echo "🚀 STARTING YOUTUBE AUTOMATION WATCHER"
+echo "----------------------------------------"
+echo "Watching folder: ~/Desktop/youtube_inbox"
+echo "Press Ctrl+C to stop..."
+# Use the uploader venv for the watcher script
+./venvs/uploader/bin/python3 src/watcher.py

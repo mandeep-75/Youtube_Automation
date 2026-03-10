@@ -31,4 +31,6 @@ client_secret.json
 youtube_token.pickle
 .venv
 venvs/uploader
-venvs
+venv
+upload_queue
+uploaded
