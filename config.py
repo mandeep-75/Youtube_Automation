@@ -77,7 +77,10 @@ LLM_MODEL = "jaahas/qwen3.5-uncensored:9b"
 # 5. TTS  — Chatterbox voice synthesis
 # ─────────────────────────────────────────────────────────────────────────────
 
-TTS_REF_AUDIO = "./samples/me.mp3"   # reference voice clip (short, clear speech)
+TTS_REF_AUDIO = [
+    "./samples/me.mp3",
+    "./samples/me2.mp3"
+]   # reference voice clip(s). if a list is provided, one will be chosen randomly.
 
 # Voice characteristics
 TTS_EXAGGERATION      = 0.6
@@ -102,15 +105,23 @@ ORIGINAL_AUDIO_VOLUME = 0.4    # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
 # 7 & 8. SUBTITLES  — burn-in styling
 # ─────────────────────────────────────────────────────────────────────────────
 
-SUBTITLE_FONT_NAME      = "Helvetica"
-SUBTITLE_FONT_SIZE      = 20
+# CUSTOM SHORTS FONTS (Local TTF files in fonts/ directory):
+# Anton natively renders smaller than other fonts, so we give it a larger size to match visually.
+SUBTITLE_FONTS = [
+    {"name": "Anton", "size": 40},
+    {"name": "Bebas Neue", "size": 50},
+    {"name": "Oswald", "size": 60}
+]
 SUBTITLE_FONT_COLOR     = "#FFFFFF"
 SUBTITLE_HIGHLIGHT_COLOR = "#00FFAA"
 SUBTITLE_OUTLINE_COLOR   = "#000000"
 SUBTITLE_OUTLINE_WIDTH   = 1
-SUBTITLE_MAX_WORDS      = 1
+SUBTITLE_MAX_WORDS      = 3
 SUBTITLE_BOLD           = True
 SUBTITLE_ITALIC         = False
+SUBTITLE_POSITION       = "center" # top, center, bottom
+SUBTITLE_X_OFFSET       = -10
+SUBTITLE_Y_OFFSET       = 300
 
 
 

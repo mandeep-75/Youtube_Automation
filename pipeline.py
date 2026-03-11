@@ -1,4 +1,5 @@
 import os
+import random
 import subprocess
 import sys
 from pathlib import Path
@@ -63,11 +64,13 @@ def step4_llm_script(frames_file: str, transcript_file: str, script_output: str)
     subprocess.run(cmd, check=True)
 
 def step5_tts(script_file: str, voice_output: str):
+    ref_audio = random.choice(config.TTS_REF_AUDIO) if isinstance(config.TTS_REF_AUDIO, list) else config.TTS_REF_AUDIO
+    print(f"🎤 Using TTS reference audio: {ref_audio}")
     subprocess.run([
         config.CHATTERBOX_PYTHON, "./src/step5_tts.py",
         "--script",             script_file,
         "--output",             voice_output,
-        "--ref-audio",          config.TTS_REF_AUDIO,
+        "--ref-audio",          ref_audio,
         "--exaggeration",       str(config.TTS_EXAGGERATION),
         "--temperature",        str(config.TTS_TEMPERATURE),
         "--cfg-weight",         str(config.TTS_CFG_WEIGHT),
@@ -100,17 +103,29 @@ def step7_transcribe_subtitles(video_path: str, srt_path: str):
     subprocess.run(cmd, check=True)
 
 def step8_burn_subtitles(video_path: str, subtitle_path: str, output_path: str):
+    font_choice = random.choice(config.SUBTITLE_FONTS) if isinstance(config.SUBTITLE_FONTS, list) else config.SUBTITLE_FONTS
+    if isinstance(font_choice, dict):
+        font_name = font_choice["name"]
+        font_size = font_choice.get("size", 36)
+    else:
+        font_name = font_choice
+        font_size = 36
+
+    print(f"🔤 Using subtitle font: {font_name} (Size: {font_size})")
     cmd = [
         config.FASTER_WHISPER_PYTHON, "./src/step8_burn_subtitles.py",
         video_path, subtitle_path,
         "-o",               output_path,
-        "--font-name",       config.SUBTITLE_FONT_NAME,
-        "--font-size",       str(config.SUBTITLE_FONT_SIZE),
+        "--font-name",       font_name,
+        "--font-size",       str(font_size),
         "--font-color",      config.SUBTITLE_FONT_COLOR,
         "--highlight-color", config.SUBTITLE_HIGHLIGHT_COLOR,
         "--border-color",    config.SUBTITLE_OUTLINE_COLOR,
         "--border-width",    str(config.SUBTITLE_OUTLINE_WIDTH),
         "--max-words",       str(config.SUBTITLE_MAX_WORDS),
+        "--position",        config.SUBTITLE_POSITION,
+        "--x-offset",        str(config.SUBTITLE_X_OFFSET),
+        "--y-offset",        str(config.SUBTITLE_Y_OFFSET),
     ]
     if config.SUBTITLE_BOLD:
         cmd.append("--bold")

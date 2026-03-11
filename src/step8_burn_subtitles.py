@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import os
+import shutil
 import argparse
 import subprocess
 from pathlib import Path
@@ -42,7 +44,14 @@ def hex_to_ass(hex_color: str):
 
 
 def get_video_resolution(video_path, ffmpeg_bin):
-    ffprobe = ffmpeg_bin.replace("ffmpeg", "ffprobe")
+    ffprobe_local = ffmpeg_bin.replace("ffmpeg", "ffprobe")
+    if os.path.exists(ffprobe_local):
+        ffprobe = ffprobe_local
+    elif shutil.which("ffprobe"):
+        ffprobe = "ffprobe"
+    else:
+        return None, None
+
     cmd = [
         ffprobe,
         "-v", "error",
@@ -76,6 +85,8 @@ class SubtitleBurner:
         max_words=1,
         bold=True,
         italic=False,
+        x_offset=0,
+        y_offset=40,
     ):
 
         self.input_video = Path(input_video)
@@ -92,6 +103,8 @@ class SubtitleBurner:
         self.max_words = max_words
         self.bold = bold
         self.italic = italic
+        self.x_offset = x_offset
+        self.y_offset = y_offset
 
         project_root = Path(__file__).parent.parent
         ffmpeg_path = project_root / "tools" / "ffmpeg"
@@ -145,7 +158,9 @@ class SubtitleBurner:
         else:
             style.alignment = 8
 
-        style.marginv = 40
+        style.marginl = self.x_offset
+        style.marginr = self.x_offset
+        style.marginv = self.y_offset
 
         ass.styles["Default"] = style
 
@@ -168,39 +183,43 @@ class SubtitleBurner:
         if not all_words:
             print("⚠️ No words found in subtitles.")
         else:
-            # Word-by-word highlighting logic with sliding window
-            for i, current_word in enumerate(all_words):
-                # Calculate window: try to keep current word in focus
-                # For max_words=1, it's just the current word.
-                # For max_words > 1, we show a window.
-                
-                half_window = self.max_words // 2
-                start_idx = max(0, i - half_window)
-                end_idx = min(len(all_words), start_idx + self.max_words)
-                
-                # Adjust if we're near the end
-                if end_idx - start_idx < self.max_words:
-                    start_idx = max(0, end_idx - self.max_words)
+            pos_tag = ""
+            if width and height:
+                pos_x = (width // 2) + self.x_offset
+                if self.position == "center":
+                    pos_y = (height // 2) + self.y_offset
+                elif self.position == "bottom":
+                    pos_y = height - self.y_offset
+                else: # top
+                    pos_y = self.y_offset
+                pos_tag = f"{{\\pos({pos_x},{pos_y})}}"
 
-                text_parts = []
-                for j in range(start_idx, end_idx):
-                    w = all_words[j]
-                    if j == i:
-                        # Highlight current word
-                        text_parts.append("{\\c" + highlight + "}" + w["text"] + "{\\r}")
-                    else:
-                        # Use base color for others
-                        text_parts.append("{\\c" + base_color + "}" + w["text"])
+            # Group words into static chunks so the text doesn't jump around
+            chunks = [all_words[i:i + self.max_words] for i in range(0, len(all_words), self.max_words)]
 
-                full_text = " ".join(text_parts)
+            for chunk in chunks:
+                if not chunk: continue
                 
-                ass.events.append(
-                    pysubs2.SSAEvent(
-                        start=current_word["start"],
-                        end=current_word["end"],
-                        text=full_text
+                # Each word in the chunk will be highlighted once, one after the other
+                for i, current_word in enumerate(chunk):
+                    text_parts = []
+                    for j, w in enumerate(chunk):
+                        if j == i:
+                            # Highlight current word
+                            text_parts.append("{\\c" + highlight + "}" + w["text"] + "{\\r}")
+                        else:
+                            # Use base color for others
+                            text_parts.append("{\\c" + base_color + "}" + w["text"])
+
+                    full_text = pos_tag + " ".join(text_parts)
+                    
+                    ass.events.append(
+                        pysubs2.SSAEvent(
+                            start=current_word["start"],
+                            end=current_word["end"],
+                            text=full_text
+                        )
                     )
-                )
 
         output_dir = Path("outputs")
         output_dir.mkdir(exist_ok=True)
@@ -215,11 +234,16 @@ class SubtitleBurner:
 
         ass_file = self.generate_ass()
 
+        fonts_dir = Path("fonts").absolute()
+        
+        # Add fontsdir to the subtitles filter so FFmpeg can load custom .ttf/.otf fonts
+        ass_filter = f"subtitles='{ass_file}':fontsdir='{fonts_dir}'"
+
         cmd = [
             self.ffmpeg,
             "-y",
             "-i", str(self.input_video),
-            "-vf", f"subtitles='{ass_file}'",
+            "-vf", ass_filter,
             "-c:a", "copy",
             str(self.output_video)
         ]
@@ -258,6 +282,9 @@ def main():
         default="center"
     )
 
+    parser.add_argument("--x-offset", type=int, default=0)
+    parser.add_argument("--y-offset", type=int, default=40)
+
     args = parser.parse_args()
 
     SubtitleBurner(
@@ -273,7 +300,9 @@ def main():
         args.position,
         args.max_words,
         args.bold,
-        args.italic
+        args.italic,
+        args.x_offset,
+        args.y_offset
     ).burn()
 
 
