@@ -5,6 +5,7 @@ import json
 import pickle
 import re
 import curses
+import shutil
 from pathlib import Path
 import ollama
 
@@ -18,7 +19,8 @@ from google.auth.transport.requests import Request
 # CONFIG
 # ===============================
 
-OUTPUT_DIR = "outputs"
+UPLOAD_QUEUE_DIR = "upload_queue"
+UPLOADED_DIR = "uploaded"
 OLLAMA_MODEL = "jaahas/qwen3.5-uncensored:9b"
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 CLIENT_SECRET_FILE = "client_secret.json"
@@ -57,10 +59,10 @@ Return JSON only:
 def get_videos():
     """Return list of folder names that contain final_video.mp4."""
     videos = []
-    if not os.path.exists(OUTPUT_DIR):
+    if not os.path.exists(UPLOAD_QUEUE_DIR):
         return videos
-    for name in sorted(os.listdir(OUTPUT_DIR)):
-        folder = os.path.join(OUTPUT_DIR, name)
+    for name in sorted(os.listdir(UPLOAD_QUEUE_DIR)):
+        folder = os.path.join(UPLOAD_QUEUE_DIR, name)
         if os.path.isdir(folder) and os.path.exists(os.path.join(folder, "final_video.mp4")):
             # Check if uploaded
             is_uploaded = os.path.exists(os.path.join(folder, "youtube_id.txt"))
@@ -110,7 +112,7 @@ def select_video(stdscr):
 
     videos = get_videos()
     if not videos:
-        safe_addstr(stdscr, 2, 2, "No videos found in outputs/")
+        safe_addstr(stdscr, 2, 2, "No videos found in upload_queue/")
         stdscr.refresh()
         stdscr.getch()
         return None
@@ -275,7 +277,7 @@ def main(stdscr):
     if not selected:
         return
 
-    folder = os.path.join(OUTPUT_DIR, selected)
+    folder = os.path.join(UPLOAD_QUEUE_DIR, selected)
     video = os.path.join(folder, "final_video.mp4")
     script = os.path.join(folder, "script.txt")
 
@@ -305,6 +307,17 @@ def main(stdscr):
         youtube = get_authenticated_service()
         if youtube:
             upload_video(youtube, video, metadata)
+            
+            # Move folder to uploaded directory
+            if not os.path.exists(UPLOADED_DIR):
+                os.makedirs(UPLOADED_DIR)
+            dest_folder = os.path.join(UPLOADED_DIR, selected)
+            # If destination already exists, remove it first or use a unique name
+            if os.path.exists(dest_folder):
+                shutil.rmtree(dest_folder)
+            shutil.move(folder, dest_folder)
+            print(f"\n📂 Moved '{selected}' to {UPLOADED_DIR}/")
+            
     except Exception as e:
         print(f"❌ Upload failed: {e}")
         input("\nPress Enter to exit...")

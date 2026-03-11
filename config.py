@@ -31,27 +31,21 @@ VISION_MODEL  = "qwen3-vl:2b" # Model name in Ollama
 
 VISION_PROMPT = """You are analyzing a single frame from a video.
 
-Describe the frame in ONE clear sentence.
+Describe the frame in **one detailed and descriptive sentence** that clearly includes the following elements in order: the **main subject**, the **action being performed**, the **foreground elements (objects closest to the camera)**, and the **background environment or distant elements**.
 
-Structure your description like this:
-- Main subject: who or what is the primary focus
-- Action: what the subject is doing
-- Foreground: objects close to the camera
-- Background: environment or distant elements
+Guidelines:
+- Base the description strictly on **visible facts** in the image.
+- **Do not speculate** about emotions, identities, intentions, or events outside the frame.
+- Clearly distinguish between the **main subject**, **foreground**, and **background**.
+- Mention notable **people, animals, objects, vehicles, text, or structures** if visible.
+- Include **important visual details** such as clothing, colors, posture, lighting, setting, and spatial relationships when relevant.
+- Use **neutral and objective language**.
+- The sentence should be **detailed but still clear and readable**.
+- Avoid repeating words unnecessarily.
 
-Rules:
-- Focus on visible facts only.
-- Clearly distinguish between subject, foreground, and background.
-- Keep the sentence concise but descriptive.
-- Avoid speculation.
-
-Example format:
-"A man holding a flashlight stands in the foreground while a dark forest and mountains appear in the background."""
-
-# VISION_PROMPT = """Describe the actions happening in this image.
-#                 Explain what the people or animals are doing .
-#                 Focus on activities, tasks, and interactions.
-#                 Write 2 clear sentences."""
+Output requirement:
+Return **one single, detailed sentence only** that naturally describes the frame while including the subject, action, foreground, and background in that order.
+"""
 
 
 
@@ -108,9 +102,9 @@ ORIGINAL_AUDIO_VOLUME = 0.4    # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
 # CUSTOM SHORTS FONTS (Local TTF files in fonts/ directory):
 # Anton natively renders smaller than other fonts, so we give it a larger size to match visually.
 SUBTITLE_FONTS = [
-    {"name": "Anton", "size": 40},
-    {"name": "Bebas Neue", "size": 50},
-    {"name": "Oswald", "size": 60}
+    {"name": "Anton", "size": 120},
+    {"name": "Bebas Neue", "size": 120},
+    {"name": "Oswald", "size": 120}
 ]
 SUBTITLE_FONT_COLOR     = "#FFFFFF"
 SUBTITLE_HIGHLIGHT_COLOR = "#00FFAA"
@@ -120,8 +114,8 @@ SUBTITLE_MAX_WORDS      = 3
 SUBTITLE_BOLD           = True
 SUBTITLE_ITALIC         = False
 SUBTITLE_POSITION       = "center" # top, center, bottom
-SUBTITLE_X_OFFSET       = -10
-SUBTITLE_Y_OFFSET       = 300
+SUBTITLE_X_OFFSET       = -50
+SUBTITLE_Y_OFFSET       = 250
 
 
 

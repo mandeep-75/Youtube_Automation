@@ -122,19 +122,25 @@ class SubtitleBurner:
 
         # Set resolution to match video for consistent font scaling
         width, height = get_video_resolution(self.input_video, self.ffmpeg)
+        
+        # Reference resolution used to design shorts (1080x1920)
+        REF_WIDTH = 1080.0
+        REF_HEIGHT = 1920.0
+        
         if width and height:
             ass.info["PlayResX"] = width
             ass.info["PlayResY"] = height
-            # Scale font size based on height if it feels too small/large
-            # Default libass assumes 384x288. If we set 1080p, font size 20 might be tiny.
-            # However, setting PlayRes tells libass EXACTLY what coords to use.
+            scale_x = width / REF_WIDTH
+            scale_y = height / REF_HEIGHT
+            scale_font = min(scale_x, scale_y)
         else:
             print("⚠️ Could not detect video resolution. Scaling might be off.")
+            scale_x = scale_y = scale_font = 1.0
 
         style = pysubs2.SSAStyle()
 
         style.fontname = self.font_name
-        style.fontsize = self.font_size
+        style.fontsize = self.font_size * scale_font
 
         r, g, b = hex_to_rgb(self.font_color)
         style.primary_color = pysubs2.Color(r, g, b)
@@ -145,7 +151,7 @@ class SubtitleBurner:
         r, g, b = hex_to_rgb(self.outline_color)
         style.outline_color = pysubs2.Color(r, g, b)
 
-        style.outline = self.outline_width
+        style.outline = self.outline_width * scale_font
         style.shadow = 0
         style.bold = self.bold
         style.italic = self.italic
@@ -158,9 +164,12 @@ class SubtitleBurner:
         else:
             style.alignment = 8
 
-        style.marginl = self.x_offset
-        style.marginr = self.x_offset
-        style.marginv = self.y_offset
+        scaled_x_offset = int(self.x_offset * scale_x)
+        scaled_y_offset = int(self.y_offset * scale_y)
+
+        style.marginl = scaled_x_offset
+        style.marginr = scaled_x_offset
+        style.marginv = scaled_y_offset
 
         ass.styles["Default"] = style
 
@@ -185,13 +194,13 @@ class SubtitleBurner:
         else:
             pos_tag = ""
             if width and height:
-                pos_x = (width // 2) + self.x_offset
+                pos_x = (width // 2) + scaled_x_offset
                 if self.position == "center":
-                    pos_y = (height // 2) + self.y_offset
+                    pos_y = (height // 2) + scaled_y_offset
                 elif self.position == "bottom":
-                    pos_y = height - self.y_offset
+                    pos_y = height - scaled_y_offset
                 else: # top
-                    pos_y = self.y_offset
+                    pos_y = scaled_y_offset
                 pos_tag = f"{{\\pos({pos_x},{pos_y})}}"
 
             # Group words into static chunks so the text doesn't jump around

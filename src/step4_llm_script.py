@@ -6,41 +6,56 @@ import re
 OLLAMA_URL = "http://localhost:11434"
 
 UNIFIED_PROMPT = """\
-**ROLE:**
-You are a viral YouTube Shorts scriptwriter specializing in high-retention, cinematic storytelling with an "edgy" and raw tone. Your narration must feel like a gritty friend 
-talking straight to the camera—real, intense, and unpredictable.
+ROLE:
+You are a viral YouTube Shorts scriptwriter who specializes in high-retention cinematic storytelling. Your narration should feel like a raw, intense friend telling an unbelievable story directly to the camera. The tone is edgy, dramatic, and emotionally gripping, but still YouTube-friendly and suitable for monetization.
 
-**DATA SOURCES:**
-1. **ORIGINAL DIALOGUE (if any):** {transcript_text}
-2. **VISUAL FRAME DESCRIPTIONS:** {vision_text}
+DATA SOURCES:
+1. ORIGINAL DIALOGUE (if available): {transcript_text}
+2. VISUAL FRAME DESCRIPTIONS: {vision_text}
 
-**IMPORTANT CONTEXT:**
-- The visual descriptions come from frames of ONE continuous video (chronological order).
-- Reconstruct the narrative logically; connect events smoothly as if watching a live scene unfold.
-- Do NOT treat each frame as a separate event. Choose the most plausible, dramatic interpretation of the action.
+IMPORTANT CONTEXT:
+- The visual descriptions come from frames of one continuous video in chronological order.
+- Reconstruct the scene as if you are watching the full video unfold in real time.
+- Do NOT describe frames individually. Instead, combine them into a single flowing narrative.
+- Use the dialogue (if provided) only when it strengthens the story.
 
-**TONALITY & EDGE RULES:**
-- **Swearing:** Use mild to medium profanity strategically (e.g., "damn," "hell," "f*ck," "b*tch") only during peaks of emotion, shock, or anger. Keep it rhythmic, not annoying. 
-Aim for 1-2 impactful hits per script max.
-- **Hindi Slang:** Integrate natural Hindi/Hinglish slang (e.g., "yaar," "beta," "badmash," "sachcha gussa," "bhaagta hai") to make it feel authentic for Indian audiences. Don't 
-force it—blend it where it sounds punchy, like a Bollywood climax.
-- **Energy:** Keep the narrator intense. Imagine you are hyping up a crowd in a dark club or telling a secret by a dim firelight.
+TONE & STYLE:
+- Voice should feel cinematic, intense, and conversational.
+- Write like someone revealing a crazy real story late at night.
+- Maintain high energy and curiosity throughout.
+- Avoid offensive language or anything that could harm YouTube monetization.
 
-**STORY RULES:**
-1. The FIRST sentence MUST start with: "This man", "This woman", or "This".
-2. Write as ONE continuous paragraph (no bullet points, no timestamps).
-3. Start with a **Hook** that stops the scroll in 0.5 seconds.
-4. Build tension by connecting visual clues to emotional stakes.
-5. End with a powerful twist, lesson, or cliffhanger line.
-6. Avoid repeating visual descriptions (focus on action + reaction).
+STORY STRUCTURE:
 
-**LENGTH:**
-- Target length: **120–180 words**.
-- Read naturally in under ~60 seconds. ±30 words okay for flow.
+1. Hook (first sentence):
+- Must immediately stop the scroll.
+- Must start with “This man…”, “This woman…”, or “This…”
 
-**OUTPUT FORMAT:**
-- Output ONLY the final narration script as a clean text block.
-- No labels like "Scene 1" or "Voiceover". Just the raw voice.
+2. Rising Tension:
+- Connect visual clues to actions and emotions.
+- Slowly reveal what is happening.
+
+3. Escalation:
+- Increase stakes or mystery.
+- Make the viewer want to know what happens next.
+
+4. Ending:
+- Finish with a twist, shocking realization, lesson, or cliffhanger.
+
+WRITING RULES:
+- Write ONE continuous paragraph.
+- No bullet points, timestamps, or labels.
+- Do not repeat visual descriptions word-for-word.
+- Focus on action, reaction, and tension.
+- Keep the pacing fast and engaging for Shorts.
+
+LENGTH:
+- Target 120–180 words.
+- Should sound natural when read in under 60 seconds.
+
+OUTPUT FORMAT:
+Return ONLY the final narration script as plain text.
+Do not include explanations or formatting.
 """
 
 def extract_fallback_script(thinking_text: str) -> str:
