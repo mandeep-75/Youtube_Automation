@@ -1,2 +1,0 @@
-#!/bin/bash
-exec "/Users/mandeep/development/youtube_automation/autoupload_daily.sh"

@@ -81,7 +81,9 @@ EXIT_CODE=$?
 if [ $EXIT_CODE -eq 0 ]; then
     # ── Move folder to uploaded/ ───────────────────────────────────────────
     NAME=$(basename "$CHOSEN")
-    mv "$CHOSEN" "$UPLOADED/$NAME"
+    if [ -d "$CHOSEN" ]; then
+        mv "$CHOSEN" "$UPLOADED/$NAME"
+    fi
     echo "$TODAY" > "$LOG"
     echo ""
     echo "✅ Done! Moved → uploaded/$NAME"

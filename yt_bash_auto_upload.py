@@ -230,16 +230,8 @@ def main() -> int:
         f.write(video_id)
     print(f"📝 Video ID saved → {id_file}")
 
-    # ── Move folder to uploaded/ ───────────────────────────────────────────
-    os.makedirs(UPLOADED_DIR, exist_ok=True)
-    folder_name = os.path.basename(os.path.abspath(folder))
-    dest = os.path.join(UPLOADED_DIR, folder_name)
-    try:
-        shutil.move(folder, dest)
-        print(f"📦 Moved → uploaded/{folder_name}")
-    except Exception as e:
-        print(f"⚠️  Could not move folder to uploaded/: {e}")
-        # Non-fatal — upload succeeded, just log the warning
+    # ── Let the calling script (e.g. autoupload_daily.sh) move the folder ──
+
 
     return 0
 

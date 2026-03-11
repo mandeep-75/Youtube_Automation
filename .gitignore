@@ -35,3 +35,4 @@ venv
 upload_queue
 uploaded
 watcher.lock
+last_upload.txt
