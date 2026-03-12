@@ -36,3 +36,5 @@ upload_queue
 uploaded
 watcher.lock
 last_upload.txt
+ig_session.json
+last_ig_upload.txt

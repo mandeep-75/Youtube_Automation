@@ -14,17 +14,28 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.auth.transport.requests import Request
 
+from instagrapi import Client
+from dotenv import load_dotenv
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
+
+load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
+
 
 # ===============================
 # CONFIG
 # ===============================
 
-UPLOAD_QUEUE_DIR = "upload_queue"
-UPLOADED_DIR = "uploaded"
+UPLOAD_QUEUE_DIR = os.path.join(PROJECT_ROOT, "upload_queue")
+UPLOADED_DIR = os.path.join(PROJECT_ROOT, "uploaded")
 OLLAMA_MODEL = "jaahas/qwen3.5-uncensored:9b"
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
-CLIENT_SECRET_FILE = "client_secret.json"
-TOKEN_FILE = "youtube_token.pickle"
+CLIENT_SECRET_FILE = os.path.join(PROJECT_ROOT, "client_secret.json")
+TOKEN_FILE = os.path.join(PROJECT_ROOT, "youtube_token.pickle")
+IG_SESSION_FILE = os.path.join(PROJECT_ROOT, "ig_session.json")
+
+IG_USERNAME = os.environ.get("IG_USERNAME")
+IG_PASSWORD = os.environ.get("IG_PASSWORD")
 
 METADATA_PROMPT = """
 You are a YouTube Shorts SEO expert.
@@ -51,22 +62,61 @@ Return JSON only:
 }}
 """
 
+IG_METADATA_PROMPT = """
+You are an Instagram Reels viral SEO expert.
+
+Given this video script:
+
+{script}
+
+Create an engaging Instagram Reels caption.
+
+RULES:
+- Start with a catchy hook line
+- Short engaging description (1-2 sentences)
+- Include 5 to 10 relevant hashtags at the end
+- Use a few emojis
+- Return JSON only.
+
+Return JSON only:
+
+{{
+  "caption": "Your generated caption here with #hashtags"
+}}
+"""
+
 
 # ===============================
 # VIDEO DISCOVERY
 # ===============================
 
 def get_videos():
-    """Return list of folder names that contain final_video.mp4."""
+    """Return list of video data from upload_queue and uploaded."""
     videos = []
-    if not os.path.exists(UPLOAD_QUEUE_DIR):
-        return videos
-    for name in sorted(os.listdir(UPLOAD_QUEUE_DIR)):
-        folder = os.path.join(UPLOAD_QUEUE_DIR, name)
-        if os.path.isdir(folder) and os.path.exists(os.path.join(folder, "final_video.mp4")):
-            # Check if uploaded
-            is_uploaded = os.path.exists(os.path.join(folder, "youtube_id.txt"))
-            videos.append({"name": name, "uploaded": is_uploaded})
+    
+    # Check both directories
+    for parent in [UPLOAD_QUEUE_DIR, UPLOADED_DIR]:
+        if not os.path.exists(parent):
+            continue
+            
+        for name in sorted(os.listdir(parent)):
+            folder = os.path.join(parent, name)
+            if os.path.isdir(folder) and os.path.exists(os.path.join(folder, "final_video.mp4")):
+                yt_done = os.path.exists(os.path.join(folder, "youtube_id.txt"))
+                ig_done = os.path.exists(os.path.join(folder, "ig_id.txt"))
+                
+                # Check if this video name is already in the list (from another dir)
+                # to avoid duplicates if someone manually copied folders
+                if any(v["name"] == name for v in videos):
+                    continue
+                    
+                videos.append({
+                    "name": name,
+                    "folder": folder,
+                    "parent": parent,
+                    "yt_done": yt_done,
+                    "ig_done": ig_done
+                })
     return videos
 
 
@@ -133,19 +183,20 @@ def select_video(stdscr):
         draw_border(stdscr, 0, 0, h - 1, w - 1, " Select Video to Upload ")
 
         for i, video_data in enumerate(videos):
-            video = video_data["name"]
-            uploaded = video_data["uploaded"]
-            status_tag = " [OK]" if uploaded else ""
+            name = video_data["name"]
+            yt_tag = "[YT]" if video_data["yt_done"] else "    "
+            ig_tag = "[IG]" if video_data["ig_done"] else "    "
             
             y = 3 + i
             if y >= h - 4:
                 safe_addstr(stdscr, y, 6, "... more videos ...")
                 break
 
+            status = f"{yt_tag} {ig_tag} {name}"
             if i == selected:
-                safe_addstr(stdscr, y, 4, f"> {video}{status_tag}", curses.color_pair(1))
+                safe_addstr(stdscr, y, 4, f"> {status}", curses.color_pair(1))
             else:
-                safe_addstr(stdscr, y, 6, f"{video}{status_tag}")
+                safe_addstr(stdscr, y, 6, status)
 
         # Footer
         safe_addstr(stdscr, h - 3, 2, f"Total: {len(videos)}")
@@ -160,7 +211,7 @@ def select_video(stdscr):
         elif key in (curses.KEY_DOWN, ord('j')):
             selected = (selected + 1) % len(videos)
         elif key in (10, 13):
-            return videos[selected]["name"]
+            return videos[selected]
         elif key == ord('q'):
             return None
 
@@ -186,26 +237,34 @@ def extract_json(text):
 
 def generate_metadata(script_text):
     prompt = METADATA_PROMPT.format(script=script_text)
-    print("\n💡 Ollama thinking...\n")
+    print("\n💡 Ollama thinking (YouTube)...\n")
     stream = ollama.chat(
         model=OLLAMA_MODEL,
         messages=[{"role": "user", "content": prompt}],
-        think=True,
         stream=True,
         options={"temperature": 0.8}
     )
     response_text = ""
-    thinking = False
     for chunk in stream:
-        if getattr(chunk.message, "thinking", None):
-            if not thinking:
-                print("🧠 Thinking:\n")
-                thinking = True
-            print(chunk.message.thinking, end="", flush=True)
-        elif getattr(chunk.message, "content", None):
-            if thinking:
-                print("\n\n✅ Final Metadata:\n")
-                thinking = False
+        if getattr(chunk.message, "content", None):
+            print(chunk.message.content, end="", flush=True)
+            response_text += chunk.message.content
+    print("\n")
+    return extract_json(response_text)
+
+
+def generate_ig_metadata(script_text):
+    prompt = IG_METADATA_PROMPT.format(script=script_text)
+    print("\n💡 Ollama thinking (Instagram)...\n")
+    stream = ollama.chat(
+        model=OLLAMA_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        stream=True,
+        options={"temperature": 0.8}
+    )
+    response_text = ""
+    for chunk in stream:
+        if getattr(chunk.message, "content", None):
             print(chunk.message.content, end="", flush=True)
             response_text += chunk.message.content
     print("\n")
@@ -253,14 +312,14 @@ def upload_video(youtube, video_file, metadata):
     }
     media = MediaFileUpload(video_file, chunksize=-1, resumable=True)
     request = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
-    print("\nUploading video...\n")
+    print("\nUploading to YouTube...\n")
     response = None
     while response is None:
         status, response = request.next_chunk()
         if status:
-            print(f"Upload {int(status.progress() * 100)}%")
-    print("\n✅ Upload Complete")
-    print("Video ID:", response["id"])
+            print(f"  YouTube {int(status.progress() * 100)}%")
+            
+    print("\n✅ YouTube Success:", response["id"])
     
     # Save video ID to log file in the folder
     folder_path = os.path.dirname(video_file)
@@ -269,58 +328,105 @@ def upload_video(youtube, video_file, metadata):
 
 
 # ===============================
+# INSTAGRAM AUTH & UPLOAD
+# ===============================
+
+def get_authenticated_client_ig():
+    cl = Client()
+    if os.path.exists(IG_SESSION_FILE):
+        cl.load_settings(IG_SESSION_FILE)
+        try:
+            cl.login(IG_USERNAME, IG_PASSWORD)
+            return cl
+        except Exception:
+            pass
+    print("🔑 Instagram login...")
+    cl.login(IG_USERNAME, IG_PASSWORD)
+    cl.dump_settings(IG_SESSION_FILE)
+    return cl
+
+
+def upload_video_ig(cl, video_file, metadata):
+    caption = metadata.get("caption", "")
+    print(f"\nUploading Reel: {caption[:50]}...\n")
+    media = cl.clip_upload(path=video_file, caption=caption)
+    print(f"✅ Instagram Success: https://www.instagram.com/reel/{media.code}")
+    
+    # Save PK to log file
+    folder_path = os.path.dirname(video_file)
+    with open(os.path.join(folder_path, "ig_id.txt"), "w") as f:
+        f.write(str(media.pk))
+
+
+# ===============================
 # MAIN
 # ===============================
 
 def main(stdscr):
-    selected = select_video(stdscr)
-    if not selected:
+    selected_data = select_video(stdscr)
+    if not selected_data:
         return
 
-    folder = os.path.join(UPLOAD_QUEUE_DIR, selected)
+    name = selected_data["name"]
+    folder = selected_data["folder"]
     video = os.path.join(folder, "final_video.mp4")
-    script = os.path.join(folder, "script.txt")
+    script_path = os.path.join(folder, "script.txt")
 
-    if not os.path.exists(script):
+    if not os.path.exists(script_path):
         h, w = stdscr.getmaxyx()
-        safe_addstr(stdscr, h - 2, 2, "X script.txt missing. Press any key.")
+        safe_addstr(stdscr, h - 2, 2, f"X script.txt missing in {name}. Any key.")
         stdscr.getch()
         return
 
-    with open(script, "r", encoding="utf-8") as f:
+    with open(script_path, "r", encoding="utf-8") as f:
         script_text = f.read()
 
-    # Leave curses mode for metadata generation and upload
+    # Leave curses mode
     curses.endwin()
 
-    print("\nGenerating metadata...\n")
-    try:
-        metadata = generate_metadata(script_text)
-    except Exception as e:
-        print(f"❌ Metadata generation failed: {e}")
-        input("Press Enter to exit...")
-        return
-
-    # Automatically upload without confirmation
-    print("\nAuthenticating YouTube...")
-    try:
-        youtube = get_authenticated_service()
-        if youtube:
+    # YouTube Upload
+    if not selected_data["yt_done"]:
+        print(f"\n📺 Processing YouTube for: {name}")
+        try:
+            metadata = generate_metadata(script_text)
+            youtube = get_authenticated_service()
             upload_video(youtube, video, metadata)
-            
-            # Move folder to uploaded directory
-            if not os.path.exists(UPLOADED_DIR):
-                os.makedirs(UPLOADED_DIR)
-            dest_folder = os.path.join(UPLOADED_DIR, selected)
-            # If destination already exists, remove it first or use a unique name
-            if os.path.exists(dest_folder):
-                shutil.rmtree(dest_folder)
-            shutil.move(folder, dest_folder)
-            print(f"\n📂 Moved '{selected}' to {UPLOADED_DIR}/")
-            
-    except Exception as e:
-        print(f"❌ Upload failed: {e}")
-        input("\nPress Enter to exit...")
+        except Exception as e:
+            print(f"❌ YouTube failed: {e}")
+    else:
+        print(f"\n✅ YouTube already done for: {name}")
+
+    # Instagram Upload
+    if not selected_data["ig_done"]:
+        print(f"\n📸 Processing Instagram for: {name}")
+        try:
+            if not IG_USERNAME or not IG_PASSWORD:
+                print("❌ IG_USERNAME/PASSWORD missing in .env")
+            else:
+                metadata_ig = generate_ig_metadata(script_text)
+                cl = get_authenticated_client_ig()
+                upload_video_ig(cl, video, metadata_ig)
+        except Exception as e:
+            print(f"❌ Instagram failed: {e}")
+    else:
+        print(f"\n✅ Instagram already done for: {name}")
+
+    # Move folder to uploaded directory if both done
+    folder_now = folder # could have changed if we moved it midway (not really in this flow)
+    yt_now = os.path.exists(os.path.join(folder, "youtube_id.txt"))
+    ig_now = os.path.exists(os.path.join(folder, "ig_id.txt"))
+
+    if yt_now and ig_now and selected_data["parent"] == UPLOAD_QUEUE_DIR:
+        print("\n🚀 Both platforms complete. Moving to uploaded/...")
+        if not os.path.exists(UPLOADED_DIR):
+            os.makedirs(UPLOADED_DIR)
+        dest = os.path.join(UPLOADED_DIR, name)
+        if os.path.exists(dest):
+            shutil.rmtree(dest)
+        shutil.move(folder, dest)
+        print(f"📂 Done.")
+    
+    input("\nPress Enter to return...")
 
 
 if __name__ == "__main__":

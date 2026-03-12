@@ -35,11 +35,13 @@ from google.auth.transport.requests import Request
 # ─────────────────────────────────────────────────────────────────────────────
 
 BASE_DIR            = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT        = os.path.dirname(BASE_DIR)
+
 OLLAMA_MODEL        = "jaahas/qwen3.5-uncensored:9b"
 SCOPES              = ["https://www.googleapis.com/auth/youtube.upload"]
-CLIENT_SECRET_FILE  = os.path.join(BASE_DIR, "client_secret.json")
-TOKEN_FILE          = os.path.join(BASE_DIR, "youtube_token.pickle")
-UPLOADED_DIR        = os.path.join(BASE_DIR, "uploaded")
+CLIENT_SECRET_FILE  = os.path.join(PROJECT_ROOT, "client_secret.json")
+TOKEN_FILE          = os.path.join(PROJECT_ROOT, "youtube_token.pickle")
+UPLOADED_DIR        = os.path.join(PROJECT_ROOT, "uploaded")
 
 METADATA_PROMPT = """
 You are a YouTube Shorts SEO expert.

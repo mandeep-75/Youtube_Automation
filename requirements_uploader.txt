@@ -7,3 +7,5 @@ pysubs2
 curses-menu
 tqdm
 resemble-perth==1.0.1
+instagrapi
+python-dotenv
