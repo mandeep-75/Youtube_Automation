@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 
 import os
+import sys
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.dirname(script_dir)
+project_root = os.path.dirname(src_dir)
+sys.path.insert(0, project_root)
+
 import json
 import pickle
 import re
@@ -15,27 +22,25 @@ from googleapiclient.http import MediaFileUpload
 from google.auth.transport.requests import Request
 
 from instagrapi import Client
-from dotenv import load_dotenv
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(BASE_DIR)
 
-load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
+from src import config
 
 
 # ===============================
-# CONFIG
+# CONFIG (from config.py)
 # ===============================
 
-UPLOAD_QUEUE_DIR = os.path.join(PROJECT_ROOT, "upload_queue")
-UPLOADED_DIR = os.path.join(PROJECT_ROOT, "uploaded")
-OLLAMA_MODEL = "jaahas/qwen3.5-uncensored:9b"
-SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
-CLIENT_SECRET_FILE = os.path.join(PROJECT_ROOT, "client_secret.json")
-TOKEN_FILE = os.path.join(PROJECT_ROOT, "youtube_token.pickle")
-IG_SESSION_FILE = os.path.join(PROJECT_ROOT, "ig_session.json")
+UPLOAD_QUEUE_DIR = os.path.join(config.PROJECT_ROOT, "upload_queue")
+UPLOADED_DIR = os.path.join(config.PROJECT_ROOT, "uploaded")
 
-IG_USERNAME = os.environ.get("IG_USERNAME")
-IG_PASSWORD = os.environ.get("IG_PASSWORD")
+PROJECT_ROOT = config.PROJECT_ROOT
+OLLAMA_MODEL = config.LLM_MODEL
+SCOPES = config.YOUTUBE_SCOPES
+CLIENT_SECRET_FILE = config.CLIENT_SECRET_FILE
+TOKEN_FILE = config.YOUTUBE_TOKEN_FILE
+IG_SESSION_FILE = config.IG_SESSION_FILE
+IG_USERNAME = config.IG_USERNAME
+IG_PASSWORD = config.IG_PASSWORD
 
 METADATA_PROMPT = """
 You are a YouTube Shorts SEO expert.
@@ -429,5 +434,87 @@ def main(stdscr):
     input("\nPress Enter to return...")
 
 
+def main_nocurses():
+    import glob
+    
+    folders = sorted([
+        f for f in glob.glob(os.path.join(UPLOAD_QUEUE_DIR, "*"))
+        if os.path.isdir(f) and 
+        os.path.exists(os.path.join(f, "final_video.mp4")) and
+        os.path.exists(os.path.join(f, "script.txt"))
+    ])
+    
+    if not folders:
+        print("No videos found in upload_queue/")
+        return
+    
+    print("\nAvailable videos:")
+    for i, folder in enumerate(folders):
+        name = os.path.basename(folder)
+        yt_done = os.path.exists(os.path.join(folder, "youtube_id.txt"))
+        ig_done = os.path.exists(os.path.join(folder, "ig_id.txt"))
+        status = f"[YT:{'✓' if yt_done else '✗'} IG:{'✓' if ig_done else '✗'}]"
+        print(f"  {i+1}. {name} {status}")
+    
+    print("\nEnter video number to upload (or 'q' to quit): ")
+    choice = input().strip()
+    
+    if choice.lower() == 'q':
+        return
+    
+    try:
+        idx = int(choice) - 1
+        if 0 <= idx < len(folders):
+            folder = folders[idx]
+            name = os.path.basename(folder)
+            video = os.path.join(folder, "final_video.mp4")
+            script_path = os.path.join(folder, "script.txt")
+            
+            with open(script_path, "r", encoding="utf-8") as f:
+                script_text = f.read()
+            
+            # YouTube Upload
+            if not os.path.exists(os.path.join(folder, "youtube_id.txt")):
+                print(f"\n📺 Uploading to YouTube: {name}")
+                try:
+                    metadata = generate_metadata(script_text)
+                    youtube = get_authenticated_service()
+                    upload_video(youtube, video, metadata)
+                    print("✅ YouTube upload complete!")
+                except Exception as e:
+                    print(f"❌ YouTube failed: {e}")
+            else:
+                print(f"\n✅ YouTube already done for: {name}")
+            
+            # Instagram Upload
+            if not os.path.exists(os.path.join(folder, "ig_id.txt")):
+                if IG_USERNAME and IG_PASSWORD:
+                    print(f"\n📸 Uploading to Instagram: {name}")
+                    try:
+                        metadata_ig = generate_ig_metadata(script_text)
+                        cl = get_authenticated_client_ig()
+                        upload_video_ig(cl, video, metadata_ig)
+                        print("✅ Instagram upload complete!")
+                    except Exception as e:
+                        print(f"❌ Instagram failed: {e}")
+                else:
+                    print("\nℹ️ Instagram credentials not set, skipping")
+            else:
+                print(f"✅ Instagram already done for: {name}")
+                
+        else:
+            print("Invalid selection")
+    except ValueError:
+        print("Invalid input")
+
+
 if __name__ == "__main__":
-    curses.wrapper(main)
+    import sys
+    # Check if we can run curses or should use fallback
+    if not sys.stdin.isatty() or os.environ.get("TERM") == "dumb":
+        main_nocurses()
+    else:
+        try:
+            curses.wrapper(main)
+        except curses.error:
+            main_nocurses()

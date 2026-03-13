@@ -7,7 +7,7 @@
 
 import os
 
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -121,8 +121,24 @@ SUBTITLE_Y_OFFSET       = 250
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-CHATTERBOX_PYTHON = os.path.join(PROJECT_ROOT, "venvs", "chatterbox", "bin", "python")
+UNIFIED_PYTHON = os.path.join(PROJECT_ROOT, ".venv", "unified", "bin", "python")
 
-FASTER_WHISPER_PYTHON = os.path.join(PROJECT_ROOT, "venvs", "faster_whisper", "bin", "python")
+CHATTERBOX_PYTHON = UNIFIED_PYTHON
+FASTER_WHISPER_PYTHON = UNIFIED_PYTHON
+UPLOADER_PYTHON = UNIFIED_PYTHON
 
-UPLOADER_PYTHON = os.path.join(PROJECT_ROOT, "venvs", "uploader", "bin", "python")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 9. UPLOADER SETTINGS
+# ─────────────────────────────────────────────────────────────────────────────
+
+from dotenv import load_dotenv
+load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
+
+YOUTUBE_SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+CLIENT_SECRET_FILE = os.path.join(PROJECT_ROOT, "client_secret.json")
+YOUTUBE_TOKEN_FILE = os.path.join(PROJECT_ROOT, "youtube_token.pickle")
+IG_SESSION_FILE = os.path.join(PROJECT_ROOT, "ig_session.json")
+
+IG_USERNAME = os.environ.get("IG_USERNAME", "")
+IG_PASSWORD = os.environ.get("IG_PASSWORD", "")

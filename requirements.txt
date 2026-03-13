@@ -1,0 +1,51 @@
+# Unified venv requirements
+# Combines chatterbox, faster_whisper, and uploader dependencies
+
+# === Core ML/TTS ===
+chatterbox-tts==0.1.6
+torch==2.6.0
+torchaudio==2.6.0
+diffusers==0.29.0
+peft==0.18.1
+accelerate==1.12.0
+
+# === Transcription ===
+faster-whisper==1.1.1
+ctranslate2==4.7.1
+huggingface-hub>=0.25.0
+
+# === Vision & LLM ===
+ollama
+tqdm
+
+# === Video/Image Processing ===
+opencv-python==4.11.0.86
+Pillow
+imageio-ffmpeg==0.5.1
+
+# === Audio Processing ===
+librosa==0.11.0
+soundfile==0.13.1
+
+# === Subtitles ===
+pysubs2==1.7.2
+srt==3.5.3
+
+# === Uploaders ===
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
+instagrapi
+
+# === Utilities ===
+requests==2.32.5
+python-dotenv
+curses-menu
+
+# === Watermarking ===
+setuptools==69.5.1
+resemble-perth==1.0.1
+
+# === Other deps ===
+s3tokenizer==0.3.0
+gradio==5.44.1

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 yt_bash_auto_upload.py
-──────────────────────
+─────────────────────
 Automated YouTube uploader — no UI, no curses.
 
 Usage (called by autoupload_daily.sh or a bot):
@@ -17,6 +17,12 @@ On failure it exits non-zero so the shell script can detect and log it.
 
 import os
 import sys
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.dirname(script_dir)
+project_root = os.path.dirname(src_dir)
+sys.path.insert(0, project_root)
+
 import json
 import pickle
 import re
@@ -29,18 +35,18 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.auth.transport.requests import Request
 
+from src import config
+
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CONFIG  (mirrors config.py so this script is self-contained)
+# CONFIG (from config.py)
 # ─────────────────────────────────────────────────────────────────────────────
 
-BASE_DIR            = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT        = os.path.dirname(BASE_DIR)
-
-OLLAMA_MODEL        = "jaahas/qwen3.5-uncensored:9b"
-SCOPES              = ["https://www.googleapis.com/auth/youtube.upload"]
-CLIENT_SECRET_FILE  = os.path.join(PROJECT_ROOT, "client_secret.json")
-TOKEN_FILE          = os.path.join(PROJECT_ROOT, "youtube_token.pickle")
+PROJECT_ROOT        = config.PROJECT_ROOT
+OLLAMA_MODEL        = config.LLM_MODEL
+SCOPES              = config.YOUTUBE_SCOPES
+CLIENT_SECRET_FILE  = config.CLIENT_SECRET_FILE
+TOKEN_FILE          = config.YOUTUBE_TOKEN_FILE
 UPLOADED_DIR        = os.path.join(PROJECT_ROOT, "uploaded")
 
 METADATA_PROMPT = """

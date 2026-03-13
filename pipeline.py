@@ -4,7 +4,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-import config  # Import entire config module for cleaner access
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+
+from src import config
 
 # Validate environment
 if not os.path.isfile(config.CHATTERBOX_PYTHON):
@@ -38,7 +40,7 @@ def step1_extract_frames(video_path: str, frames_dir: str) -> str:
     os.makedirs(frames_dir, exist_ok=True)
     manifest_path = os.path.join(frames_dir, "manifest.json")
     subprocess.run([
-        config.CHATTERBOX_PYTHON, "./src/step1_extract_frames.py",
+        config.CHATTERBOX_PYTHON, "./src/steps/step1_extract_frames.py",
         "--video-file", video_path,
         "--interval",   config.FRAME_INTERVAL,
         "--output-dir", frames_dir,
@@ -47,7 +49,7 @@ def step1_extract_frames(video_path: str, frames_dir: str) -> str:
 
 def step2_vision_describe(manifest_path: str, output_file: str):
     subprocess.run([
-        config.UPLOADER_PYTHON, "./src/step2_qwen_vl.py",
+        config.UPLOADER_PYTHON, "./src/steps/step2_qwen_vl.py",
         "--manifest",     manifest_path,
         "--model",        config.VISION_MODEL,
         "--prompt",       config.VISION_PROMPT,
@@ -57,7 +59,7 @@ def step2_vision_describe(manifest_path: str, output_file: str):
 
 def step3_transcribe_original(video_path: str, output_file: str):
     cmd = [
-        config.FASTER_WHISPER_PYTHON, "./src/step3_transcribe_original.py",
+        config.FASTER_WHISPER_PYTHON, "./src/steps/step3_transcribe_original.py",
         "--video",        video_path,
         "--output",       output_file,
         "--model",        config.WHISPER_MODEL,
@@ -70,7 +72,7 @@ def step3_transcribe_original(video_path: str, output_file: str):
 
 def step4_llm_script(frames_file: str, transcript_file: str, script_output: str, duration: float):
     cmd = [
-        config.UPLOADER_PYTHON, "./src/step4_llm_script.py",
+        config.UPLOADER_PYTHON, "./src/steps/step4_llm_script.py",
         "--input",      frames_file,
         "--output",     script_output,
         "--duration",   f"{duration:.2f}",
@@ -86,7 +88,7 @@ def step5_tts(script_file: str, voice_output: str):
     ref_audio = config.TTS_REF_AUDIO
     print(f"🎤 Using TTS reference audio: {ref_audio}")
     subprocess.run([
-        config.CHATTERBOX_PYTHON, "./src/step5_tts.py",
+        config.CHATTERBOX_PYTHON, "./src/steps/step5_tts.py",
         "--script",             script_file,
         "--output",             voice_output,
         "--ref-audio",          ref_audio,
@@ -98,7 +100,7 @@ def step5_tts(script_file: str, voice_output: str):
 
 def step6_merge_av(video_path: str, audio_path: str, output_path: str):
     cmd = [
-        config.FASTER_WHISPER_PYTHON, "./src/step6_merge_av.py",
+        config.FASTER_WHISPER_PYTHON, "./src/steps/step6_merge_av.py",
         "--video",  video_path,
         "--audio",  audio_path,
         "--output", output_path,
@@ -110,7 +112,7 @@ def step6_merge_av(video_path: str, audio_path: str, output_path: str):
 
 def step7_transcribe_subtitles(video_path: str, srt_path: str):
     cmd = [
-        config.FASTER_WHISPER_PYTHON, "./src/step7_transcribe_subtitles.py",
+        config.FASTER_WHISPER_PYTHON, "./src/steps/step7_transcribe_subtitles.py",
         "--video",        video_path,
         "--model",        config.WHISPER_MODEL,
         "--srt",          srt_path,
@@ -132,7 +134,7 @@ def step8_burn_subtitles(video_path: str, subtitle_path: str, output_path: str):
 
     print(f"🔤 Using subtitle font: {font_name} (Size: {font_size})")
     cmd = [
-        config.FASTER_WHISPER_PYTHON, "./src/step8_burn_subtitles.py",
+        config.FASTER_WHISPER_PYTHON, "./src/steps/step8_burn_subtitles.py",
         video_path, subtitle_path,
         "-o",               output_path,
         "--font-name",       font_name,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ig_bash_auto_upload.py
-──────────────────────
+─────────────────────
 Automated Instagram Reels uploader — no UI.
 
 Usage (called by a bash script or a bot):
@@ -21,6 +21,12 @@ On failure it exits non-zero so the shell script can detect and log it.
 
 import os
 import sys
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.dirname(script_dir)
+project_root = os.path.dirname(src_dir)
+sys.path.insert(0, project_root)
+
 import json
 import re
 from pathlib import Path
@@ -28,19 +34,19 @@ from pathlib import Path
 import ollama
 from instagrapi import Client
 from instagrapi.exceptions import LoginRequired
-from dotenv import load_dotenv
 
-BASE_DIR            = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT        = os.path.dirname(BASE_DIR)
+from src import config
 
-load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
-OLLAMA_MODEL        = "jaahas/qwen3.5-uncensored:9b"
-IG_SESSION_FILE     = os.path.join(PROJECT_ROOT, "ig_session.json")
+# ─────────────────────────────────────────────────────────────────────────────
+# CONFIG (from config.py)
+# ─────────────────────────────────────────────────────────────────────────────
 
-# Load credentials from environment (or set them here directly)
-IG_USERNAME = os.environ.get("IG_USERNAME", "")
-IG_PASSWORD = os.environ.get("IG_PASSWORD", "")
+PROJECT_ROOT        = config.PROJECT_ROOT
+OLLAMA_MODEL        = config.LLM_MODEL
+IG_SESSION_FILE     = config.IG_SESSION_FILE
+IG_USERNAME         = config.IG_USERNAME
+IG_PASSWORD         = config.IG_PASSWORD
 
 METADATA_PROMPT = """
 You are an Instagram Reels viral SEO expert.

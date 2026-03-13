@@ -9,10 +9,7 @@ build/
 *.egg
 
 # ── Virtual environments (never commit these) ────────────────────────────
-venvs/uploader
-venvs/faster_whisper
-venvs/chatterbox
-venvs
+.venv
 
 # ── Model checkpoints (large binaries – use Git LFS or download script) ──
 checkpoints/
@@ -26,15 +23,11 @@ outputs/
 *.wav
 *.srt
 *.log
+logs/
 .env
-client_secret.json
-youtube_token.pickle
-.venv
-venvs/uploader
 venv
 upload_queue
 uploaded
 watcher.lock
 last_upload.txt
-ig_session.json
 last_ig_upload.txt
