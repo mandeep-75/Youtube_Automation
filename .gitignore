@@ -7,7 +7,7 @@ __pycache__/
 dist/
 build/
 *.egg
-
+client_secret.json
 # ── Virtual environments (never commit these) ────────────────────────────
 .venv
 
@@ -28,6 +28,16 @@ logs/
 venv
 upload_queue
 uploaded
+
 watcher.lock
 last_upload.txt
 last_ig_upload.txt
+
+# ── Auth tokens ────────────────────────────────────────────────────────────
+youtube_token.pickle
+ig_session.json
+
+# ── Media files ─────────────────────────────────────────────────────────────
+*.mov
+*.mp3
+thumbnails/
