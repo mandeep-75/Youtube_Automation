@@ -17,6 +17,23 @@ if not os.path.isfile(config.FASTER_WHISPER_PYTHON):
         "Please ensure the virtual environment is set up correctly."
     )
 
+def get_video_duration(video_path: str) -> float:
+    """Get video duration using ffprobe."""
+    # Try local ffprobe first
+    ffprobe_bin = os.path.join(config.PROJECT_ROOT, "tools", "ffprobe")
+    if not (os.path.isfile(ffprobe_bin) and os.access(ffprobe_bin, os.X_OK)):
+        ffprobe_bin = "ffprobe" # Fallback to system path
+
+    try:
+        result = subprocess.run([
+            ffprobe_bin, "-v", "error", "-show_entries", "format=duration",
+            "-of", "default=noprint_wrappers=1:nokey=1", video_path
+        ], capture_output=True, text=True, check=True)
+        return float(result.stdout.strip())
+    except Exception as e:
+        print(f"⚠️ Warning: Could not get duration for {video_path}: {e}")
+        return 0.0
+
 def step1_extract_frames(video_path: str, frames_dir: str) -> str:
     os.makedirs(frames_dir, exist_ok=True)
     manifest_path = os.path.join(frames_dir, "manifest.json")
@@ -51,11 +68,13 @@ def step3_transcribe_original(video_path: str, output_file: str):
         cmd += ["--language", config.WHISPER_LANG]
     subprocess.run(cmd, check=True)
 
-def step4_llm_script(frames_file: str, transcript_file: str, script_output: str):
+def step4_llm_script(frames_file: str, transcript_file: str, script_output: str, duration: float):
     cmd = [
         config.UPLOADER_PYTHON, "./src/step4_llm_script.py",
         "--input",      frames_file,
         "--output",     script_output,
+        "--duration",   f"{duration:.2f}",
+        "--wps",        str(config.LLM_WORDS_PER_SECOND),
         "--model",      config.LLM_MODEL,
         "--ollama-url", config.OLLAMA_URL,
     ]
@@ -64,7 +83,7 @@ def step4_llm_script(frames_file: str, transcript_file: str, script_output: str)
     subprocess.run(cmd, check=True)
 
 def step5_tts(script_file: str, voice_output: str):
-    ref_audio = random.choice(config.TTS_REF_AUDIO) if isinstance(config.TTS_REF_AUDIO, list) else config.TTS_REF_AUDIO
+    ref_audio = config.TTS_REF_AUDIO
     print(f"🎤 Using TTS reference audio: {ref_audio}")
     subprocess.run([
         config.CHATTERBOX_PYTHON, "./src/step5_tts.py",
@@ -138,7 +157,8 @@ def step8_burn_subtitles(video_path: str, subtitle_path: str, output_path: str):
     subprocess.run(cmd, check=True)
 
 def run_pipeline(video_path: str):
-    video_name = Path(video_path).stem
+    # Use full filename (including tags and extension) for the output directory
+    video_name = os.path.basename(video_path)
     out_dir = os.path.join(config.PROJECT_ROOT, "outputs", video_name)
     os.makedirs(out_dir, exist_ok=True)
 
@@ -164,7 +184,8 @@ def run_pipeline(video_path: str):
     step3_transcribe_original(video_path, transcript_file)
 
     print("\n─── Step 4  Generate narration script ────────────────────────")
-    step4_llm_script(frames_file, transcript_file, script_file)
+    duration = get_video_duration(video_path)
+    step4_llm_script(frames_file, transcript_file, script_file, duration)
 
     print("\n─── Step 5  Text-to-speech ───────────────────────────────────")
     step5_tts(script_file, voice_file)

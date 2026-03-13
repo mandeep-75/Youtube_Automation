@@ -29,23 +29,21 @@ FRAME_INTERVAL = "1.0"          # seconds between extracted frames (lower = more
 
 VISION_MODEL  = "qwen3-vl:2b" # Model name in Ollama
 
-VISION_PROMPT = """You are analyzing a single frame from a video.
+VISION_PROMPT = """Analyze a single video frame and write one clear paragraph describing it.
 
-Describe the frame in **one detailed and descriptive sentence** that clearly includes the following elements in order: the **main subject**, the **action being performed**, the **foreground elements (objects closest to the camera)**, and the **background environment or distant elements**.
+Order:
+1. Main subject (who/what is the focus)
+2. Action (what the subject is doing)
+3. Foreground (objects closest to the camera)
+4. Background (environment or distant elements)
 
-Guidelines:
-- Base the description strictly on **visible facts** in the image.
-- **Do not speculate** about emotions, identities, intentions, or events outside the frame.
-- Clearly distinguish between the **main subject**, **foreground**, and **background**.
-- Mention notable **people, animals, objects, vehicles, text, or structures** if visible.
-- Include **important visual details** such as clothing, colors, posture, lighting, setting, and spatial relationships when relevant.
-- Use **neutral and objective language**.
-- The sentence should be **detailed but still clear and readable**.
-- Avoid repeating words unnecessarily.
+Rules:
+- Describe only visible facts.
+- Do guess emotions, identity, or events.
+- Mention notable objects, people, colors, clothing, lighting, or structures if visible.
+- Use neutral, clear language.
 
-Output requirement:
-Return **one single, detailed sentence only** that naturally describes the frame while including the subject, action, foreground, and background in that order.
-"""
+Output: Return one detailed paragraph only."""
 
 
 
@@ -66,15 +64,13 @@ WHISPER_COMPUTE_TYPE = "int8"          # int8 | float16 | float32
 # LLM_MODEL = "qwen3.5:9b"       # any model installed in your local Ollama instance
 
 LLM_MODEL = "jaahas/qwen3.5-uncensored:9b"
+LLM_WORDS_PER_SECOND = 3    # Target words per second for narration
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 5. TTS  — Chatterbox voice synthesis
 # ─────────────────────────────────────────────────────────────────────────────
 
-TTS_REF_AUDIO = [
-    "./samples/me.mp3",
-    "./samples/me2.mp3"
-]   # reference voice clip(s). if a list is provided, one will be chosen randomly.
+TTS_REF_AUDIO = "./samples/me.mp3"  # Primary reference voice clip
 
 # Voice characteristics
 TTS_EXAGGERATION      = 0.6

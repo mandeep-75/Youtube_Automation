@@ -10,8 +10,10 @@ ROLE:
 You are a viral YouTube Shorts scriptwriter who specializes in high-retention cinematic storytelling. Your narration should feel like a raw, intense friend telling an unbelievable story directly to the camera. The tone is edgy, dramatic, and emotionally gripping, but still YouTube-friendly and suitable for monetization.
 
 DATA SOURCES:
-1. ORIGINAL DIALOGUE (if available): {transcript_text}
-2. VISUAL FRAME DESCRIPTIONS: {vision_text}
+1. VIDEO DURATION: {duration} seconds
+2. TARGET WORD COUNT: ~{target_words} words (based on {wps} words/sec)
+3. ORIGINAL DIALOGUE (if available): {transcript_text}
+4. VISUAL FRAME DESCRIPTIONS: {vision_text}
 
 IMPORTANT CONTEXT:
 - The visual descriptions come from frames of one continuous video in chronological order.
@@ -49,9 +51,11 @@ WRITING RULES:
 - Focus on action, reaction, and tension.
 - Keep the pacing fast and engaging for Shorts.
 
-LENGTH:
-- Target 120–180 words.
-- Should sound natural when read in under 60 seconds.
+LENGTH & PACING:
+- The script MUST be exactly sized for the video duration.
+- Target word count: {target_words} words.
+- Do NOT exceed this length, as the narration will be cut off.
+- Ensure the pacing feels natural for the given duration.
 
 OUTPUT FORMAT:
 Return ONLY the final narration script as plain text.
@@ -80,11 +84,16 @@ def extract_fallback_script(thinking_text: str) -> str:
 
 
 def generate_script(vision_text, transcript_text=None,
+                    duration=0.0, wps=2.5,
                     model="qwen3.5:9b", ollama_url=OLLAMA_URL):
 
     transcript_val = transcript_text.strip() if transcript_text else "[No audio script available]"
+    target_words = int(float(duration) * float(wps)) if float(duration) > 0 else 150
 
     prompt_content = UNIFIED_PROMPT.format(
+        duration=duration,
+        wps=wps,
+        target_words=target_words,
         transcript_text=transcript_val,
         vision_text=vision_text.strip(),
     )
@@ -163,6 +172,8 @@ if __name__ == "__main__":
     parser.add_argument("--input", required=True)
     parser.add_argument("--transcript", default=None)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--duration", type=float, default=0.0)
+    parser.add_argument("--wps", type=float, default=2.5)
     parser.add_argument("--model", default="qwen3.5:9b")
     parser.add_argument("--ollama-url", default=OLLAMA_URL)
 
@@ -178,7 +189,9 @@ if __name__ == "__main__":
 
     script, thinking = generate_script(
         vision_data,
-        transcript_data,
+        transcript_text=transcript_data,
+        duration=args.duration,
+        wps=args.wps,
         model=args.model,
         ollama_url=args.ollama_url
     )
