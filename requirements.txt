@@ -49,3 +49,8 @@ resemble-perth==1.0.1
 # === Other deps ===
 s3tokenizer==0.3.0
 gradio==5.44.1
+
+# === Testing ===
+pytest>=7.4.0
+pytest-mock>=3.11.0
+pytest-cov>=4.1.0

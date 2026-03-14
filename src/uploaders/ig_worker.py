@@ -1,22 +1,11 @@
 #!/usr/bin/env python3
 """
 ig_bash_auto_upload.py
-─────────────────────
-Automated Instagram Reels uploader — no UI.
+──────────────────────
+Automated Instagram Reels uploader.
 
 Usage (called by a bash script or a bot):
     python ig_bash_auto_upload.py <video_folder>
-
-The folder must contain:
-    final_video.mp4   – the video file to upload
-    script.txt        – the narration script (used to generate caption)
-
-Environment variables required (or set via .env / inline):
-    IG_USERNAME
-    IG_PASSWORD
-
-On success the script writes ig_id.txt into the folder and exits 0.
-On failure it exits non-zero so the shell script can detect and log it.
 """
 
 import os
@@ -29,11 +18,7 @@ sys.path.insert(0, project_root)
 
 import json
 import re
-from pathlib import Path
-
 import ollama
-from instagrapi import Client
-from instagrapi.exceptions import LoginRequired
 
 from src import config
 
@@ -44,31 +29,32 @@ from src import config
 
 PROJECT_ROOT        = config.PROJECT_ROOT
 OLLAMA_MODEL        = config.LLM_MODEL
+OLLAMA_URL          = config.OLLAMA_URL
+IG_SESSION_FILE     = config.IG_SESSION_FILE
+IG_USERNAME         = config.IG_USERNAME
+IG_PASSWORD         = config.IG_PASSWORD
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONFIG (from config.py)
+# ─────────────────────────────────────────────────────────────────────────────
+
+PROJECT_ROOT        = config.PROJECT_ROOT
+OLLAMA_MODEL        = config.LLM_MODEL
+OLLAMA_URL          = config.OLLAMA_URL
 IG_SESSION_FILE     = config.IG_SESSION_FILE
 IG_USERNAME         = config.IG_USERNAME
 IG_PASSWORD         = config.IG_PASSWORD
 
 METADATA_PROMPT = """
-You are an Instagram Reels viral SEO expert.
-
 Given this video script:
 
 {script}
 
-Create an engaging Instagram Reels caption.
+Create an engaging Instagram Reels caption with a hook and hashtags.
 
-RULES:
-- Start with a catchy hook line
-- Short engaging description (1-2 sentences)
-- Include 5 to 10 relevant hashtags at the end
-- Use a few emojis
-- Do NOT include any markdown or text outside the JSON.
-
-Return JSON only:
-
-{{
-  "caption": "Your generated caption here with #hashtags"
-}}
+Respond with ONLY valid JSON:
+{{"caption": "Your caption here with #hashtags"}}
 """
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -76,78 +62,150 @@ Return JSON only:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def extract_json(text: str) -> dict:
-    match = re.search(r"(\{.*\})", text, re.DOTALL)
-    if not match:
+    # Find JSON block - look for first { and last }
+    text = text.strip()
+    start = text.find('{')
+    end = text.rfind('}')
+    
+    if start == -1 or end == -1:
         raise ValueError("No JSON found in LLM response")
-    content = match.group(1)
+    
+    content = text[start:end+1]
+    
     try:
         return json.loads(content)
     except json.JSONDecodeError:
-        if content.count("{") > content.count("}"):
-            content += "}" * (content.count("{") - content.count("}"))
+        pass
+    
+    # Fix unquoted caption
+    caption_match = re.search(r'"caption"\s*:\s*(.+)', content)
+    if caption_match:
+        caption_part = caption_match.group(1).strip()
+        # If caption is unquoted, quote it
+        if not (caption_part.startswith('"') and caption_part.endswith('"')):
+            # Find the last } to close properly
+            last_brace = caption_part.rfind('}')
+            if last_brace > 0:
+                caption = caption_part[:last_brace].strip().rstrip(',')
+                if not caption.endswith('"'):
+                    caption += '"'
+                content = '{"caption": ' + caption + '}'
+    
+    try:
         return json.loads(content)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON: {e}")
 
 def generate_metadata(script_text: str) -> dict:
     prompt = METADATA_PROMPT.format(script=script_text)
-    print("\n💡 Generating Instagram caption with Ollama...\n")
+    print(f"\n💡 Generating Instagram caption with Ollama ({OLLAMA_MODEL})...\n")
 
-    stream = ollama.chat(
+    client = ollama.Client(host=OLLAMA_URL)
+    
+    response = client.chat(
         model=OLLAMA_MODEL,
         messages=[{"role": "user", "content": prompt}],
-        stream=True,
-        options={"temperature": 0.8},
+        think=False,
+        options={"num_predict": 500}
     )
-
-    response_text = ""
-    for chunk in stream:
-        content = getattr(chunk.message, "content", None)
-        if content:
-            print(content, end="", flush=True)
-            response_text += content
-
-    print("\n")
+    
+    response_text = response["message"]["content"].strip()
+    thinking = response["message"].get("thinking", "") or ""
+    
+    if thinking:
+        print(f"\n[THINKING]\n{thinking[:500]}...")
+    
+    print(f"\n[RESPONSE]\n{response_text[:500]}...")
+    
     return extract_json(response_text)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# INSTAGRAM AUTH
+# INSTAGRAM AUTH & UPLOAD
 # ─────────────────────────────────────────────────────────────────────────────
 
 def get_authenticated_client():
+    """Use Playwright to get cookies, then login with instagrapi"""
+    from playwright.sync_api import sync_playwright
+    
+    playwright = sync_playwright().start()
+    browser = playwright.chromium.launch(headless=True)
+    context = browser.new_context()
+    page = context.new_page()
+    
+    print("🔑 Opening Instagram to get session...")
+    page.goto("https://www.instagram.com/", wait_until="domcontentloaded")
+    page.wait_for_timeout(2000)
+    
+    # Check if already logged in via cookies
+    if "login" not in page.url.lower():
+        print("✅ Already logged in - saving session")
+        cookies = context.cookies()
+        with open(IG_SESSION_FILE, "w") as f:
+            json.dump(cookies, f)
+        browser.close()
+        playwright.stop()
+    else:
+        print("🔐 Logging in...")
+        
+        for sel in ['input[name="username"]', 'input[type="text"]']:
+            try:
+                page.wait_for_selector(sel, timeout=5000)
+                page.fill(sel, IG_USERNAME)
+                break
+            except:
+                continue
+        
+        for sel in ['input[name="password"]', 'input[type="password"]']:
+            try:
+                page.fill(sel, IG_PASSWORD)
+                break
+            except:
+                continue
+        
+        page.click('button[type="submit"]')
+        page.wait_for_timeout(5000)
+        
+        if "challenge" in page.url.lower():
+            raise Exception("Instagram verification required")
+        
+        cookies = context.cookies()
+        with open(IG_SESSION_FILE, "w") as f:
+            json.dump(cookies, f)
+        print("✅ Session saved")
+        browser.close()
+        playwright.stop()
+    
+    # Now use instagrapi with session
+    from instagrapi import Client
     cl = Client()
     
-    # Try loading an existing session first
-    if os.path.exists(IG_SESSION_FILE):
-        cl.load_settings(IG_SESSION_FILE)
+    if os.path.exists(IG_SESSION_FILE) and os.path.getsize(IG_SESSION_FILE) > 0:
         try:
-            # Login required to ensure the loaded session is valid and active
+            cl.load_settings(IG_SESSION_FILE)
             cl.login(IG_USERNAME, IG_PASSWORD)
+            print("✅ Instagram logged in via saved session")
             return cl
         except Exception as e:
-            print(f"⚠️  Session expired or login failed ({e}). Re-authenticating...")
+            print(f"⚠️ Session login failed: {e}")
     
-    if not IG_USERNAME or not IG_PASSWORD:
-        raise ValueError("IG_USERNAME and IG_PASSWORD must be set in the script or environment.")
-        
-    # Performs a completely fresh login
-    print("🔑 Logging into Instagram...")
+    # Direct login as fallback
+    print("🔐 Direct login to Instagram...")
     cl.login(IG_USERNAME, IG_PASSWORD)
     cl.dump_settings(IG_SESSION_FILE)
+    print("✅ Login successful")
     return cl
 
-# ─────────────────────────────────────────────────────────────────────────────
-# VIDEO UPLOAD
-# ─────────────────────────────────────────────────────────────────────────────
 
 def upload_video(cl, video_file: str, metadata: dict) -> str:
     caption = metadata.get("caption", "Default caption")
-    print(f"\nUploading Reel to Instagram...\nCaption: {caption}\n")
+    print(f"\n🚀 Uploading Reel to Instagram...")
+    print(f"   Caption: {caption[:50]}...")
     
-    # clip_upload supports instagram reels.
     media = cl.clip_upload(path=video_file, caption=caption)
     video_pk = media.pk
     video_code = media.code
     
-    print(f"\n✅ Upload complete  →  https://www.instagram.com/reel/{video_code}/")
+    print(f"\n✅ Upload complete → https://www.instagram.com/reel/{video_code}/")
     return str(video_pk)
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -195,7 +253,7 @@ def main() -> int:
         return 1
 
     # ── Authenticate & upload ──────────────────────────────────────────────
-    print("\n🔑 Authenticating with Instagram...")
+    print("\n🔑 Authenticating with Instagram (using browser)...")
     try:
         client = get_authenticated_client()
     except Exception as e:

@@ -210,11 +210,17 @@ if __name__ == "__main__":
     parser.add_argument("videos", nargs="+", help="Input video file(s)")
     args = parser.parse_args()
 
+    any_errors = False
     for video in args.videos:
         try:
             run_pipeline(video)
         except Exception as e:
             print(f"\n❌ Error processing {video}: {e}")
+            any_errors = True
             continue
+
+    if any_errors:
+        print("\n⚠️ Some videos failed to process.")
+        sys.exit(1)
 
     print("\n🎯 All videos processed!")

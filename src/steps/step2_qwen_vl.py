@@ -5,10 +5,9 @@ import ollama
 from tqdm import tqdm
 
 
-def describe_batch(client, image_paths, model, prompt):
+def describe_frame(client, image_path, model, prompt):
     """
-    Sends multiple images to Ollama in ONE request to avoid
-    repeated model initialization.
+    Sends a single image to Ollama for description.
     """
 
     try:
@@ -16,7 +15,7 @@ def describe_batch(client, image_paths, model, prompt):
             model=model,
             prompt=prompt,
             keep_alive="15s",
-            images=image_paths,
+            images=[image_path],
             stream=True,
         )
 
@@ -24,8 +23,6 @@ def describe_batch(client, image_paths, model, prompt):
         in_thinking = False
 
         for chunk in stream:
-
-            # thinking tokens
             thought = chunk.get("thinking", "")
             if thought:
                 if not in_thinking:
@@ -33,7 +30,6 @@ def describe_batch(client, image_paths, model, prompt):
                     in_thinking = True
                 print(thought, end="", flush=True)
 
-            # answer tokens
             token = chunk.get("response", "")
             if token:
                 if in_thinking:
@@ -60,7 +56,6 @@ def main(args):
 
     os.makedirs(os.path.dirname(os.path.abspath(args.output_file)), exist_ok=True)
 
-    # Create Ollama client once
     base_host = args.ollama_url.split("/api")[0] if "/api" in args.ollama_url else args.ollama_url
     client = ollama.Client(host=base_host)
 
@@ -77,10 +72,9 @@ def main(args):
 
             tqdm.write(f"\n[{timestamp}] {os.path.basename(image_path)}")
 
-            # BATCH CALL (single image still works but keeps model loaded)
-            description = describe_batch(
+            description = describe_frame(
                 client,
-                [image_path],   # still supports batching
+                image_path,
                 args.model,
                 args.prompt
             )

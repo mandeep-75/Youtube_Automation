@@ -35,6 +35,7 @@ UPLOADED_DIR = os.path.join(config.PROJECT_ROOT, "uploaded")
 
 PROJECT_ROOT = config.PROJECT_ROOT
 OLLAMA_MODEL = config.LLM_MODEL
+OLLAMA_URL = config.OLLAMA_URL
 SCOPES = config.YOUTUBE_SCOPES
 CLIENT_SECRET_FILE = config.CLIENT_SECRET_FILE
 TOKEN_FILE = config.YOUTUBE_TOKEN_FILE
@@ -242,37 +243,49 @@ def extract_json(text):
 
 def generate_metadata(script_text):
     prompt = METADATA_PROMPT.format(script=script_text)
-    print("\n💡 Ollama thinking (YouTube)...\n")
-    stream = ollama.chat(
+    print(f"\n💡 Generating YouTube metadata with Ollama ({OLLAMA_MODEL})...\n")
+    
+    client = ollama.Client(host=OLLAMA_URL)
+    
+    response = client.chat(
         model=OLLAMA_MODEL,
         messages=[{"role": "user", "content": prompt}],
-        stream=True,
-        options={"temperature": 0.8}
+        think=True,
+        options={"num_predict": 1000}
     )
-    response_text = ""
-    for chunk in stream:
-        if getattr(chunk.message, "content", None):
-            print(chunk.message.content, end="", flush=True)
-            response_text += chunk.message.content
-    print("\n")
+    
+    response_text = response["message"]["content"].strip()
+    thinking = response["message"].get("thinking", "") or ""
+    
+    if thinking:
+        print(f"\n[THINKING]\n{thinking[:500]}...")
+    
+    print(f"\n[RESPONSE]\n{response_text[:500]}...")
+    
     return extract_json(response_text)
 
 
 def generate_ig_metadata(script_text):
     prompt = IG_METADATA_PROMPT.format(script=script_text)
-    print("\n💡 Ollama thinking (Instagram)...\n")
-    stream = ollama.chat(
+    print(f"\n💡 Generating Instagram caption with Ollama ({OLLAMA_MODEL})...\n")
+    
+    client = ollama.Client(host=OLLAMA_URL)
+    
+    response = client.chat(
         model=OLLAMA_MODEL,
         messages=[{"role": "user", "content": prompt}],
-        stream=True,
-        options={"temperature": 0.8}
+        think=True,
+        options={"num_predict": 1000}
     )
-    response_text = ""
-    for chunk in stream:
-        if getattr(chunk.message, "content", None):
-            print(chunk.message.content, end="", flush=True)
-            response_text += chunk.message.content
-    print("\n")
+    
+    response_text = response["message"]["content"].strip()
+    thinking = response["message"].get("thinking", "") or ""
+    
+    if thinking:
+        print(f"\n[THINKING]\n{thinking[:500]}...")
+    
+    print(f"\n[RESPONSE]\n{response_text[:500]}...")
+    
     return extract_json(response_text)
 
 
@@ -338,17 +351,33 @@ def upload_video(youtube, video_file, metadata):
 
 def get_authenticated_client_ig():
     cl = Client()
-    if os.path.exists(IG_SESSION_FILE):
-        cl.load_settings(IG_SESSION_FILE)
+    if os.path.exists(IG_SESSION_FILE) and os.path.getsize(IG_SESSION_FILE) > 0:
         try:
+            cl.load_settings(IG_SESSION_FILE)
             cl.login(IG_USERNAME, IG_PASSWORD)
+            print("✅ Instagram session restored")
             return cl
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"⚠️ Session expired/invalid: {e}")
+            try:
+                os.remove(IG_SESSION_FILE)
+            except:
+                pass
+    
     print("🔑 Instagram login...")
-    cl.login(IG_USERNAME, IG_PASSWORD)
-    cl.dump_settings(IG_SESSION_FILE)
-    return cl
+    print(f"   Username: {IG_USERNAME}")
+    try:
+        cl.login(IG_USERNAME, IG_PASSWORD)
+        cl.dump_settings(IG_SESSION_FILE)
+        print("✅ Instagram logged in")
+        return cl
+    except Exception as e:
+        err_str = str(e)
+        if "challenge" in err_str.lower() or "verify" in err_str.lower():
+            print("⚠️ Instagram requires verification (2FA or email confirm)")
+            print("   Try: Login on mobile first, then run this again")
+        print(f"❌ Instagram login failed: {e}")
+        raise
 
 
 def upload_video_ig(cl, video_file, metadata):
@@ -413,6 +442,7 @@ def main(stdscr):
                 upload_video_ig(cl, video, metadata_ig)
         except Exception as e:
             print(f"❌ Instagram failed: {e}")
+            print("   (Skipping Instagram - will retry next run)")
     else:
         print(f"\n✅ Instagram already done for: {name}")
 
@@ -497,6 +527,7 @@ def main_nocurses():
                         print("✅ Instagram upload complete!")
                     except Exception as e:
                         print(f"❌ Instagram failed: {e}")
+                        print("   (Skipping Instagram - will retry next run)")
                 else:
                     print("\nℹ️ Instagram credentials not set, skipping")
             else:

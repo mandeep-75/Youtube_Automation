@@ -57,7 +57,11 @@ class PipelineLogger:
     def __init__(self, step_name: str):
         self.logger = logging.getLogger(f"pipeline.{step_name}")
         self.step_name = step_name
-
+    
+    def setLevel(self, level: int):
+        """Set the logging level."""
+        self.logger.setLevel(level)
+    
     def info(self, message: str):
         self.logger.info(f"[{self.step_name}] {message}")
 

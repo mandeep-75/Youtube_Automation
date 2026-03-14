@@ -61,9 +61,7 @@ WHISPER_COMPUTE_TYPE = "int8"          # int8 | float16 | float32
 # 4. LLM SCRIPT  — Ollama model for narration script generation
 # ─────────────────────────────────────────────────────────────────────────────
 
-# LLM_MODEL = "qwen3.5:9b"       # any model installed in your local Ollama instance
-
-LLM_MODEL = "jaahas/qwen3.5-uncensored:9b"
+LLM_MODEL = "qwen3.5:9b"
 LLM_WORDS_PER_SECOND = 3    # Target words per second for narration
 
 # ─────────────────────────────────────────────────────────────────────────────

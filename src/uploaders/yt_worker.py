@@ -27,7 +27,6 @@ import json
 import pickle
 import re
 import shutil
-
 import ollama
 
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -44,34 +43,21 @@ from src import config
 
 PROJECT_ROOT        = config.PROJECT_ROOT
 OLLAMA_MODEL        = config.LLM_MODEL
+OLLAMA_URL          = config.OLLAMA_URL
 SCOPES              = config.YOUTUBE_SCOPES
 CLIENT_SECRET_FILE  = config.CLIENT_SECRET_FILE
 TOKEN_FILE          = config.YOUTUBE_TOKEN_FILE
 UPLOADED_DIR        = os.path.join(PROJECT_ROOT, "uploaded")
 
 METADATA_PROMPT = """
-You are a YouTube Shorts SEO expert.
-
 Given this video script:
 
 {script}
 
-Create viral metadata.
+Create a short title (under 90 chars), 2-sentence description, and tags.
 
-RULES:
-- Title under 90 characters
-- Include #shorts
-- Description 2 sentences max
-- Include 3-5 hashtags
-- 10 tags
-
-Return JSON only:
-
-{{
-  "title": "...",
-  "description": "...",
-  "tags": ["tag1","tag2"]
-}}
+Respond with ONLY valid JSON (use double quotes for all strings):
+{{"title": "...", "description": "...", "tags": ["tag1", "tag2", "tag3"]}}
 """
 
 
@@ -80,38 +66,53 @@ Return JSON only:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def extract_json(text: str) -> dict:
-    match = re.search(r"(\{.*\})", text, re.DOTALL)
-    if not match:
+    # Find JSON block - look for first { and last }
+    text = text.strip()
+    start = text.find('{')
+    end = text.rfind('}')
+    
+    if start == -1 or end == -1:
         raise ValueError("No JSON found in LLM response")
-    content = match.group(1)
+    
+    content = text[start:end+1]
+    
     try:
         return json.loads(content)
     except json.JSONDecodeError:
-        # Try patching unbalanced braces
-        if content.count("{") > content.count("}"):
-            content += "}" * (content.count("{") - content.count("}"))
+        pass
+    
+    # Fix unquoted tags: [tag1, tag2] -> ["tag1", "tag2"]
+    content = re.sub(r'"tags"\s*:\s*\[([^\]]+)\]', 
+                     lambda m: '"tags": [' + ', '.join(f'"{t.strip()}"' for t in m.group(1).split(',')) + ']',
+                     content)
+    
+    try:
         return json.loads(content)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON: {e}")
 
 
 def generate_metadata(script_text: str) -> dict:
     prompt = METADATA_PROMPT.format(script=script_text)
-    print("\n💡 Generating metadata with Ollama...\n")
+    print(f"\n💡 Generating metadata with Ollama ({OLLAMA_MODEL})...\n")
 
-    stream = ollama.chat(
+    client = ollama.Client(host=OLLAMA_URL)
+    
+    response = client.chat(
         model=OLLAMA_MODEL,
         messages=[{"role": "user", "content": prompt}],
-        stream=True,
-        options={"temperature": 0.8},
+        think=False,
+        options={"num_predict": 500}
     )
-
-    response_text = ""
-    for chunk in stream:
-        content = getattr(chunk.message, "content", None)
-        if content:
-            print(content, end="", flush=True)
-            response_text += content
-
-    print("\n")
+    
+    response_text = response["message"]["content"].strip()
+    thinking = response["message"].get("thinking", "") or ""
+    
+    if thinking:
+        print(f"\n[THINKING]\n{thinking[:500]}...")
+    
+    print(f"\n[RESPONSE]\n{response_text[:500]}...")
+    
     return extract_json(response_text)
 
 

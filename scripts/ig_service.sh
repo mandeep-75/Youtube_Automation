@@ -13,7 +13,7 @@
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
 PARENT_DIR="$(dirname "$BASE_DIR")"
 
-PYTHON="$PARENT_DIR/.venv/unified/bin/python"
+PYTHON="$PARENT_DIR/.venv/bin/python"
 UPLOADER="$PARENT_DIR/src/uploaders/ig_worker.py"
 QUEUE="$PARENT_DIR/upload_queue"
 UPLOADED="$PARENT_DIR/uploaded"

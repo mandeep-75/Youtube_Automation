@@ -106,7 +106,7 @@ class SubtitleBurner:
         self.x_offset = x_offset
         self.y_offset = y_offset
 
-        project_root = Path(__file__).parent.parent
+        project_root = Path(__file__).resolve().parent.parent.parent
         ffmpeg_path = project_root / "tools" / "ffmpeg"
 
         if not ffmpeg_path.exists():

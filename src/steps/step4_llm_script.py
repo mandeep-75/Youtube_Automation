@@ -1,9 +1,14 @@
 import ollama
 import argparse
 import os
-import re
+import sys
 
-OLLAMA_URL = "http://localhost:11434"
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+
+from src import config
+
+OLLAMA_MODEL = config.LLM_MODEL
+OLLAMA_URL = config.OLLAMA_URL
 
 UNIFIED_PROMPT = """\
 ROLE:
@@ -62,33 +67,15 @@ Return ONLY the final narration script as plain text.
 Do not include explanations or formatting.
 """
 
-def extract_fallback_script(thinking_text: str) -> str:
-    markers = [
-        "FINAL SCRIPT:", "NARRATION SCRIPT:", "Final Script:",
-        "Draft:", "Script:", "Result:"
-    ]
-
-    for marker in markers:
-        if marker in thinking_text:
-            potential = thinking_text.split(marker)[-1].strip()
-            if len(potential) > 50:
-                return potential
-
-    blocks = [b.strip() for b in re.split(r'\n\s*\n', thinking_text) if b.strip()]
-
-    for block in reversed(blocks):
-        if len(block) > 100:
-            return block
-
-    return ""
-
-
 def generate_script(vision_text, transcript_text=None,
                     duration=0.0, wps=2.5,
-                    model="qwen3.5:9b", ollama_url=OLLAMA_URL):
+                    model=None, ollama_url=None):
 
     transcript_val = transcript_text.strip() if transcript_text else "[No audio script available]"
     target_words = int(float(duration) * float(wps)) if float(duration) > 0 else 150
+
+    effective_model = model if model else OLLAMA_MODEL
+    effective_url = ollama_url if ollama_url else OLLAMA_URL
 
     prompt_content = UNIFIED_PROMPT.format(
         duration=duration,
@@ -98,70 +85,57 @@ def generate_script(vision_text, transcript_text=None,
         vision_text=vision_text.strip(),
     )
 
-    client = ollama.Client(host=ollama_url)
-
-    print(f"[step4_llm_script] Calling model {model}...")
-
+    print(f"[step4_llm_script] Calling Ollama model: {effective_model}...")
+    
+    client = ollama.Client(host=effective_url)
+    
+    # Stream the chat response to show live thinking output
     stream = client.chat(
-        model=model,
-        messages=[{'role': 'user', 'content': prompt_content}],
-        think=False,       
+        model=effective_model,
+        messages=[{"role": "user", "content": prompt_content}],
+        think=True,
+        options={"num_predict": 4000},
         stream=True,
-        keep_alive="5s",
-        options={
-            "num_ctx": 16384,
-            "temperature": 0.7,
-        }
     )
-
-    accumulated_content = []
-    accumulated_thinking = []
+    
+    response_text = []
+    thinking_text = []
     in_thinking = False
-
+    
     for chunk in stream:
+        # Handle both object-based (standard SDK) and dict-based chunks
+        if hasattr(chunk, 'message'):
+            msg = chunk.message
+            thought = getattr(msg, 'thinking', '')
+            content = getattr(msg, 'content', '')
+        else:
+            msg = chunk.get('message', {})
+            thought = msg.get('thinking', '')
+            content = msg.get('content', '')
 
-        if not chunk:
-            continue
-
-        message = chunk.get("message")
-        if not message:
-            continue
-
-        thinking = message.get("thinking", None)
-        content = message.get("content", None)
-
-        # ---- Thinking stream ----
-        if thinking is not None:
-
+        if thought:
             if not in_thinking:
-                print("\n[THINKING]\n", end="", flush=True)
+                print("\nThinking:\n", end="", flush=True)
                 in_thinking = True
-
-            accumulated_thinking.append(thinking)
-            print(thinking, end="", flush=True)
-            continue
-
-        # ---- Response stream ----
-        if content is not None:
-
+            print(thought, end="", flush=True)
+            thinking_text.append(thought)
+        elif content:
             if in_thinking:
-                print("\n\n[RESPONSE]\n", end="", flush=True)
+                print("\n\nAnswer:\n", end="", flush=True)
                 in_thinking = False
-            elif not accumulated_content:
-                print("\n[RESPONSE]\n", end="", flush=True)
-
-            accumulated_content.append(content)
             print(content, end="", flush=True)
-
-    print("\n")
-
-    final_script = "".join(accumulated_content).strip()
-    final_thinking = "".join(accumulated_thinking).strip()
-
-    if not final_script and final_thinking:
-        print("[step4_llm_script] Extracting script from thinking...")
-        final_script = extract_fallback_script(final_thinking)
-
+            response_text.append(content)
+    
+    print()  # final newline
+    final_script = "".join(response_text).strip()
+    final_thinking = "".join(thinking_text).strip()
+    
+    if final_thinking:
+        print(f"\n[THINKING]\n{final_thinking[:500]}...")
+    
+    if final_script:
+        print(f"\n[RESPONSE]\n{final_script[:500]}...")
+    
     return final_script, final_thinking
 
 
@@ -174,8 +148,8 @@ if __name__ == "__main__":
     parser.add_argument("--output", required=True)
     parser.add_argument("--duration", type=float, default=0.0)
     parser.add_argument("--wps", type=float, default=2.5)
-    parser.add_argument("--model", default="qwen3.5:9b")
-    parser.add_argument("--ollama-url", default=OLLAMA_URL)
+    parser.add_argument("--model", default=None)
+    parser.add_argument("--ollama-url", default=None)
 
     args = parser.parse_args()
 
@@ -193,7 +167,7 @@ if __name__ == "__main__":
         duration=args.duration,
         wps=args.wps,
         model=args.model,
-        ollama_url=args.ollama_url
+        ollama_url=args.ollama_url,
     )
 
     with open(args.output, "w", encoding="utf-8") as f:
