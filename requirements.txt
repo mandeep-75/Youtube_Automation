@@ -1,18 +1,15 @@
 # Unified venv requirements
-# Combines chatterbox, faster_whisper, and uploader dependencies
+# All dependencies in one venv
 
 # === Core ML/TTS ===
 chatterbox-tts==0.1.6
 torch==2.6.0
 torchaudio==2.6.0
-diffusers==0.29.0
-peft==0.18.1
-accelerate==1.12.0
+setuptools
 
 # === Transcription ===
 faster-whisper==1.1.1
 ctranslate2==4.7.1
-huggingface-hub>=0.25.0
 
 # === Vision & LLM ===
 ollama
@@ -36,21 +33,11 @@ google-api-python-client
 google-auth-oauthlib
 google-auth-httplib2
 instagrapi
+playwright
 
 # === Utilities ===
 requests==2.32.5
 python-dotenv
-curses-menu
 
-# === Watermarking ===
-setuptools==69.5.1
-resemble-perth==1.0.1
-
-# === Other deps ===
-s3tokenizer==0.3.0
-gradio==5.44.1
-
-# === Testing ===
-pytest>=7.4.0
-pytest-mock>=3.11.0
-pytest-cov>=4.1.0
+# === FFmpeg (install separately) ===
+# brew install ffmpeg
