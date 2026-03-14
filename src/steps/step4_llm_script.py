@@ -16,7 +16,7 @@ You are a viral YouTube Shorts scriptwriter who specializes in high-retention ci
 
 DATA SOURCES:
 1. VIDEO DURATION: {duration} seconds
-2. TARGET WORD COUNT: ~{target_words} words (based on {wps} words/sec)
+2. TARGET WORD COUNT: ~{target_words} words can be longer or shorter by 10% of the target words (based on {wps} words/sec)
 3. ORIGINAL DIALOGUE (if available): {transcript_text}
 4. VISUAL FRAME DESCRIPTIONS: {vision_text}
 
@@ -94,7 +94,8 @@ def generate_script(vision_text, transcript_text=None,
         model=effective_model,
         messages=[{"role": "user", "content": prompt_content}],
         think=True,
-        options={"num_predict": 4000},
+        options={"num_predict": 4000, "num_ctx": 8192},
+        keep_alive=0,
         stream=True,
     )
     
@@ -106,20 +107,22 @@ def generate_script(vision_text, transcript_text=None,
         # Handle both object-based (standard SDK) and dict-based chunks
         if hasattr(chunk, 'message'):
             msg = chunk.message
-            thought = getattr(msg, 'thinking', '')
-            content = getattr(msg, 'content', '')
+            thought = getattr(msg, 'thinking', '') or ''
+            content = getattr(msg, 'content', '') or ''
         else:
             msg = chunk.get('message', {})
-            thought = msg.get('thinking', '')
-            content = msg.get('content', '')
+            thought = msg.get('thinking', '') or ''
+            content = msg.get('content', '') or ''
 
+        # Both thinking and content can be in the same chunk
         if thought:
             if not in_thinking:
                 print("\nThinking:\n", end="", flush=True)
                 in_thinking = True
             print(thought, end="", flush=True)
             thinking_text.append(thought)
-        elif content:
+        
+        if content:
             if in_thinking:
                 print("\n\nAnswer:\n", end="", flush=True)
                 in_thinking = False
