@@ -3,6 +3,7 @@ import random
 import re
 import subprocess
 import sys
+from typing import Optional
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
@@ -98,7 +99,10 @@ def step5_tts(script_file: str, voice_output: str):
         "--repetition-penalty", str(config.TTS_REPETITION_PENALTY),
     ], check=True)
 
-def step6_merge_av(video_path: str, audio_path: str, output_path: str):
+def step6_merge_av(video_path: str, audio_path: str, output_path: str, mix_audio: Optional[bool] = None) -> None:
+    if mix_audio is None:
+        mix_audio = config.MERGE_MIX_AUDIO
+    
     cmd = [
         config.FASTER_WHISPER_PYTHON, "./src/steps/step6_merge_av.py",
         "--video",  video_path,
@@ -106,7 +110,7 @@ def step6_merge_av(video_path: str, audio_path: str, output_path: str):
         "--output", output_path,
         "--volume", str(config.ORIGINAL_AUDIO_VOLUME),
     ]
-    if config.MERGE_MIX_AUDIO:
+    if mix_audio:
         cmd.append("--mix")
     subprocess.run(cmd, check=True)
 
@@ -178,14 +182,23 @@ def run_pipeline(video_path: str):
     out_dir = os.path.join(config.PROJECT_ROOT, "outputs", video_name)
     os.makedirs(out_dir, exist_ok=True)
 
-    frames_dir      = os.path.join(out_dir, "frames")
-    frames_file     = os.path.join(out_dir, "frames.txt")
-    transcript_file = os.path.join(out_dir, "transcript.txt")
-    script_file     = os.path.join(out_dir, "script.txt")
-    voice_file      = os.path.join(out_dir, "voice.wav")
-    video_tts       = os.path.join(out_dir, "video_with_tts.mp4")
-    srt_file        = os.path.join(out_dir, "subtitles.srt")
-    final_video     = os.path.join(out_dir, "final_video.mp4")
+    frames_dir       = os.path.join(out_dir, "frames")
+    frames_file      = os.path.join(out_dir, "frames.txt")
+    transcript_file  = os.path.join(out_dir, "transcript.txt")
+    script_file      = os.path.join(out_dir, "script.txt")
+    voice_file       = os.path.join(out_dir, "voice.wav")
+    
+    # Two video versions (mixed and simple)
+    video_mixed     = os.path.join(out_dir, "video_mixed.mp4")
+    video_simple    = os.path.join(out_dir, "video_simple.mp4")
+    
+    # Subtitles for each version
+    srt_mixed       = os.path.join(out_dir, "subtitles_mixed.srt")
+    srt_simple      = os.path.join(out_dir, "subtitles_simple.srt")
+    
+    # Final videos for each version
+    final_video_mixed   = os.path.join(out_dir, "final_video_mixed.mp4")
+    final_video_simple  = os.path.join(out_dir, "final_video_simple.mp4")
 
     print(f"\n🚀 Processing video: {video_path}")
     print(f"📂 Output directory: {out_dir}")
@@ -207,16 +220,27 @@ def run_pipeline(video_path: str):
     step5_tts(script_file, voice_file)
 
     print("\n─── Step 6  Merge TTS audio onto video ───────────────────────")
-    step6_merge_av(video_path, voice_file, video_tts)
+    print("   [Mixed version] Using MERGE_MIX_AUDIO setting...")
+    step6_merge_av(video_path, voice_file, video_mixed, mix_audio=config.MERGE_MIX_AUDIO)
+    
+    print("   [Simple version] Replacing original audio with TTS...")
+    step6_merge_av(video_path, voice_file, video_simple, mix_audio=False)
 
     print("\n─── Step 7  Transcribe TTS for subtitles ─────────────────────")
-    step7_transcribe_subtitles(video_tts, srt_file)
+    print("   [Mixed version] Transcribing...")
+    step7_transcribe_subtitles(video_mixed, srt_mixed)
+    print("   [Simple version] Transcribing...")
+    step7_transcribe_subtitles(video_simple, srt_simple)
 
     print("\n─── Step 8  Burn subtitles ───────────────────────────────────")
-    step8_burn_subtitles(video_tts, srt_file, final_video)
+    print("   [Mixed version] Burning subtitles...")
+    step8_burn_subtitles(video_mixed, srt_mixed, final_video_mixed)
+    print("   [Simple version] Burning subtitles...")
+    step8_burn_subtitles(video_simple, srt_simple, final_video_simple)
 
     print(f"\n✅ Finished processing: {video_path}")
-    print(f"   Final video: {final_video}")
+    print(f"   Mixed video:  {final_video_mixed}")
+    print(f"   Simple video: {final_video_simple}")
 
 if __name__ == "__main__":
     import argparse

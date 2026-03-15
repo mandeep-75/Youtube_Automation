@@ -131,7 +131,18 @@ UPLOADER_PYTHON = UNIFIED_PYTHON
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 9. UPLOADER SETTINGS
+# 9. UPLOAD ROUTING — which video version goes to each platform
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Video version options: "mixed" (original + TTS) or "simple" (TTS only)
+# "mixed" may have copyright issues on YouTube
+# "simple" is safer for YouTube (TTS only, no original audio)
+INSTAGRAM_VIDEO = "mixed"   # Which version to upload to Instagram
+YOUTUBE_VIDEO = "simple"    # Which version to upload to YouTube
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 10. UPLOADER SETTINGS
 # ─────────────────────────────────────────────────────────────────────────────
 
 YOUTUBE_SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
