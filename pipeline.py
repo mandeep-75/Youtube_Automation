@@ -220,10 +220,10 @@ def run_pipeline(video_path: str):
     step5_tts(script_file, voice_file)
 
     print("\n─── Step 6  Merge TTS audio onto video ───────────────────────")
-    print("   [Mixed version] Using MERGE_MIX_AUDIO setting...")
-    step6_merge_av(video_path, voice_file, video_mixed, mix_audio=config.MERGE_MIX_AUDIO)
+    print("   [Mixed version] Original + TTS audio...")
+    step6_merge_av(video_path, voice_file, video_mixed, mix_audio=True)
     
-    print("   [Simple version] Replacing original audio with TTS...")
+    print("   [Simple version] TTS only (original replaced)...")
     step6_merge_av(video_path, voice_file, video_simple, mix_audio=False)
 
     print("\n─── Step 7  Transcribe TTS for subtitles ─────────────────────")
