@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 import shutil
 import gc
+from typing import Any, List
 
 from faster_whisper import WhisperModel
 
@@ -48,11 +49,12 @@ def has_audio(video_path: str) -> bool:
 
         return bool(result.stdout.strip())
 
-    except Exception:
+    except Exception as e:
+        print(f"Warning: Could not check audio stream: {e}")
         return True
 
 
-def extract_audio_wav(video_path: str, wav_path: str):
+def extract_audio_wav(video_path: str, wav_path: str) -> None:
 
     cmd = [
         FFMPEG_BIN,
@@ -208,7 +210,7 @@ def transcribe(
         gc.collect()
 
 
-def segments_to_srt(segments, srt_path):
+def segments_to_srt(segments: List[dict[str, Any]], srt_path: str) -> None:
 
     lines = []
 
@@ -224,7 +226,7 @@ def segments_to_srt(segments, srt_path):
         )
 
     with open(srt_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines))
+        f.write("\n\n".join(lines))
 
     print("Saved SRT →", srt_path)
 

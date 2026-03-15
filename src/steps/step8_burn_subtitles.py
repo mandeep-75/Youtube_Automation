@@ -5,6 +5,7 @@ import shutil
 import argparse
 import subprocess
 from pathlib import Path
+from typing import Optional, Tuple
 import pysubs2
 
 
@@ -43,14 +44,14 @@ def hex_to_ass(hex_color: str):
     return f"&H{b:02X}{g:02X}{r:02X}&"
 
 
-def get_video_resolution(video_path, ffmpeg_bin):
+def get_video_resolution(video_path: str, ffmpeg_bin: str) -> Optional[Tuple[int, int]]:
     ffprobe_local = ffmpeg_bin.replace("ffmpeg", "ffprobe")
     if os.path.exists(ffprobe_local):
         ffprobe = ffprobe_local
     elif shutil.which("ffprobe"):
         ffprobe = "ffprobe"
     else:
-        return None, None
+        return None
 
     cmd = [
         ffprobe,
@@ -63,9 +64,9 @@ def get_video_resolution(video_path, ffmpeg_bin):
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         w, h = map(int, result.stdout.strip().split("x"))
-        return w, h
+        return (w, h)
     except Exception:
-        return None, None
+        return None
 
 
 class SubtitleBurner:
@@ -207,7 +208,8 @@ class SubtitleBurner:
             chunks = [all_words[i:i + self.max_words] for i in range(0, len(all_words), self.max_words)]
 
             for chunk in chunks:
-                if not chunk: continue
+                if not chunk:
+                    continue
                 
                 # Each word in the chunk will be highlighted once, one after the other
                 for i, current_word in enumerate(chunk):

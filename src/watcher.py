@@ -61,8 +61,8 @@ def acquire_lock():
             os.kill(existing_pid, 0)
             print(f"❌ Watcher already running (PID {existing_pid}). Exiting.")
             sys.exit(1)
-        except (ProcessLookupError, ValueError):
-            pass  # Stale lock file — safe to overwrite
+        except (ProcessLookupError, ValueError, PermissionError):
+            pass  # Stale lock file (process ended) or no permission — safe to overwrite
     Path(LOCK_FILE).write_text(str(os.getpid()))
 
 def release_lock():

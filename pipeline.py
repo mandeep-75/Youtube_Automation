@@ -1,5 +1,6 @@
 import os
 import random
+import re
 import subprocess
 import sys
 
@@ -157,9 +158,23 @@ def step8_burn_subtitles(video_path: str, subtitle_path: str, output_path: str):
     
     subprocess.run(cmd, check=True)
 
+
+def sanitize_filename(name: str) -> str:
+    """Remove or replace characters that are invalid in filesystem paths."""
+    # Replace spaces with underscores, remove invalid chars
+    name = re.sub(r'[<>:"/\\|?*]', '_', name)
+    # Remove leading/trailing dots and spaces
+    name = name.strip('. ')
+    # Ensure not empty
+    if not name:
+        name = "unnamed_video"
+    return name
+
+
 def run_pipeline(video_path: str):
     # Use full filename (including tags and extension) for the output directory
     video_name = os.path.basename(video_path)
+    video_name = sanitize_filename(video_name)
     out_dir = os.path.join(config.PROJECT_ROOT, "outputs", video_name)
     os.makedirs(out_dir, exist_ok=True)
 

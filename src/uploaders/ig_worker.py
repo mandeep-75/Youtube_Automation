@@ -123,7 +123,6 @@ def create_resumable_container(caption: str, video_duration: float = None) -> di
 def upload_video_to_meta(container_id: str, video_path: str) -> bool:
     """Upload video directly to Meta's servers using resumable upload"""
     file_size = os.path.getsize(video_path)
-    filename = os.path.basename(video_path)
     
     upload_url = f"https://{IG_UPLOAD_HOST}/ig-api-upload/{IG_API_VERSION}/{container_id}"
     
@@ -190,7 +189,8 @@ def get_video_duration(video_path: str) -> float:
             capture_output=True, text=True, timeout=10
         )
         return float(result.stdout.strip())
-    except:
+    except (subprocess.SubprocessError, ValueError, OSError) as e:
+        print(f"   ⚠️ Could not get video duration: {e}")
         return None
 
 
@@ -205,7 +205,6 @@ def upload_reel(video_path: str, caption: str) -> str:
     # Step 1: Create resumable container
     container = create_resumable_container(caption, video_duration)
     container_id = container["id"]
-    upload_uri = container.get("uri", "")
     
     # Step 2: Upload video directly to Meta
     upload_video_to_meta(container_id, video_path)

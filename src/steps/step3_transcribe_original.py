@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+from typing import Optional
 
 from faster_whisper import WhisperModel
 
@@ -56,14 +57,15 @@ def transcribe_to_txt(
     video_path: str,
     output_path: str,
     model_size: str = "base",
-    language: str | None = None,
+    language: Optional[str] = None,
     beam_size: int = 5,
     compute_type: str = "int8",
 ) -> str:
     if not _has_audio(video_path):
         print("[transcribe_original] ⚠️  No audio stream found – writing empty transcript.")
-        os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
-        open(output_path, "w").close()
+        os.makedirs(os.path.dirname(os.path.abspath(output_path)) or ".", exist_ok=True)
+        with open(output_path, "w", encoding="utf-8") as f:
+            pass  # Create empty file
         return output_path
 
     tmp_dir = tempfile.mkdtemp(prefix="orig_audio_")

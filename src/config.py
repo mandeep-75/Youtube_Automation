@@ -6,8 +6,12 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 import os
+from dotenv import load_dotenv
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Load .env after PROJECT_ROOT is defined
+load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -129,9 +133,6 @@ UPLOADER_PYTHON = UNIFIED_PYTHON
 # ─────────────────────────────────────────────────────────────────────────────
 # 9. UPLOADER SETTINGS
 # ─────────────────────────────────────────────────────────────────────────────
-
-from dotenv import load_dotenv
-load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
 YOUTUBE_SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 CLIENT_SECRET_FILE = os.path.join(PROJECT_ROOT, "client_secret.json")
