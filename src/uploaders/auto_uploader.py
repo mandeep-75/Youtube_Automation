@@ -18,13 +18,14 @@ import os
 import sys
 
 from src import config
+from src import upload_config
 from src.uploaders.yt_worker import (
     get_authenticated_service as get_youtube_service,
     upload_video as upload_to_youtube,
     generate_metadata,
 )
 from src.uploaders.ig_worker import (
-    upload_video as upload_to_instagram,
+    upload_reel as upload_to_instagram,
 )
 
 PROJECT_ROOT = config.PROJECT_ROOT
@@ -111,8 +112,8 @@ def main() -> int:
         print(f"❌ Folder not found: {folder}")
         return 1
 
-    youtube_video = config.YOUTUBE_VIDEO
-    instagram_video = config.INSTAGRAM_VIDEO
+    youtube_video = upload_config.YOUTUBE_VIDEO
+    instagram_video = upload_config.INSTAGRAM_VIDEO
 
     print("\n🎬 Auto-Uploader")
     print(f"   YouTube version:   {youtube_video}")

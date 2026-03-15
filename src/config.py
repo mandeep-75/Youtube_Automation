@@ -84,12 +84,6 @@ TTS_REPETITION_PENALTY = 1.2
 # ─────────────────────────────────────────────────────────────────────────────
 # 6. MERGE  — video version audio settings (legacy, see section 9)
 # ─────────────────────────────────────────────────────────────────────────────
-# NOTE: The pipeline now always generates two versions:
-#   - mixed: original audio + TTS (may have copyright issues)
-#   - simple: TTS only, original replaced (safer for YouTube)
-# This setting is kept for legacy compatibility but is not used anymore.
-
-MERGE_MIX_AUDIO = True          # Legacy setting (kept for compatibility)
 
 ORIGINAL_AUDIO_VOLUME = 0.4    # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
                                 # Volume level for original audio in mixed version
@@ -133,18 +127,8 @@ UPLOADER_PYTHON = UNIFIED_PYTHON
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 9. UPLOAD ROUTING — which video version goes to each platform
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Video version options: "mixed" (original + TTS) or "simple" (TTS only)
-# "mixed" may have copyright issues on YouTube
-# "simple" is safer for YouTube (TTS only, no original audio)
-INSTAGRAM_VIDEO = "mixed"   # Which version to upload to Instagram
-YOUTUBE_VIDEO = "simple"    # Which version to upload to YouTube
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 10. UPLOADER SETTINGS
+# 9. UPLOADER SETTINGS
+# Note: Upload routing config moved to upload_config.py
 # ─────────────────────────────────────────────────────────────────────────────
 
 YOUTUBE_SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]

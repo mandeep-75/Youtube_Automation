@@ -59,18 +59,14 @@ for full in "$QUEUE"/*; do
     fi
 done
 
-# If nothing in queue, check uploaded/
+# If nothing in queue, check uploaded/ for pending uploads
 if [ -z "$CHOSEN" ]; then
     for full in "$UPLOADED"/*; do
-        if [ ! -d "$full" ]; continue; fi
+        if [ ! -d "$full" ]; then continue; fi
         if [ -f "$full/final_video_mixed.mp4" ] || [ -f "$full/final_video_simple.mp4" ]; then
             if [ -f "$full/script.txt" ]; then
-                # Check if any uploads are still pending
-                if [ -n "$(config.YOUTUBE_VIDEO)" ] && [ "$(config.YOUTUBE_VIDEO)" != "none" ] && [ ! -f "$full/youtube_id.txt" ]; then
-                    CHOSEN="$full"
-                    break
-                fi
-                if [ -n "$(config.INSTAGRAM_VIDEO)" ] && [ "$(config.INSTAGRAM_VIDEO)" != "none" ] && [ ! -f "$full/ig_id.txt" ]; then
+                # Check if uploads are pending (id files missing)
+                if [ ! -f "$full/youtube_id.txt" ] || [ ! -f "$full/ig_id.txt" ]; then
                     CHOSEN="$full"
                     break
                 fi
