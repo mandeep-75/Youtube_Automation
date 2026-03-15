@@ -15,7 +15,7 @@ ollama pull jaahas/qwen3.5-uncensored:9b
 bash setup_all_venvs.sh
 
 # 3. Authenticate YouTube (opens browser once)
-.venv/unified/bin/python src/uploaders/interactive_uploader.py
+.venv/bin/python src/uploaders/interactive_uploader.py
 ```
 
 That's it. Never run setup again unless you delete `.venv/`.
@@ -26,222 +26,136 @@ That's it. Never run setup again unless you delete `.venv/`.
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  You have a raw video                               │
+│  Drop raw video in yt_inbox/                        │
 └─────────────────┬───────────────────────────────────┘
                   │
                   ▼
 ┌─────────────────────────────────────────────────────┐
-│  STEP A — Process the video  (pipeline.py)          │
-│  8 automated steps → final_video.mp4 in outputs/   │
+│  WATCHER — Auto-detects & processes new videos      │
+│  Outputs → yt_inbox/outputs/                       │
 └─────────────────┬───────────────────────────────────┘
                   │
-          ┌───────┴────────┐
-          │                │
-          ▼                ▼
-┌──────────────┐   ┌──────────────────────────────────┐
-│  MANUAL      │   │  AUTOMATIC (daily, on boot)       │
-│  upload now  │   │  Drop folder → auto-uploads       │
-│  (pick from  │   │  one video per day via launchd   │
-│  a menu)     │   └──────────────────────────────────┘
-└──────────────┘
+                  ▼
+┌─────────────────────────────────────────────────────┐
+│  AUTO-UPLOAD — Runs on boot + every 24 hours       │
+│  Queues videos in upload_queue/                      │
+└─────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🎬 Part 1 — Process a Video  (`pipeline.py`)
+## 🎬 How to Use
 
-Drop your raw video anywhere, then run:
+### 1. Drop a Video to Process
+
+Drop your raw video in `yt_inbox/` (or use the desktop symlink).
+
+The watcher automatically:
+- Detects new video
+- Processes through 8-step pipeline
+- Saves output to `yt_inbox/outputs/<video_name>/`
+- Moves original to `yt_inbox/processed/`
+- Skips videos already in `yt_inbox/outputs/`
+
+### 2. Queue for Upload
+
+Move the processed folder to `upload_queue/`. Folder must contain:
+- `final_video_mixed.mp4` or `final_video_simple.mp4`
+- `script.txt`
+
+### 3. Auto-Upload Happens Automatically
+
+- **On every Mac boot/login**
+- **Every 24 hours**
+- **One video per day**
+- After upload, folder moves to `uploaded/`
+
+---
+
+## 📤 Manual Upload
 
 ```bash
-python pipeline.py /path/to/your_video.mp4
-```
-
-The pipeline runs **8 steps automatically**:
-
-| Step | What it does | Tool used |
-|------|-------------|-----------|
-| 1 | Extract frames | OpenCV |
-| 2 | Describe each frame | Ollama (Qwen3-VL vision) |
-| 3 | Transcribe original audio | Faster-Whisper |
-| 4 | Generate narration script | Ollama (LLM) |
-| 5 | Create AI voice-over | Chatterbox-TTS |
-| 6 | Merge voice onto video | FFmpeg |
-| 7 | Transcribe voice for subtitles | Faster-Whisper |
-| 8 | Burn subtitles onto video | FFmpeg |
-
-**Output** → `outputs/your_video_name/final_video.mp4`
-
-> ⚙️ Tweak anything (subtitle style, voice, LLM model, volume) in **`config.py`** — it controls everything.
-
----
-
-## 📤 Part 2A — Upload Manually  (`youtube_upload.py`)
-
-Use this when you want to pick which video to upload right now.
-
-```bash
-.venv/unified/bin/python src/uploaders/interactive_uploader.py
-```
-
-- Opens an interactive menu
-- Shows all videos in `outputs/`  
-- Tick mark `[OK]` = already uploaded
-- Select a video → AI generates title/description/tags → uploads to YouTube
-
----
-
-## 📅 Part 2B — Auto Upload Daily  (runs on boot automatically)
-
-Use this for hands-free, one-video-per-day uploads.
-
-### How to queue a video for upload
-
-1. Open the **`📤 YouTube Upload Queue`** folder on your Desktop
-2. Move your processed video folder (from `outputs/`) into it  
-   The folder must have `final_video.mp4` and `script.txt` inside
-3. That's it — the upload will happen automatically
-
-### When does it upload?
-
-- **On every Mac boot/login** — automatically
-- **Every 24 hours** — if your Mac stays on
-- **One video per day** — oldest folder in the queue goes first
-- **After upload** — folder moves to `uploaded/` automatically
-
-### Check what's happening
-
-```bash
-# Live upload log
-tail -f ~/development/youtube_automation/autoupload.log
-
-# Error log
-tail -f ~/development/youtube_automation/autoupload_error.log
-
-# Trigger manually right now
-launchctl start com.mandeep.youtube_autoupload
+.venv/bin/python src/uploaders/interactive_uploader.py
 ```
 
 ---
 
-## 📸 Part 2C — Instagram Auto Upload (runs on boot automatically)
-
-The system also supports auto-uploading to Instagram Reels.
-
-### How it works
-
-- Runs automatically on boot and every 24 hours (same schedule as YouTube)
-- One video per day, oldest folder in queue goes first
-- After upload, folder stays in `upload_queue/` until YouTube upload is also complete
-- Once both platforms have uploaded, folder moves to `uploaded/`
-
-### Requirements
-
-1. Add your Instagram credentials to `.env`:
-   ```
-   IG_USERNAME=your_username
-   IG_PASSWORD=your_password
-   ```
-
-2. Queue videos the same way as YouTube (drop folder in `upload_queue/`)
-
-### Check what's happening
-
-```bash
-# Live Instagram upload log
-tail -f logs/ig_upload.log
-
-# Trigger manually right now
-launchctl start com.mandeep.ig_autoupload
-```
-
----
-
-## 📁 Folder Reference
+## 📁 Folder Structure
 
 ```
 youtube_automation/
+├── pipeline.py              # Run manually to process a video
+├── config.py               # ALL settings live here
+├── setup_all_venvs.sh      # First-time setup
 │
-├── pipeline.py              ← Run this to process a raw video
-├── config.py                ← ALL settings live here (edit this)
-├── setup_all_venvs.sh       ← First-time setup (run once)
+├── yt_inbox/               # ← DROP VIDEOS HERE
+│   ├── inputs/             # Raw videos (create if needed)
+│   ├── outputs/           # Processed videos
+│   │   └── <video_name>/
+│   │       ├── final_video_mixed.mp4   # Original + TTS audio
+│   │       ├── final_video_simple.mp4  # TTS only
+│   │       └── script.txt
+│   ├── processed/          # Original videos after processing
+│   └── failed/            # Videos that failed processing
 │
-├── src/                     ← Source code
-│   ├── __init__.py
-│   ├── config.py            ← Settings (imported by pipeline.py)
-│   ├── logger.py            ← Centralized logging system
-│   ├── steps/               ← Pipeline steps (don't need to touch)
-│   │   ├── __init__.py
-│   │   ├── step1_extract_frames.py
-│   │   ├── step2_qwen_vl.py
-│   │   ├── step3_transcribe_original.py
-│   │   ├── step4_llm_script.py
-│   │   ├── step5_tts.py
-│   │   ├── step6_merge_av.py
-│   │   ├── step7_transcribe_subtitles.py
-│   │   └── step8_burn_subtitles.py
-│   └── uploaders/           ← Upload workers
-│       ├── __init__.py
+├── upload_queue/           # Videos ready for upload
+│   └── <video_name>/
+├── uploaded/              # Successfully uploaded
+│
+├── src/
+│   ├── config.py
+│   ├── logger.py
+│   ├── watcher.py         # Auto-detects & processes new videos
+│   ├── steps/            # 8 pipeline steps
+│   └── uploaders/
 │       ├── yt_worker.py
 │       ├── ig_worker.py
-│       └── interactive_uploader.py
+│       └── auto_uploader.py
 │
-├── scripts/                 ← Bash scripts for scheduled tasks
-│   ├── yt_service.sh
-│   └── ig_service.sh
+├── scripts/
+│   └── auto_service.sh    # Auto-upload on boot
 │
-├── logs/                    ← Centralized logs (rotating, auto-managed)
+├── logs/
 │   ├── pipeline.log
 │   ├── yt_upload.log
 │   ├── ig_upload.log
 │   └── error.log
 │
-├── outputs/                 ← Processed videos land here
-│   └── your_video_name/
-│       ├── final_video.mp4  ← Upload-ready video
-│       └── script.txt       ← Generated narration
-│
-├── upload_queue/            ← Drop folders here for auto-upload
-│   └── (your video folders go here)
-│
-├── uploaded/                ← Moved here after successful upload
-│
-├── .venv/                   ← Python environments (auto-created, gitignored)
-│   ├── unified/             ← Main environment (all dependencies)
-│   └── ...
-│
-├── tools/                   ← External tools (ffmpeg binary)
-├── docs/                    ← Documentation
-├── tests/                   ← Test files
-├── youtube_token.pickle     ← YouTube auth token
-└── ig_session.json          ← Instagram session
+└── .venv/                # Python environment
+```
+
+**Desktop:**
+- `~/Desktop/yt_inbox` → symlink to project `yt_inbox/`
+- `~/Desktop/watcher.command` → runs the watcher
+
+---
+
+## 🔧 Commands
+
+```bash
+# Run watcher (auto-processes new videos)
+bash scripts/watch.sh
+# Or double-click watcher.command on Desktop
+
+# Process a video manually
+.venv/bin/python pipeline.py /path/to/video.mp4
+
+# Auto-upload (runs automatically on boot)
+bash scripts/auto_service.sh
+
+# Manual upload
+.venv/bin/python src/uploaders/interactive_uploader.py
 ```
 
 ---
 
 ## 📝 Logging
 
-All logs are centralized in the `logs/` directory with automatic rotation (10MB max per file, 5 backups):
-
 ```bash
-# Watch pipeline logs
 tail -f logs/pipeline.log
-
-# Watch YouTube upload logs
-tail -f logs/yt_upload.log
-
-# Watch Instagram upload logs
-tail -f logs/ig_upload.log
-
-# Watch all errors
+tail -f logs/auto_upload.log
 tail -f logs/error.log
 ```
-
-| Log File | What it captures |
-|----------|------------------|
-| `pipeline.log` | Video processing pipeline (all 8 steps) |
-| `yt_upload.log` | YouTube auto-uploads |
-| `ig_upload.log` | Instagram auto-uploads |
-| `error.log` | All errors from all modules |
 
 ---
 
@@ -253,6 +167,5 @@ tail -f logs/error.log
 | Ollama connection refused | Run `ollama serve` in a terminal |
 | YouTube auth fails | Delete `youtube_token.pickle` and re-run upload |
 | Auto-upload not running | Check `logs/error.log` |
-| Curses menu crash | Make your terminal window bigger |
-| Video folder not uploading | Make sure it has both `final_video.mp4` AND `script.txt` |
-| Instagram login fails | Check `logs/ig_upload.log` for errors | |
+| Video not processing | Make sure it's in `yt_inbox/` (not subfolders) |
+| Video re-processed | Already in `yt_inbox/outputs/` - watcher skips it |

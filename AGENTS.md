@@ -19,9 +19,6 @@ source .venv/bin/activate
 ### Running the Pipeline
 ```bash
 # Process a video through all 8 steps
-python pipeline.py /path/to/video.mp4
-
-# Or with venv
 .venv/bin/python pipeline.py /path/to/video.mp4
 ```
 
@@ -32,18 +29,12 @@ ruff check .
 
 # Auto-fix issues
 ruff check . --fix
-
-# Check specific file
-ruff check src/config.py
 ```
-
-### Type Checking
-This project uses Python type hints. No mypy is currently configured, but types should be used for function signatures.
 
 ### Running Individual Steps (Debugging)
 ```bash
 # Step 1: Extract frames
-.venv/bin/python src/steps/step1_extract_frames.py --video-file input.mp4 --interval 2.0 --output-dir outputs/frames
+.venv/bin/python src/steps/step1_extract_frames.py --video-file input.mp4 --interval 2.0 --output-dir yt_inbox/outputs/frames
 
 # Step 2: Vision descriptions
 .venv/bin/python src/steps/step2_qwen_vl.py --manifest manifest.json --model qwen3-vl:2b --output-file frames.txt
@@ -71,13 +62,15 @@ This project uses Python type hints. No mypy is currently configured, but types 
 ```bash
 # Interactive YouTube upload
 .venv/bin/python src/uploaders/interactive_uploader.py
+
+# Auto-uploader (for upload_queue/)
+.venv/bin/python src/uploaders/auto_uploader.py <folder>
 ```
 
 ### Watching Logs
 ```bash
 tail -f logs/pipeline.log
-tail -f logs/yt_upload.log
-tail -f logs/ig_upload.log
+tail -f logs/auto_upload.log
 tail -f logs/error.log
 ```
 
@@ -108,12 +101,6 @@ tail -f logs/error.log
 ### Error Handling
 - Use explicit exception types with descriptive messages
 - Catch specific exceptions when possible
-- Example:
-```python
-cap = cv2.VideoCapture(video_path)
-if not cap.isOpened():
-    raise Exception(f"Error opening video file: {video_path}")
-```
 
 ### Function Structure
 - Keep functions focused and single-purpose
@@ -151,9 +138,10 @@ if not cap.isOpened():
 youtube_automation/
 ├── pipeline.py              # Main orchestration script
 ├── src/
-│   ├── config.py            # All configuration settings
-│   ├── logger.py            # Centralized logging
-│   ├── steps/               # 8 pipeline steps
+│   ├── config.py           # All configuration settings
+│   ├── logger.py           # Centralized logging
+│   ├── watcher.py          # Auto-detects & processes new videos
+│   ├── steps/              # 8 pipeline steps
 │   │   ├── step1_extract_frames.py
 │   │   ├── step2_qwen_vl.py
 │   │   ├── step3_transcribe_original.py
@@ -162,14 +150,23 @@ youtube_automation/
 │   │   ├── step6_merge_av.py
 │   │   ├── step7_transcribe_subtitles.py
 │   │   └── step8_burn_subtitles.py
-│   └── uploaders/           # Upload workers
+│   └── uploaders/          # Upload workers
 │       ├── yt_worker.py
-│       └── ig_worker.py
-├── outputs/                 # Processed videos
-├── upload_queue/            # Videos pending upload
-├── logs/                    # Application logs
-├── samples/                 # Reference audio for TTS
-└── .venv/                   # Python virtual environment
+│       ├── ig_worker.py
+│       ├── auto_uploader.py
+│       └── interactive_uploader.py
+├── scripts/
+│   └── auto_service.sh    # Auto-upload on boot
+├── yt_inbox/               # Drop videos here
+│   ├── inputs/             # Raw videos (optional)
+│   ├── outputs/           # Processed videos
+│   ├── processed/          # Original videos after processing
+│   └── failed/            # Failed videos
+├── upload_queue/           # Videos pending upload
+├── uploaded/              # Successfully uploaded
+├── logs/                   # Application logs
+├── samples/                # Reference audio for TTS
+└── .venv/                  # Python virtual environment
 ```
 
 ## External Dependencies
@@ -194,4 +191,15 @@ Edit `src/config.py` - all pipeline settings are centralized there.
 1. Check logs in `logs/pipeline.log`
 2. Run the step individually with verbose output
 3. Verify Ollama is running: `ollama list`
-4. Check intermediate outputs in `outputs/<video_name>/`
+4. Check intermediate outputs in `yt_inbox/outputs/<video_name>/`
+
+### Running the Watcher
+```bash
+# Option 1: Run directly
+.venv/bin/python src/watcher.py
+
+# Option 2: Use the script
+bash scripts/watch.sh
+
+# Option 3: Double-click watcher.command on Desktop
+```
