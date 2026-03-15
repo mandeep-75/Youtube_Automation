@@ -4,37 +4,65 @@
 WrapStyle: 0
 ScaledBorderAndShadow: yes
 Collisions: Normal
-PlayResX: 576
-PlayResY: 1024
+PlayResX: 360
+PlayResY: 640
 ScriptType: v4.00+
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Bebas Neue,64,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0.5333333333333333,0,5,-26,-26,133,1
+Style: Default,Oswald,40,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0.3333333333333333,0,5,-16,-16,83,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-Dialogue: 0,0:00:00.00,0:00:00.16,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}This{\r} {\c&HFFFFFF&}master {\c&HFFFFFF&}craftsman
-Dialogue: 0,0:00:00.16,0:00:00.50,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}This {\c&HAAFF00&}master{\r} {\c&HFFFFFF&}craftsman
-Dialogue: 0,0:00:00.50,0:00:00.96,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}This {\c&HFFFFFF&}master {\c&HAAFF00&}craftsman{\r}
-Dialogue: 0,0:00:00.96,0:00:01.24,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}turns{\r} {\c&HFFFFFF&}rough {\c&HFFFFFF&}white
-Dialogue: 0,0:00:01.24,0:00:01.54,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}turns {\c&HAAFF00&}rough{\r} {\c&HFFFFFF&}white
-Dialogue: 0,0:00:01.54,0:00:01.78,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}turns {\c&HFFFFFF&}rough {\c&HAAFF00&}white{\r}
-Dialogue: 0,0:00:01.78,0:00:02.20,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}concrete{\r} {\c&HFFFFFF&}into {\c&HFFFFFF&}perfect
-Dialogue: 0,0:00:02.20,0:00:02.52,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}concrete {\c&HAAFF00&}into{\r} {\c&HFFFFFF&}perfect
-Dialogue: 0,0:00:02.52,0:00:02.84,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}concrete {\c&HFFFFFF&}into {\c&HAAFF00&}perfect{\r}
-Dialogue: 0,0:00:02.84,0:00:03.18,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}gold.{\r} {\c&HFFFFFF&}He {\c&HFFFFFF&}ripples
-Dialogue: 0,0:00:03.32,0:00:03.40,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}gold. {\c&HAAFF00&}He{\r} {\c&HFFFFFF&}ripples
-Dialogue: 0,0:00:03.40,0:00:03.70,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}gold. {\c&HFFFFFF&}He {\c&HAAFF00&}ripples{\r}
-Dialogue: 0,0:00:03.70,0:00:03.88,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}the{\r} {\c&HFFFFFF&}surface, {\c&HFFFFFF&}spreads
-Dialogue: 0,0:00:03.88,0:00:04.24,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}the {\c&HAAFF00&}surface,{\r} {\c&HFFFFFF&}spreads
-Dialogue: 0,0:00:04.50,0:00:04.64,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}the {\c&HFFFFFF&}surface, {\c&HAAFF00&}spreads{\r}
-Dialogue: 0,0:00:04.64,0:00:04.82,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}the{\r} {\c&HFFFFFF&}mix, {\c&HFFFFFF&}and
-Dialogue: 0,0:00:04.82,0:00:05.04,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}the {\c&HAAFF00&}mix,{\r} {\c&HFFFFFF&}and
-Dialogue: 0,0:00:05.38,0:00:05.50,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}the {\c&HFFFFFF&}mix, {\c&HAAFF00&}and{\r}
-Dialogue: 0,0:00:05.50,0:00:05.72,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}levels{\r} {\c&HFFFFFF&}every {\c&HFFFFFF&}imperfection
-Dialogue: 0,0:00:05.72,0:00:06.16,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}levels {\c&HAAFF00&}every{\r} {\c&HFFFFFF&}imperfection
-Dialogue: 0,0:00:06.16,0:00:06.86,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}levels {\c&HFFFFFF&}every {\c&HAAFF00&}imperfection{\r}
-Dialogue: 0,0:00:06.86,0:00:07.04,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}with{\r} {\c&HFFFFFF&}brutal {\c&HFFFFFF&}precision.
-Dialogue: 0,0:00:07.04,0:00:07.32,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}with {\c&HAAFF00&}brutal{\r} {\c&HFFFFFF&}precision.
-Dialogue: 0,0:00:07.32,0:00:07.72,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}with {\c&HFFFFFF&}brutal {\c&HAAFF00&}precision.{\r}
+Dialogue: 0,0:00:00.00,0:00:00.18,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}This{\r} {\c&HFFFFFF&}man {\c&HFFFFFF&}carves
+Dialogue: 0,0:00:00.18,0:00:00.38,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}This {\c&HAAFF00&}man{\r} {\c&HFFFFFF&}carves
+Dialogue: 0,0:00:00.38,0:00:00.76,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}This {\c&HFFFFFF&}man {\c&HAAFF00&}carves{\r}
+Dialogue: 0,0:00:00.76,0:00:01.20,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}perfection{\r} {\c&HFFFFFF&}out {\c&HFFFFFF&}of
+Dialogue: 0,0:00:01.20,0:00:01.44,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}perfection {\c&HAAFF00&}out{\r} {\c&HFFFFFF&}of
+Dialogue: 0,0:00:01.44,0:00:01.58,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}perfection {\c&HFFFFFF&}out {\c&HAAFF00&}of{\r}
+Dialogue: 0,0:00:01.58,0:00:01.76,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}raw{\r} {\c&HFFFFFF&}mud {\c&HFFFFFF&}with
+Dialogue: 0,0:00:01.76,0:00:02.02,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}raw {\c&HAAFF00&}mud{\r} {\c&HFFFFFF&}with
+Dialogue: 0,0:00:02.02,0:00:02.24,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}raw {\c&HFFFFFF&}mud {\c&HAAFF00&}with{\r}
+Dialogue: 0,0:00:02.24,0:00:02.52,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}nothing{\r} {\c&HFFFFFF&}but {\c&HFFFFFF&}a
+Dialogue: 0,0:00:02.52,0:00:02.70,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}nothing {\c&HAAFF00&}but{\r} {\c&HFFFFFF&}a
+Dialogue: 0,0:00:02.70,0:00:02.80,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}nothing {\c&HFFFFFF&}but {\c&HAAFF00&}a{\r}
+Dialogue: 0,0:00:02.80,0:00:03.08,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}simple{\r} {\c&HFFFFFF&}wooden {\c&HFFFFFF&}tool.
+Dialogue: 0,0:00:03.08,0:00:03.34,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}simple {\c&HAAFF00&}wooden{\r} {\c&HFFFFFF&}tool.
+Dialogue: 0,0:00:03.34,0:00:03.66,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}simple {\c&HFFFFFF&}wooden {\c&HAAFF00&}tool.{\r}
+Dialogue: 0,0:00:03.84,0:00:03.92,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}He{\r} {\c&HFFFFFF&}scrapes, {\c&HFFFFFF&}smooths,
+Dialogue: 0,0:00:03.92,0:00:04.42,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}He {\c&HAAFF00&}scrapes,{\r} {\c&HFFFFFF&}smooths,
+Dialogue: 0,0:00:04.58,0:00:04.88,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}He {\c&HFFFFFF&}scrapes, {\c&HAAFF00&}smooths,{\r}
+Dialogue: 0,0:00:04.94,0:00:04.98,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}and{\r} {\c&HFFFFFF&}shapes {\c&HFFFFFF&}the
+Dialogue: 0,0:00:04.98,0:00:05.26,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}and {\c&HAAFF00&}shapes{\r} {\c&HFFFFFF&}the
+Dialogue: 0,0:00:05.26,0:00:05.48,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}and {\c&HFFFFFF&}shapes {\c&HAAFF00&}the{\r}
+Dialogue: 0,0:00:05.48,0:00:05.62,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}wet{\r} {\c&HFFFFFF&}concrete {\c&HFFFFFF&}with
+Dialogue: 0,0:00:05.62,0:00:06.06,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}wet {\c&HAAFF00&}concrete{\r} {\c&HFFFFFF&}with
+Dialogue: 0,0:00:06.06,0:00:06.24,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}wet {\c&HFFFFFF&}concrete {\c&HAAFF00&}with{\r}
+Dialogue: 0,0:00:06.24,0:00:06.48,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}such{\r} {\c&HFFFFFF&}precision {\c&HFFFFFF&}it
+Dialogue: 0,0:00:06.48,0:00:06.92,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}such {\c&HAAFF00&}precision{\r} {\c&HFFFFFF&}it
+Dialogue: 0,0:00:06.92,0:00:07.12,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}such {\c&HFFFFFF&}precision {\c&HAAFF00&}it{\r}
+Dialogue: 0,0:00:07.12,0:00:07.30,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}looks{\r} {\c&HFFFFFF&}impossible. {\c&HFFFFFF&}Every
+Dialogue: 0,0:00:07.30,0:00:07.98,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}looks {\c&HAAFF00&}impossible.{\r} {\c&HFFFFFF&}Every
+Dialogue: 0,0:00:08.20,0:00:08.44,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}looks {\c&HFFFFFF&}impossible. {\c&HAAFF00&}Every{\r}
+Dialogue: 0,0:00:08.44,0:00:08.72,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}stroke{\r} {\c&HFFFFFF&}adds {\c&HFFFFFF&}character
+Dialogue: 0,0:00:08.72,0:00:08.98,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}stroke {\c&HAAFF00&}adds{\r} {\c&HFFFFFF&}character
+Dialogue: 0,0:00:08.98,0:00:09.42,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}stroke {\c&HFFFFFF&}adds {\c&HAAFF00&}character{\r}
+Dialogue: 0,0:00:09.42,0:00:09.64,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}until{\r} {\c&HFFFFFF&}the {\c&HFFFFFF&}rough
+Dialogue: 0,0:00:09.64,0:00:09.80,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}until {\c&HAAFF00&}the{\r} {\c&HFFFFFF&}rough
+Dialogue: 0,0:00:09.80,0:00:09.96,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}until {\c&HFFFFFF&}the {\c&HAAFF00&}rough{\r}
+Dialogue: 0,0:00:09.96,0:00:10.22,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}patch{\r} {\c&HFFFFFF&}transforms {\c&HFFFFFF&}into
+Dialogue: 0,0:00:10.22,0:00:10.76,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}patch {\c&HAAFF00&}transforms{\r} {\c&HFFFFFF&}into
+Dialogue: 0,0:00:10.76,0:00:11.04,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}patch {\c&HFFFFFF&}transforms {\c&HAAFF00&}into{\r}
+Dialogue: 0,0:00:11.04,0:00:11.46,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}absolute{\r} {\c&HFFFFFF&}elegance. {\c&HFFFFFF&}You
+Dialogue: 0,0:00:11.46,0:00:11.98,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}absolute {\c&HAAFF00&}elegance.{\r} {\c&HFFFFFF&}You
+Dialogue: 0,0:00:12.14,0:00:12.22,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}absolute {\c&HFFFFFF&}elegance. {\c&HAAFF00&}You{\r}
+Dialogue: 0,0:00:12.22,0:00:12.38,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}think{\r} {\c&HFFFFFF&}he's {\c&HFFFFFF&}building
+Dialogue: 0,0:00:12.38,0:00:12.60,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}think {\c&HAAFF00&}he's{\r} {\c&HFFFFFF&}building
+Dialogue: 0,0:00:12.60,0:00:12.82,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}think {\c&HFFFFFF&}he's {\c&HAAFF00&}building{\r}
+Dialogue: 0,0:00:12.82,0:00:12.96,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}a{\r} {\c&HFFFFFF&}castle {\c&HFFFFFF&}from
+Dialogue: 0,0:00:12.96,0:00:13.26,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}a {\c&HAAFF00&}castle{\r} {\c&HFFFFFF&}from
+Dialogue: 0,0:00:13.26,0:00:13.48,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}a {\c&HFFFFFF&}castle {\c&HAAFF00&}from{\r}
+Dialogue: 0,0:00:13.48,0:00:13.60,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}a{\r} {\c&HFFFFFF&}pile {\c&HFFFFFF&}of
+Dialogue: 0,0:00:13.60,0:00:13.80,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}a {\c&HAAFF00&}pile{\r} {\c&HFFFFFF&}of
+Dialogue: 0,0:00:13.80,0:00:13.98,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}a {\c&HFFFFFF&}pile {\c&HAAFF00&}of{\r}
+Dialogue: 0,0:00:13.98,0:00:14.14,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}dirt?{\r}
