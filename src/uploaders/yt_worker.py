@@ -25,8 +25,6 @@ sys.path.insert(0, project_root)
 
 import json
 import pickle
-import re
-import shutil
 import ollama
 
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -66,30 +64,26 @@ Respond with ONLY valid JSON (use double quotes for all strings):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def extract_json(text: str) -> dict:
-    # Find JSON block - look for first { and last }
     text = text.strip()
-    start = text.find('{')
-    end = text.rfind('}')
     
-    if start == -1 or end == -1:
-        raise ValueError("No JSON found in LLM response")
+    brace_count = 0
+    start = -1
+    for i, c in enumerate(text):
+        if c == '{':
+            if start == -1:
+                start = i
+            brace_count += 1
+        elif c == '}':
+            brace_count -= 1
+            if brace_count == 0 and start != -1:
+                content = text[start:i+1]
+                try:
+                    return json.loads(content)
+                except json.JSONDecodeError:
+                    pass
+                start = -1
     
-    content = text[start:end+1]
-    
-    try:
-        return json.loads(content)
-    except json.JSONDecodeError:
-        pass
-    
-    # Fix unquoted tags: [tag1, tag2] -> ["tag1", "tag2"]
-    content = re.sub(r'"tags"\s*:\s*\[([^\]]+)\]', 
-                     lambda m: '"tags": [' + ', '.join(f'"{t.strip()}"' for t in m.group(1).split(',')) + ']',
-                     content)
-    
-    try:
-        return json.loads(content)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON: {e}")
+    raise ValueError("No valid JSON found in LLM response")
 
 
 def generate_metadata(script_text: str) -> dict:
@@ -100,9 +94,7 @@ def generate_metadata(script_text: str) -> dict:
     
     response = client.chat(
         model=OLLAMA_MODEL,
-        messages=[{"role": "user", "content": prompt}],
-        think=False,
-        options={"num_predict": 500}
+        messages=[{"role": "user", "content": prompt}]
     )
     
     response_text = response["message"]["content"].strip()
@@ -202,7 +194,7 @@ def main() -> int:
         print(f"❌ script.txt missing in {folder}")
         return 1
     if os.path.exists(os.path.join(folder, "youtube_id.txt")):
-        print(f"⚠️  Already uploaded (youtube_id.txt exists). Skipping.")
+        print("⚠️  Already uploaded (youtube_id.txt exists). Skipping.")
         return 0
 
     # ── Read script ────────────────────────────────────────────────────────

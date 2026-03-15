@@ -1,86 +1,159 @@
-# AGENTS.md - Agent Coding Guidelines
+# AGENTS.md - YouTube Automation Project
 
-This file provides guidelines for AI agents working in this YouTube automation repository.
+## Project Overview
 
-## 1. Build and Run Commands
+Python-based video processing pipeline that transforms raw videos into narrated, subtitled YouTube Shorts with automatic upload capabilities. Uses Ollama for vision/LLM, Faster-Whisper for transcription, Chatterbox-TTS for voice synthesis, and FFmpeg for video processing.
+
+## Environment Setup
+
+```bash
+# Activate the virtual environment
+source .venv/bin/activate
+
+# Or use the full path directly
+.venv/bin/python <script.py>
+```
+
+## Build / Lint / Test Commands
 
 ### Running the Pipeline
-
 ```bash
-# Process a video through the full 8-step pipeline
-.venv/unified/bin/python pipeline.py /path/to/video.mp4
+# Process a video through all 8 steps
+python pipeline.py /path/to/video.mp4
 
-# Process multiple videos
-.venv/unified/bin/python pipeline.py video1.mp4 video2.mp4
+# Or with venv
+.venv/bin/python pipeline.py /path/to/video.mp4
 ```
 
-### Virtual Environment
-
-All Python commands should use the unified venv:
+### Linting (Ruff)
 ```bash
-.venv/unified/bin/python <script>
+# Run ruff linter
+ruff check .
+
+# Auto-fix issues
+ruff check . --fix
+
+# Check specific file
+ruff check src/config.py
 ```
 
-## 2. Code Style Guidelines
+### Type Checking
+This project uses Python type hints. No mypy is currently configured, but types should be used for function signatures.
 
-### General Conventions
+### Running Individual Steps (Debugging)
+```bash
+# Step 1: Extract frames
+.venv/bin/python src/steps/step1_extract_frames.py --video-file input.mp4 --interval 2.0 --output-dir outputs/frames
 
-- **Language**: Python 3.11+
-- **Style**: Follow PEP 8 with snake_case naming
-- **Type hints**: Use for function signatures (especially in library code)
-- **Docstrings**: Use Google-style docstrings for public functions
+# Step 2: Vision descriptions
+.venv/bin/python src/steps/step2_qwen_vl.py --manifest manifest.json --model qwen3-vl:2b --output-file frames.txt
+
+# Step 3: Transcribe original audio
+.venv/bin/python src/steps/step3_transcribe_original.py --video input.mp4 --output transcript.txt --model base
+
+# Step 4: Generate narration script
+.venv/bin/python src/steps/step4_llm_script.py --input frames.txt --output script.txt --duration 60.0 --wps 3
+
+# Step 5: Text-to-speech
+.venv/bin/python src/steps/step5_tts.py --script script.txt --output voice.wav --ref-audio samples/me.mp3
+
+# Step 6: Merge audio/video
+.venv/bin/python src/steps/step6_merge_av.py --video input.mp4 --audio voice.wav --output video_tts.mp4
+
+# Step 7: Transcribe TTS for subtitles
+.venv/bin/python src/steps/step7_transcribe_subtitles.py --video video_tts.mp4 --srt subtitles.srt --model base
+
+# Step 8: Burn subtitles
+.venv/bin/python src/steps/step8_burn_subtitles.py video_tts.mp4 subtitles.srt -o final_video.mp4
+```
+
+### Upload Commands
+```bash
+# Interactive YouTube upload
+.venv/bin/python src/uploaders/interactive_uploader.py
+```
+
+### Watching Logs
+```bash
+tail -f logs/pipeline.log
+tail -f logs/yt_upload.log
+tail -f logs/ig_upload.log
+tail -f logs/error.log
+```
+
+## Code Style Guidelines
+
+### Imports
+- Standard library imports first, then third-party, then local
+- Use explicit relative imports for project modules (`from src import config`)
+- Alphabetize within import groups
+
+### Formatting
+- Maximum line length: 100 characters (ruff default)
+- Use 4 spaces for indentation (no tabs)
+- Add trailing commas in multi-line structures
+- Use f-strings for string formatting
+
+### Type Hints
+- Use type hints for all function signatures
+- Common types: `str`, `int`, `float`, `bool`, `List[str]`, `Dict[str, Any]`
+- Use `Optional[X]` instead of `X | None` for compatibility
 
 ### Naming Conventions
+- Functions/variables: `snake_case` (e.g., `extract_frames`, `video_path`)
+- Classes: `PascalCase` (e.g., `VideoProcessor`)
+- Constants: `UPPER_SNAKE_CASE` (e.g., `MAX_FRAME_COUNT`)
+- Private functions: prefix with underscore (e.g., `_internal_helper`)
 
-| Element | Convention | Example |
-|---------|------------|---------|
-| Functions/variables | snake_case | `extract_frames`, `video_path` |
-| Classes | PascalCase | `PipelineLogger`, `TestStep1` |
-| Constants | UPPER_SNAKE_CASE | `OLLAMA_URL`, `FRAME_INTERVAL` |
-| Private functions | prefix with underscore | `_format_ts` |
-
-### Import Organization
-
-Order imports as follows (within each group, alphabetically):
-1. Standard library (`os`, `sys`, `argparse`)
-2. Third-party packages (`cv2`, `json`)
-3. Local imports (`from src import config`)
-
+### Error Handling
+- Use explicit exception types with descriptive messages
+- Catch specific exceptions when possible
+- Example:
 ```python
-import os
-import sys
-import argparse
-import json
-
-import cv2
-from datetime import timedelta
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
-
-from src import config
-from src.logger import PipelineLogger
+cap = cv2.VideoCapture(video_path)
+if not cap.isOpened():
+    raise Exception(f"Error opening video file: {video_path}")
 ```
 
-### File Structure
+### Function Structure
+- Keep functions focused and single-purpose
+- Use docstrings for complex functions (Google style)
+- Put main execution behind `if __name__ == "__main__":`
+
+### Logging
+- Use print statements for user-facing output (pipeline.py uses this pattern)
+- Use the `src/logger.py` module for application logging to files
+
+### File Paths
+- Use `os.path.join()` for path concatenation
+- Use `pathlib.Path` for modern path handling when appropriate
+- Reference config values for project paths (e.g., `config.PROJECT_ROOT`)
+
+### Pipeline Steps
+- Each step is a standalone script in `src/steps/`
+- Steps communicate via JSON manifest files or command-line arguments
+- Return paths to output files for chaining steps
+
+### Configuration
+- All settings go in `src/config.py`
+- Use environment variables via `python-dotenv` for sensitive data
+- Constants at module level, runtime config can be mutable
+
+### Video Processing Patterns
+- Use subprocess to call FFmpeg for video operations
+- Check return codes with `check=True` for critical operations
+- Use temporary directories for intermediate outputs
+- Clean up temporary files when done
+
+## Project Structure
 
 ```
 youtube_automation/
-├── pipeline.py              # Main pipeline entry point
-├── AGENTS.md               # This file
-├── README.md               # Project documentation
-├── .env                    # Environment variables
-├── client_secret.json      # YouTube API credentials
-├── youtube_token.pickle   # YouTube auth token
-├── ig_session.json        # Instagram session
-├── requirements.txt       # Python dependencies
-│
+├── pipeline.py              # Main orchestration script
 ├── src/
-│   ├── __init__.py
-│   ├── config.py          # All settings (imported by pipeline)
-│   ├── logger.py          # Centralized logging
-│   ├── watcher.py         # File watcher
-│   │
-│   ├── steps/             # Pipeline step implementations
+│   ├── config.py            # All configuration settings
+│   ├── logger.py            # Centralized logging
+│   ├── steps/               # 8 pipeline steps
 │   │   ├── step1_extract_frames.py
 │   │   ├── step2_qwen_vl.py
 │   │   ├── step3_transcribe_original.py
@@ -89,176 +162,36 @@ youtube_automation/
 │   │   ├── step6_merge_av.py
 │   │   ├── step7_transcribe_subtitles.py
 │   │   └── step8_burn_subtitles.py
-│   │
-│   └── uploaders/         # Upload workers
+│   └── uploaders/           # Upload workers
 │       ├── yt_worker.py
-│       ├── ig_worker.py
-│       └── interactive_uploader.py
-│
-├── scripts/               # Shell scripts
-│   ├── yt_service.sh
-│   └── ig_service.sh
-│
-├── tools/                # Binary tools (ffmpeg, ffprobe)
-├── fonts/               # Subtitle font files (TTF)
-├── samples/             # Reference audio samples
-├── docs/                 # Documentation
-├── logs/                 # Log files
-├── outputs/              # Processed video output
-├── upload_queue/         # Videos waiting for upload
-└── uploaded/             # Successfully uploaded videos
+│       └── ig_worker.py
+├── outputs/                 # Processed videos
+├── upload_queue/            # Videos pending upload
+├── logs/                    # Application logs
+├── samples/                 # Reference audio for TTS
+└── .venv/                   # Python virtual environment
 ```
 
-### Logging
+## External Dependencies
 
-- Use the centralized logger from `src/logger.py`
-- Use `PipelineLogger` for pipeline steps (automatically logs to error.log)
-- Use print statements only for CLI tools and user-facing output
+- **Ollama**: Must be running locally (`ollama serve`) for vision/LLM steps
+- **FFmpeg**: Required for video processing (`brew install ffmpeg`)
+- **Google Cloud**: YouTube API credentials in `client_secret.json`
+- **Instagram**: Session-based authentication (ig_session.json)
 
-```python
-from src.logger import PipelineLogger
+## Common Development Tasks
 
-logger = PipelineLogger("step1")
-logger.info("Extracting frames...")
-logger.error("Failed to extract frames")
-```
+### Adding a New Pipeline Step
+1. Create `src/steps/stepN_name.py`
+2. Add CLI argument parsing with argparse
+3. Output results to configured output directory
+4. Update `pipeline.py` to call the new step
 
-### Argument Parsing
+### Modifying Configuration
+Edit `src/config.py` - all pipeline settings are centralized there.
 
-Use `argparse` for CLI scripts:
-
-```python
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input", type=str, required=True)
-    parser.add_argument("--output", type=str, default="output.txt")
-    parser.add_argument("--verbose", action="store_true")
-    args = parser.parse_args()
-```
-
-### Error Handling
-
-- Raise exceptions with descriptive messages
-- Use try/except for recoverable errors
-- Log errors before re-raising
-
-```python
-cap = cv2.VideoCapture(video_path)
-if not cap.isOpened():
-    raise Exception(f"Error opening video file: {video_path}")
-```
-
-### Configuration
-
-All settings belong in `src/config.py`. Never hardcode values:
-- API URLs, model names
-- File paths (use `PROJECT_ROOT` for base paths)
-- Thresholds, intervals, sizes
-- Credentials via environment variables (use `.env`)
-
-```python
-# Good
-output_dir = os.path.join(config.PROJECT_ROOT, "outputs")
-
-# Bad
-output_dir = "/Users/mandeep/development/youtube_automation/outputs"
-```
-
-### Video Processing Patterns
-
-- Always create output directories with `os.makedirs(dir, exist_ok=True)`
-- Use manifest files (JSON) to track generated artifacts
-- Log progress with step names for debugging
-
-## 3. Project-Specific Notes
-
-### Pipeline Steps
-
-| Step | Description | Key Dependencies |
-|------|-------------|-------------------|
-| 1 | Extract frames | OpenCV |
-| 2 | Vision description | Ollama (Qwen3-VL) |
-| 3 | Transcribe original | faster-whisper |
-| 4 | Generate script | Ollama (LLM) |
-| 5 | Text-to-speech | chatterbox |
-| 6 | Merge audio/video | FFmpeg |
-| 7 | Transcribe TTS | faster-whisper |
-| 8 | Burn subtitles | FFmpeg |
-
-### Output Directory Structure
-
-Each processed video creates a folder in `outputs/`:
-```
-outputs/<video_name>/
-├── frames/              # Extracted frames
-│   └── manifest.json
-├── frames.txt          # Vision descriptions
-├── transcript.txt       # Original audio transcription
-├── script.txt          # Generated narration script
-├── voice.wav           # TTS audio output
-├── video_with_tts.mp4  # Video with TTS (before subtitles)
-├── subtitles.srt       # Subtitle file
-└── final_video.mp4      # Final output with burned subtitles
-```
-
-### Upload Queue
-
-Videos waiting for upload go in `upload_queue/` with structure:
-```
-upload_queue/<video_folder>/
-├── final_video.mp4   (required)
-├── script.txt        (required)
-├── youtube_id.txt    (added after YT upload)
-└── ig_id.txt         (added after IG upload)
-```
-
-### Logs
-
-- `logs/pipeline.log` - Video processing
-- `logs/yt_upload.log` - YouTube uploads
-- `logs/ig_upload.log` - Instagram uploads
-- `logs/error.log` - All errors
-
-### Configuration Sections (src/config.py)
-
-The config file is organized into sections:
-
-| Section | Description |
-|---------|-------------|
-| 0. GLOBAL | OLLAMA_URL |
-| 1. FRAME EXTRACTION | FRAME_INTERVAL |
-| 2. VISION MODEL | VISION_MODEL, VISION_PROMPT |
-| 3. WHISPER | WHISPER_MODEL, WHISPER_LANG, WHISPER_BEAM_SIZE, WHISPER_COMPUTE_TYPE |
-| 4. LLM SCRIPT | LLM_MODEL, LLM_WORDS_PER_SECOND |
-| 5. TTS | TTS_REF_AUDIO, TTS_EXAGGERATION, TTS_TEMPERATURE, TTS_CFG_WEIGHT, TTS_REPETITION_PENALTY |
-| 6. MERGE | MERGE_MIX_AUDIO, ORIGINAL_AUDIO_VOLUME |
-| 7 & 8. SUBTITLES | SUBTITLE_FONTS, SUBTITLE_FONT_COLOR, SUBTITLE_HIGHLIGHT_COLOR, SUBTITLE_OUTLINE_COLOR, SUBTITLE_MAX_WORDS, SUBTITLE_POSITION |
-| PYTHON INTERPRETERS | UNIFIED_PYTHON, CHATTERBOX_PYTHON, FASTER_WHISPER_PYTHON, UPLOADER_PYTHON |
-| 9. UPLOADER | CLIENT_SECRET_FILE, YOUTUBE_TOKEN_FILE, IG_SESSION_FILE, IG_USERNAME, IG_PASSWORD |
-
-## 4. Environment Setup
-
-Required services:
-- **Ollama**: Run `ollama serve` before using vision/LLM steps
-- **FFmpeg**: Present in `tools/` directory (or system PATH)
-
-First-time setup:
-```bash
-ollama pull qwen3-vl:2b
-ollama pull qwen3.5:9b
-bash setup_all_venvs.sh  # or create .venv manually
-```
-
-Required environment variables (in `.env`):
-- `IG_USERNAME` - Instagram username
-- `IG_PASSWORD` - Instagram password
-
-## 5. Shell Scripts
-
-```bash
-# Start YouTube upload service
-bash scripts/yt_service.sh
-
-# Start Instagram upload service
-bash scripts/ig_service.sh
-```
+### Debugging a Failed Step
+1. Check logs in `logs/pipeline.log`
+2. Run the step individually with verbose output
+3. Verify Ollama is running: `ollama list`
+4. Check intermediate outputs in `outputs/<video_name>/`

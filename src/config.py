@@ -119,7 +119,7 @@ SUBTITLE_Y_OFFSET       = 250
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-UNIFIED_PYTHON = os.path.join(PROJECT_ROOT, ".venv", "unified", "bin", "python")
+UNIFIED_PYTHON = os.path.join(PROJECT_ROOT, ".venv", "bin", "python")
 
 CHATTERBOX_PYTHON = UNIFIED_PYTHON
 FASTER_WHISPER_PYTHON = UNIFIED_PYTHON
@@ -140,3 +140,8 @@ IG_SESSION_FILE = os.path.join(PROJECT_ROOT, "ig_session.json")
 
 IG_USERNAME = os.environ.get("IG_USERNAME", "")
 IG_PASSWORD = os.environ.get("IG_PASSWORD", "")
+
+# Instagram Graph API (Official)
+IG_GRAPH_API_VERSION = "v23.0"
+IG_GRAPH_ACCESS_TOKEN = os.environ.get("IG_GRAPH_ACCESS_TOKEN", "")
+IG_GRAPH_USER_ID = os.environ.get("IG_GRAPH_USER_ID", "")
