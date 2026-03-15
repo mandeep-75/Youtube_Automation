@@ -16,6 +16,9 @@
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
 PARENT_DIR="$(dirname "$BASE_DIR")"
 
+# Add project root to Python path
+export PYTHONPATH="$PARENT_DIR"
+
 PYTHON="$PARENT_DIR/.venv/bin/python"
 UPLOADER="$PARENT_DIR/src/uploaders/auto_uploader.py"
 QUEUE="$PARENT_DIR/upload_queue"

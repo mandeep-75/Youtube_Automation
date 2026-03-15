@@ -15,7 +15,9 @@ client_secret.json
 checkpoints/
 
 # ── Generated outputs ─────────────────────────────────────────────────────
-outputs/
+yt_inbox/outputs/
+yt_inbox/processed/
+yt_inbox/failed/
 
 # ── Misc ──────────────────────────────────────────────────────────────────
 .DS_Store

@@ -89,8 +89,16 @@ def upload_to_instagram_wrapper(folder: str, video_path: str) -> bool:
         print("⚠️  Already uploaded to Instagram")
         return True
 
+    script_path = os.path.join(folder, "script.txt")
+    if not os.path.exists(script_path):
+        print("❌ script.txt not found for Instagram caption")
+        return False
+
+    with open(script_path, "r") as f:
+        caption = f.read().strip()
+
     try:
-        video_id = upload_to_instagram(video_path)
+        video_id = upload_to_instagram(video_path, caption)
     except Exception as e:
         print(f"❌ Instagram upload failed: {e}")
         return False

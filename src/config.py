@@ -85,7 +85,7 @@ TTS_REPETITION_PENALTY = 1.2
 # 6. MERGE  — video version audio settings (legacy, see section 9)
 # ─────────────────────────────────────────────────────────────────────────────
 
-ORIGINAL_AUDIO_VOLUME = 0.4    # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
+ORIGINAL_AUDIO_VOLUME = 0.3    # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
                                 # Volume level for original audio in mixed version
 
 

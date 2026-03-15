@@ -1,25 +1,33 @@
 #!/usr/bin/env python3
 
 import os
+import re
 import sys
 import time
 import shutil
 import subprocess
 from pathlib import Path
 
+# Link to the main pipeline
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 # --- CONFIG ---
-WATCH_DIR = os.path.expanduser("~/Desktop/youtube_inbox")
+WATCH_DIR = os.path.join(PROJECT_ROOT, "yt_inbox")
+OUTPUTS_DIR = os.path.join(WATCH_DIR, "outputs")  # outputs inside yt_inbox
 PROCESSED_DIR = os.path.join(WATCH_DIR, "processed")
 FAILED_DIR = os.path.join(WATCH_DIR, "failed")
 POLL_INTERVAL = 5  # Seconds between scans
 STABILITY_DELAY = 3  # Seconds to wait to ensure file is fully copied
 SUPPORTED_EXTENSIONS = {".mp4", ".mov", ".mkv", ".avi"}
 
-# Link to the main pipeline
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PIPELINE_SCRIPT = os.path.join(PROJECT_ROOT, "pipeline.py")
+OUTPUTS_DIR = os.path.join(PROJECT_ROOT, "outputs")
 PYTHON_EXE = sys.executable  # Use the same interpreter we are running on
 LOCK_FILE = os.path.join(PROJECT_ROOT, "watcher.lock")
+
+def sanitize_filename(name):
+    """Remove characters that are invalid in filenames."""
+    return re.sub(r'[<>:"/\\|?*]', '_', name)
 
 def is_file_stable(filepath):
     """Check if the file size is stable (not being written)."""
@@ -30,6 +38,18 @@ def is_file_stable(filepath):
         return size1 == size2 and size1 > 0
     except OSError:
         return False
+
+def is_already_processed(video_path):
+    """Check if video has already been processed (output exists in outputs/)."""
+    video_name = os.path.basename(video_path)
+    video_name = sanitize_filename(video_name)
+    output_dir = os.path.join(OUTPUTS_DIR, video_name)
+    
+    # Check if output directory exists with final videos
+    final_mixed = os.path.join(output_dir, "final_video_mixed.mp4")
+    final_simple = os.path.join(output_dir, "final_video_simple.mp4")
+    
+    return os.path.exists(final_mixed) or os.path.exists(final_simple)
 
 def process_video(video_path):
     print(f"\n🎬 New video detected: {os.path.basename(video_path)}")
@@ -92,6 +112,16 @@ def main():
                 
                 # Check if it's a hidden file
                 if filename.startswith("."):
+                    continue
+                
+                # Check if already processed - skip if output exists
+                if is_already_processed(filepath):
+                    print(f"⏭️  Already processed, skipping: {filename}")
+                    # Move to processed folder
+                    dest = os.path.join(PROCESSED_DIR, filename)
+                    if not os.path.exists(dest):
+                        shutil.move(filepath, dest)
+                        print(f"   → Moved to processed/")
                     continue
                 
                 if is_file_stable(filepath):

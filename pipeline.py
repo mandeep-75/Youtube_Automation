@@ -175,11 +175,22 @@ def sanitize_filename(name: str) -> str:
     return name
 
 
+def cleanup_intermediate_files(*files: str) -> None:
+    """Remove intermediate files that are no longer needed."""
+    for f in files:
+        if os.path.exists(f):
+            try:
+                os.remove(f)
+                print(f"   🗑️  Removed intermediate: {os.path.basename(f)}")
+            except OSError as e:
+                print(f"   ⚠️  Could not remove {f}: {e}")
+
+
 def run_pipeline(video_path: str):
     # Use full filename (including tags and extension) for the output directory
     video_name = os.path.basename(video_path)
     video_name = sanitize_filename(video_name)
-    out_dir = os.path.join(config.PROJECT_ROOT, "outputs", video_name)
+    out_dir = os.path.join(config.PROJECT_ROOT, "yt_inbox", "outputs", video_name)
     os.makedirs(out_dir, exist_ok=True)
 
     frames_dir       = os.path.join(out_dir, "frames")
@@ -237,6 +248,9 @@ def run_pipeline(video_path: str):
     step8_burn_subtitles(video_mixed, srt_mixed, final_video_mixed)
     print("   [Simple version] Burning subtitles...")
     step8_burn_subtitles(video_simple, srt_simple, final_video_simple)
+
+    # Clean up intermediate files (video + subtitle files used for burning)
+    cleanup_intermediate_files(video_mixed, video_simple, srt_mixed, srt_simple)
 
     print(f"\n✅ Finished processing: {video_path}")
     print(f"   Mixed video:  {final_video_mixed}")
