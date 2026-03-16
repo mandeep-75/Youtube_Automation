@@ -32,22 +32,27 @@ FRAME_INTERVAL = "1.0"          # seconds between extracted frames (lower = more
 # ─────────────────────────────────────────────────────────────────────────────
 
 VISION_MODEL  = "qwen3-vl:2b" # Model name in Ollama
+VISION_CONTEXT_WINDOW = 5  # Number of previous frames to include as context
 
-VISION_PROMPT = """Analyze a single video frame and write one clear paragraph describing it.
+VISION_PROMPT = """Analyze a single video frame and write one clear paragraph describing it for Instagram Reels optimization.
 
 Order:
 1. Main subject (who/what is the focus)
 2. Action (what the subject is doing)
 3. Foreground (objects closest to the camera)
 4. Background (environment or distant elements)
+5. Visual aesthetics (colors, lighting, mood, composition)
+6. Instagram engagement potential (hook-worthy moments, text overlay opportunities)
 
 Rules:
-- Describe only visible facts.
-- Do guess emotions, identity, or events.
-- Mention notable objects, people, colors, clothing, lighting, or structures if visible.
+- Describe only visible facts - no guessing emotions, identity, or events.
+- Note visually striking elements: notable objects, people, colors, clothing, lighting, structures.
+- Mention visual style: warm/cool lighting, contrast, vibrant/muted colors, cinematic framing.
+- Capture potential for text overlays: moments with clear visual hierarchy, readable text in frame, clean backgrounds.
+- Note trending aesthetic indicators: minimal, high-contrast, bold colors, or unique visual moments.
 - Use neutral, clear language.
 
-Output: Return one detailed paragraph only."""
+Output: Return one detailed paragraph optimized for creating engaging Reels content."""
 
 
 

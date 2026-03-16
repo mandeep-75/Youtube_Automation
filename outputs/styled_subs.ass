@@ -4,65 +4,58 @@
 WrapStyle: 0
 ScaledBorderAndShadow: yes
 Collisions: Normal
-PlayResX: 360
-PlayResY: 640
+PlayResX: 576
+PlayResY: 1024
 ScriptType: v4.00+
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Oswald,40,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0.3333333333333333,0,5,-16,-16,83,1
+Style: Default,Bebas Neue,64,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,0.5333333333333333,0,5,-26,-26,133,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-Dialogue: 0,0:00:00.00,0:00:00.18,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}This{\r} {\c&HFFFFFF&}man {\c&HFFFFFF&}carves
-Dialogue: 0,0:00:00.18,0:00:00.38,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}This {\c&HAAFF00&}man{\r} {\c&HFFFFFF&}carves
-Dialogue: 0,0:00:00.38,0:00:00.76,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}This {\c&HFFFFFF&}man {\c&HAAFF00&}carves{\r}
-Dialogue: 0,0:00:00.76,0:00:01.20,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}perfection{\r} {\c&HFFFFFF&}out {\c&HFFFFFF&}of
-Dialogue: 0,0:00:01.20,0:00:01.44,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}perfection {\c&HAAFF00&}out{\r} {\c&HFFFFFF&}of
-Dialogue: 0,0:00:01.44,0:00:01.58,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}perfection {\c&HFFFFFF&}out {\c&HAAFF00&}of{\r}
-Dialogue: 0,0:00:01.58,0:00:01.76,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}raw{\r} {\c&HFFFFFF&}mud {\c&HFFFFFF&}with
-Dialogue: 0,0:00:01.76,0:00:02.02,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}raw {\c&HAAFF00&}mud{\r} {\c&HFFFFFF&}with
-Dialogue: 0,0:00:02.02,0:00:02.24,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}raw {\c&HFFFFFF&}mud {\c&HAAFF00&}with{\r}
-Dialogue: 0,0:00:02.24,0:00:02.52,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}nothing{\r} {\c&HFFFFFF&}but {\c&HFFFFFF&}a
-Dialogue: 0,0:00:02.52,0:00:02.70,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}nothing {\c&HAAFF00&}but{\r} {\c&HFFFFFF&}a
-Dialogue: 0,0:00:02.70,0:00:02.80,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}nothing {\c&HFFFFFF&}but {\c&HAAFF00&}a{\r}
-Dialogue: 0,0:00:02.80,0:00:03.08,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}simple{\r} {\c&HFFFFFF&}wooden {\c&HFFFFFF&}tool.
-Dialogue: 0,0:00:03.08,0:00:03.34,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}simple {\c&HAAFF00&}wooden{\r} {\c&HFFFFFF&}tool.
-Dialogue: 0,0:00:03.34,0:00:03.66,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}simple {\c&HFFFFFF&}wooden {\c&HAAFF00&}tool.{\r}
-Dialogue: 0,0:00:03.84,0:00:03.92,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}He{\r} {\c&HFFFFFF&}scrapes, {\c&HFFFFFF&}smooths,
-Dialogue: 0,0:00:03.92,0:00:04.42,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}He {\c&HAAFF00&}scrapes,{\r} {\c&HFFFFFF&}smooths,
-Dialogue: 0,0:00:04.58,0:00:04.88,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}He {\c&HFFFFFF&}scrapes, {\c&HAAFF00&}smooths,{\r}
-Dialogue: 0,0:00:04.94,0:00:04.98,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}and{\r} {\c&HFFFFFF&}shapes {\c&HFFFFFF&}the
-Dialogue: 0,0:00:04.98,0:00:05.26,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}and {\c&HAAFF00&}shapes{\r} {\c&HFFFFFF&}the
-Dialogue: 0,0:00:05.26,0:00:05.48,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}and {\c&HFFFFFF&}shapes {\c&HAAFF00&}the{\r}
-Dialogue: 0,0:00:05.48,0:00:05.62,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}wet{\r} {\c&HFFFFFF&}concrete {\c&HFFFFFF&}with
-Dialogue: 0,0:00:05.62,0:00:06.06,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}wet {\c&HAAFF00&}concrete{\r} {\c&HFFFFFF&}with
-Dialogue: 0,0:00:06.06,0:00:06.24,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}wet {\c&HFFFFFF&}concrete {\c&HAAFF00&}with{\r}
-Dialogue: 0,0:00:06.24,0:00:06.48,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}such{\r} {\c&HFFFFFF&}precision {\c&HFFFFFF&}it
-Dialogue: 0,0:00:06.48,0:00:06.92,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}such {\c&HAAFF00&}precision{\r} {\c&HFFFFFF&}it
-Dialogue: 0,0:00:06.92,0:00:07.12,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}such {\c&HFFFFFF&}precision {\c&HAAFF00&}it{\r}
-Dialogue: 0,0:00:07.12,0:00:07.30,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}looks{\r} {\c&HFFFFFF&}impossible. {\c&HFFFFFF&}Every
-Dialogue: 0,0:00:07.30,0:00:07.98,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}looks {\c&HAAFF00&}impossible.{\r} {\c&HFFFFFF&}Every
-Dialogue: 0,0:00:08.20,0:00:08.44,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}looks {\c&HFFFFFF&}impossible. {\c&HAAFF00&}Every{\r}
-Dialogue: 0,0:00:08.44,0:00:08.72,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}stroke{\r} {\c&HFFFFFF&}adds {\c&HFFFFFF&}character
-Dialogue: 0,0:00:08.72,0:00:08.98,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}stroke {\c&HAAFF00&}adds{\r} {\c&HFFFFFF&}character
-Dialogue: 0,0:00:08.98,0:00:09.42,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}stroke {\c&HFFFFFF&}adds {\c&HAAFF00&}character{\r}
-Dialogue: 0,0:00:09.42,0:00:09.64,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}until{\r} {\c&HFFFFFF&}the {\c&HFFFFFF&}rough
-Dialogue: 0,0:00:09.64,0:00:09.80,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}until {\c&HAAFF00&}the{\r} {\c&HFFFFFF&}rough
-Dialogue: 0,0:00:09.80,0:00:09.96,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}until {\c&HFFFFFF&}the {\c&HAAFF00&}rough{\r}
-Dialogue: 0,0:00:09.96,0:00:10.22,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}patch{\r} {\c&HFFFFFF&}transforms {\c&HFFFFFF&}into
-Dialogue: 0,0:00:10.22,0:00:10.76,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}patch {\c&HAAFF00&}transforms{\r} {\c&HFFFFFF&}into
-Dialogue: 0,0:00:10.76,0:00:11.04,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}patch {\c&HFFFFFF&}transforms {\c&HAAFF00&}into{\r}
-Dialogue: 0,0:00:11.04,0:00:11.46,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}absolute{\r} {\c&HFFFFFF&}elegance. {\c&HFFFFFF&}You
-Dialogue: 0,0:00:11.46,0:00:11.98,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}absolute {\c&HAAFF00&}elegance.{\r} {\c&HFFFFFF&}You
-Dialogue: 0,0:00:12.14,0:00:12.22,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}absolute {\c&HFFFFFF&}elegance. {\c&HAAFF00&}You{\r}
-Dialogue: 0,0:00:12.22,0:00:12.38,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}think{\r} {\c&HFFFFFF&}he's {\c&HFFFFFF&}building
-Dialogue: 0,0:00:12.38,0:00:12.60,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}think {\c&HAAFF00&}he's{\r} {\c&HFFFFFF&}building
-Dialogue: 0,0:00:12.60,0:00:12.82,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}think {\c&HFFFFFF&}he's {\c&HAAFF00&}building{\r}
-Dialogue: 0,0:00:12.82,0:00:12.96,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}a{\r} {\c&HFFFFFF&}castle {\c&HFFFFFF&}from
-Dialogue: 0,0:00:12.96,0:00:13.26,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}a {\c&HAAFF00&}castle{\r} {\c&HFFFFFF&}from
-Dialogue: 0,0:00:13.26,0:00:13.48,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}a {\c&HFFFFFF&}castle {\c&HAAFF00&}from{\r}
-Dialogue: 0,0:00:13.48,0:00:13.60,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}a{\r} {\c&HFFFFFF&}pile {\c&HFFFFFF&}of
-Dialogue: 0,0:00:13.60,0:00:13.80,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}a {\c&HAAFF00&}pile{\r} {\c&HFFFFFF&}of
-Dialogue: 0,0:00:13.80,0:00:13.98,Default,,0,0,0,,{\pos(164,403)}{\c&HFFFFFF&}a {\c&HFFFFFF&}pile {\c&HAAFF00&}of{\r}
-Dialogue: 0,0:00:13.98,0:00:14.14,Default,,0,0,0,,{\pos(164,403)}{\c&HAAFF00&}dirt?{\r}
+Dialogue: 0,0:00:00.00,0:00:00.18,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}This{\r} {\c&HFFFFFF&}giant {\c&HFFFFFF&}yellow
+Dialogue: 0,0:00:00.18,0:00:00.50,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}This {\c&HAAFF00&}giant{\r} {\c&HFFFFFF&}yellow
+Dialogue: 0,0:00:00.50,0:00:00.80,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}This {\c&HFFFFFF&}giant {\c&HAAFF00&}yellow{\r}
+Dialogue: 0,0:00:00.80,0:00:01.12,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}cat{\r} {\c&HFFFFFF&}just {\c&HFFFFFF&}devoured
+Dialogue: 0,0:00:01.12,0:00:01.38,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}cat {\c&HAAFF00&}just{\r} {\c&HFFFFFF&}devoured
+Dialogue: 0,0:00:01.38,0:00:01.72,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}cat {\c&HFFFFFF&}just {\c&HAAFF00&}devoured{\r}
+Dialogue: 0,0:00:01.72,0:00:01.88,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}a{\r} {\c&HFFFFFF&}massive {\c&HFFFFFF&}slab
+Dialogue: 0,0:00:01.88,0:00:02.22,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}a {\c&HAAFF00&}massive{\r} {\c&HFFFFFF&}slab
+Dialogue: 0,0:00:02.22,0:00:02.50,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}a {\c&HFFFFFF&}massive {\c&HAAFF00&}slab{\r}
+Dialogue: 0,0:00:02.50,0:00:02.70,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}of{\r} {\c&HFFFFFF&}concrete {\c&HFFFFFF&}in
+Dialogue: 0,0:00:02.70,0:00:03.02,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}of {\c&HAAFF00&}concrete{\r} {\c&HFFFFFF&}in
+Dialogue: 0,0:00:03.02,0:00:03.24,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}of {\c&HFFFFFF&}concrete {\c&HAAFF00&}in{\r}
+Dialogue: 0,0:00:03.24,0:00:03.42,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}one{\r} {\c&HFFFFFF&}swift {\c&HFFFFFF&}bite.
+Dialogue: 0,0:00:03.42,0:00:03.70,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}one {\c&HAAFF00&}swift{\r} {\c&HFFFFFF&}bite.
+Dialogue: 0,0:00:03.70,0:00:03.98,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}one {\c&HFFFFFF&}swift {\c&HAAFF00&}bite.{\r}
+Dialogue: 0,0:00:04.42,0:00:04.48,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}The{\r} {\c&HFFFFFF&}machine {\c&HFFFFFF&}crushes
+Dialogue: 0,0:00:04.48,0:00:04.76,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}The {\c&HAAFF00&}machine{\r} {\c&HFFFFFF&}crushes
+Dialogue: 0,0:00:04.76,0:00:05.26,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}The {\c&HFFFFFF&}machine {\c&HAAFF00&}crushes{\r}
+Dialogue: 0,0:00:05.26,0:00:05.38,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}the{\r} {\c&HFFFFFF&}rubble, {\c&HFFFFFF&}shaking
+Dialogue: 0,0:00:05.38,0:00:05.64,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}the {\c&HAAFF00&}rubble,{\r} {\c&HFFFFFF&}shaking
+Dialogue: 0,0:00:05.80,0:00:05.98,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}the {\c&HFFFFFF&}rubble, {\c&HAAFF00&}shaking{\r}
+Dialogue: 0,0:00:05.98,0:00:06.14,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}the{\r} {\c&HFFFFFF&}dry {\c&HFFFFFF&}field
+Dialogue: 0,0:00:06.14,0:00:06.34,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}the {\c&HAAFF00&}dry{\r} {\c&HFFFFFF&}field
+Dialogue: 0,0:00:06.34,0:00:06.62,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}the {\c&HFFFFFF&}dry {\c&HAAFF00&}field{\r}
+Dialogue: 0,0:00:06.62,0:00:06.84,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}while{\r} {\c&HFFFFFF&}golden {\c&HFFFFFF&}light
+Dialogue: 0,0:00:06.84,0:00:07.10,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}while {\c&HAAFF00&}golden{\r} {\c&HFFFFFF&}light
+Dialogue: 0,0:00:07.10,0:00:07.30,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}while {\c&HFFFFFF&}golden {\c&HAAFF00&}light{\r}
+Dialogue: 0,0:00:07.30,0:00:07.52,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}hits{\r} {\c&HFFFFFF&}its {\c&HFFFFFF&}arm.
+Dialogue: 0,0:00:07.52,0:00:07.68,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}hits {\c&HAAFF00&}its{\r} {\c&HFFFFFF&}arm.
+Dialogue: 0,0:00:07.68,0:00:07.84,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}hits {\c&HFFFFFF&}its {\c&HAAFF00&}arm.{\r}
+Dialogue: 0,0:00:08.04,0:00:08.20,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}Watch{\r} {\c&HFFFFFF&}closely {\c&HFFFFFF&}as
+Dialogue: 0,0:00:08.20,0:00:08.62,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}Watch {\c&HAAFF00&}closely{\r} {\c&HFFFFFF&}as
+Dialogue: 0,0:00:08.62,0:00:08.82,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}Watch {\c&HFFFFFF&}closely {\c&HAAFF00&}as{\r}
+Dialogue: 0,0:00:08.82,0:00:08.96,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}it{\r} {\c&HFFFFFF&}lifts {\c&HFFFFFF&}a
+Dialogue: 0,0:00:08.96,0:00:09.10,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}it {\c&HAAFF00&}lifts{\r} {\c&HFFFFFF&}a
+Dialogue: 0,0:00:09.10,0:00:09.30,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}it {\c&HFFFFFF&}lifts {\c&HAAFF00&}a{\r}
+Dialogue: 0,0:00:09.30,0:00:09.68,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}huge{\r} {\c&HFFFFFF&}chunk {\c&HFFFFFF&}of
+Dialogue: 0,0:00:09.68,0:00:09.86,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}huge {\c&HAAFF00&}chunk{\r} {\c&HFFFFFF&}of
+Dialogue: 0,0:00:09.86,0:00:10.06,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}huge {\c&HFFFFFF&}chunk {\c&HAAFF00&}of{\r}
+Dialogue: 0,0:00:10.06,0:00:10.34,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}debris,{\r} {\c&HFFFFFF&}proving {\c&HFFFFFF&}this
+Dialogue: 0,0:00:10.70,0:00:10.86,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}debris, {\c&HAAFF00&}proving{\r} {\c&HFFFFFF&}this
+Dialogue: 0,0:00:10.86,0:00:11.10,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}debris, {\c&HFFFFFF&}proving {\c&HAAFF00&}this{\r}
+Dialogue: 0,0:00:11.10,0:00:11.58,Default,,0,0,0,,{\pos(262,645)}{\c&HAAFF00&}excavator{\r} {\c&HFFFFFF&}is {\c&HFFFFFF&}unstoppable.
+Dialogue: 0,0:00:11.58,0:00:11.78,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}excavator {\c&HAAFF00&}is{\r} {\c&HFFFFFF&}unstoppable.
+Dialogue: 0,0:00:11.78,0:00:12.20,Default,,0,0,0,,{\pos(262,645)}{\c&HFFFFFF&}excavator {\c&HFFFFFF&}is {\c&HAAFF00&}unstoppable.{\r}

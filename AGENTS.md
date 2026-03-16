@@ -37,7 +37,7 @@ ruff check . --fix
 .venv/bin/python src/steps/step1_extract_frames.py --video-file input.mp4 --interval 2.0 --output-dir yt_inbox/outputs/frames
 
 # Step 2: Vision descriptions
-.venv/bin/python src/steps/step2_qwen_vl.py --manifest manifest.json --model qwen3-vl:2b --output-file frames.txt
+.venv/bin/python src/steps/step2_qwen_vl.py --manifest manifest.json --model qwen3-vl:2b --prompt "..." --output-file frames.txt --context-window 5
 
 # Step 3: Transcribe original audio
 .venv/bin/python src/steps/step3_transcribe_original.py --video input.mp4 --output transcript.txt --model base

@@ -34,14 +34,49 @@ IG_GRAPH_API_URL = "https://graph.facebook.com"
 IG_UPLOAD_HOST = "rupload.facebook.com"
 
 METADATA_PROMPT = """
+You are an Instagram Reels expert specializing in viral content optimization.
+
 Given this video script:
 
 {script}
 
-Create an engaging Instagram Reels caption with a hook and hashtags.
+Create a highly engaging Instagram Reels caption optimized for maximum reach and engagement.
 
-Respond with ONLY valid JSON:
-{{"caption": "Your caption here with #hashtags"}}
+CAPTION STRUCTURE (follow this exactly):
+
+1. HOOK (first line - must stop the scroll):
+   - Start with an intriguing question, bold statement, or trend-aligned opener
+   - Examples: "Wait for this...", "POV:", "You need to see this...", "The secret most people miss..."
+   - Keep it under 80 characters
+
+2. BODY (2-3 short paragraphs with line breaks):
+   - Tell a mini-story or provide value/context
+   - Use conversational tone - like texting a friend
+   - Include 1-2 emoji to break up text (🔥✨💯🤯📸🎬)
+   - Add subtle pacing with line breaks
+
+3. CTA (call to action - crucial for engagement):
+   - Choose ONE: "Save for later 💾", "Share with a friend", "Comment your thoughts", "Follow for more"
+   - Place before hashtags
+
+4. HASHTAGS (strategic mix - 15-20 tags):
+   - 3-5 popular hashtags (#viral #reels #trending #fyp #explore)
+   - 5-8 niche hashtags (content-specific)
+   - 3-5 ultra-niche hashtags (very specific to your micro-niche)
+   - Example mix: #viral #reels #fyp #travel #travelgram #wanderlust #solotravel #travelingram #adventure #explore
+
+OUTPUT FORMAT:
+Return ONLY valid JSON with this structure:
+{{
+  "caption": "Your full caption with hook, line breaks, CTA, and hashtags",
+  "cover_image_hint": "Brief note about which frame would work best as thumbnail (e.g., 'high contrast close-up', 'moment with text', 'outdoor landscape')"
+}}
+
+Important:
+- Use double quotes for ALL strings in JSON
+- Include actual line breaks (\\n) in caption for readability
+- No explanatory text outside the JSON
+- Make the CTA feel natural, not spammy
 """
 
 

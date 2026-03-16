@@ -51,11 +51,12 @@ def step1_extract_frames(video_path: str, frames_dir: str) -> str:
 def step2_vision_describe(manifest_path: str, output_file: str):
     subprocess.run([
         config.UPLOADER_PYTHON, "./src/steps/step2_qwen_vl.py",
-        "--manifest",     manifest_path,
-        "--model",        config.VISION_MODEL,
-        "--prompt",       config.VISION_PROMPT,
-        "--output-file",  output_file,
-        "--ollama-url",   config.OLLAMA_URL,
+        "--manifest",       manifest_path,
+        "--model",          config.VISION_MODEL,
+        "--prompt",         config.VISION_PROMPT,
+        "--output-file",    output_file,
+        "--ollama-url",     config.OLLAMA_URL,
+        "--context-window", str(config.VISION_CONTEXT_WINDOW),
     ], check=True)
 
 def step3_transcribe_original(video_path: str, output_file: str):
