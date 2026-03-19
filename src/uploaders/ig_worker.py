@@ -12,6 +12,7 @@ import sys
 import time
 import json
 import requests
+from typing import Optional
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.dirname(script_dir)
@@ -128,7 +129,7 @@ def generate_metadata(script_text: str) -> dict:
 # INSTAGRAM GRAPH API UPLOAD (RESUMABLE)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def create_resumable_container(caption: str, video_duration: float = None) -> dict:
+def create_resumable_container(caption: str, video_duration: Optional[float] = None) -> dict:
     """Create a resumable upload container for video"""
     url = f"{IG_GRAPH_API_URL}/{IG_API_VERSION}/{IG_USER_ID}/media"
     
@@ -214,19 +215,29 @@ def publish_media(container_id: str) -> str:
         raise Exception(f"Failed to publish: {result}")
 
 
-def get_video_duration(video_path: str) -> float:
-    """Get video duration using ffprobe"""
+def get_video_duration(video_path: str) -> Optional[float]:
+    """Get video duration using ffmpeg"""
     import subprocess
+    
+    ffmpeg_local = os.path.join(project_root, "tools", "ffmpeg")
+    ffmpeg_bin = ffmpeg_local if os.path.isfile(ffmpeg_local) and os.access(ffmpeg_local, os.X_OK) else "ffmpeg"
+    
     try:
         result = subprocess.run(
-            ["ffprobe", "-v", "error", "-show_entries", "format=duration", 
-             "-of", "default=noprint_wrappers=1:nokey=1", video_path],
-            capture_output=True, text=True, timeout=10
+            [ffmpeg_bin, "-i", video_path, "-f", "null", "-"],
+            capture_output=True, text=True, timeout=30
         )
-        return float(result.stdout.strip())
+        for line in result.stderr.split("\n"):
+            if "Duration:" in line:
+                duration_str = line.split("Duration:")[1].split(",")[0].strip()
+                parts = duration_str.split(":")
+                hours = int(parts[0])
+                minutes = int(parts[1])
+                seconds = float(parts[2])
+                return hours * 3600 + minutes * 60 + seconds
     except (subprocess.SubprocessError, ValueError, OSError) as e:
         print(f"   ⚠️ Could not get video duration: {e}")
-        return None
+    return None
 
 
 def upload_reel(video_path: str, caption: str) -> str:

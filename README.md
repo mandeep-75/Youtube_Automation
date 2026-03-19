@@ -108,9 +108,10 @@ youtube_automation/
 │   ├── watcher.py         # Auto-detects & processes new videos
 │   ├── steps/            # 8 pipeline steps
 │   └── uploaders/
+│       ├── yt_uploader.py
+│       ├── ig_uploader.py
 │       ├── yt_worker.py
-│       ├── ig_worker.py
-│       └── auto_uploader.py
+│       └── ig_worker.py
 │
 ├── scripts/
 │   └── auto_service.sh    # Auto-upload on boot

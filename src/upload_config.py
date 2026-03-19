@@ -8,7 +8,7 @@
 # "mixed" - original audio + TTS (may have copyright issues on YouTube)
 # "simple" - TTS only, original audio replaced (safer for YouTube)
 
-INSTAGRAM_VIDEO = "mixed"   # Which version to upload to Instagram
+INSTAGRAM_VIDEO = "none"   # Disabled - set to "mixed" or "simple" to enable
 YOUTUBE_VIDEO = "simple"   # Which version to upload to YouTube
 
 # Set to "" or "none" to disable upload to that platform

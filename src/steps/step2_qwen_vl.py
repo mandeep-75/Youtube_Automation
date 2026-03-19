@@ -1,11 +1,89 @@
 import os
 import argparse
 import json
+from typing import Optional
 import ollama
 from tqdm import tqdm
 
 
-def describe_frame(client, image_path, model, prompt, context_prompt: str = None):
+HALLUCINATION_CHECK_PROMPT = '''You described this image as: "{description}"
+Is this accurate? Just say ACCURATE or HALLUCINATED. If HALLUCINATED, give a corrected description in 1-2 sentences.'''
+
+
+def detect_hallucination(client, image_path, model, description: str) -> tuple[bool, str]:
+    """
+    Verify a frame description against the image to detect hallucinations.
+    
+    Returns:
+        Tuple of (is_hallucinated: bool, corrected_description: str)
+    """
+    try:
+        check_prompt = HALLUCINATION_CHECK_PROMPT.format(description=description)
+        
+        stream = client.generate(
+            model=model,
+            prompt=check_prompt,
+            keep_alive="15s",
+            images=[image_path],
+            stream=True,
+        )
+        
+        response_text = []
+        for chunk in stream:
+            token = chunk.get("response", "")
+            if token:
+                response_text.append(token)
+        
+        result = "".join(response_text).strip()
+        
+        is_hallucinated = "HALLUCINATED" in result.upper()
+        
+        corrected = ""
+        if is_hallucinated:
+            for line in result.split("\n"):
+                if line.startswith("CORRECTED:"):
+                    corrected = line.replace("CORRECTED:", "").strip()
+                    break
+        
+        return is_hallucinated, corrected if corrected else description
+        
+    except Exception as e:
+        print(f"\n⚠️ Hallucination check failed: {e}")
+        return False, description
+
+
+def check_frame_consistency(client, image_path, model, prev_description: str, current_description: str) -> bool:
+    """
+    Check for contradictions between consecutive frame descriptions.
+    Returns True if contradictions detected.
+    """
+    try:
+        consistency_prompt = f'''Previous: "{prev_description}" | Current: "{current_description}"
+Any contradictions? Say CONSISTENT or INCONSISTENT in one word.'''
+        
+        stream = client.generate(
+            model=model,
+            prompt=consistency_prompt,
+            keep_alive="15s",
+            images=[image_path],
+            stream=True,
+        )
+        
+        response_text = []
+        for chunk in stream:
+            token = chunk.get("response", "")
+            if token:
+                response_text.append(token)
+        
+        result = "".join(response_text).strip()
+        return "INCONSISTENT" in result.upper()
+        
+    except Exception as e:
+        print(f"\n⚠️ Consistency check failed: {e}")
+        return False
+
+
+def describe_frame(client, image_path, model, prompt, context_prompt: Optional[str] = None):
     """
     Sends a single image to Ollama for description.
     Optionally includes context from previous frames.
@@ -131,11 +209,39 @@ def main(args):
                 image_path,
                 args.model,
                 args.prompt,
-                context_prompt
+                context_prompt if context_prompt else None
             )
 
             if description is None:
                 continue
+
+            if args.hallucination_check:
+                tqdm.write("🔍 Checking for hallucinations...")
+                is_hallucinated, corrected = detect_hallucination(
+                    client, image_path, args.model, description
+                )
+                
+                if is_hallucinated:
+                    tqdm.write("⚠️ Hallucination detected! Regenerating...")
+                    description = corrected
+                    
+                    retry_count = 0
+                    while is_hallucinated and retry_count < args.max_retries:
+                        is_hallucinated, corrected = detect_hallucination(
+                            client, image_path, args.model, description
+                        )
+                        if is_hallucinated:
+                            description = corrected
+                            retry_count += 1
+                            tqdm.write(f"🔄 Retry {retry_count}/{args.max_retries}")
+                    
+                    if is_hallucinated:
+                        tqdm.write(f"⚠️ Could not fix hallucination after {args.max_retries} retries")
+
+                if previous_frames:
+                    prev_desc = previous_frames[-1][1]
+                    if check_frame_consistency(client, image_path, args.model, prev_desc, description):
+                        tqdm.write("⚠️ Inconsistency with previous frame detected")
 
             previous_frames.append((timestamp, description))
 
@@ -158,6 +264,10 @@ if __name__ == "__main__":
     parser.add_argument("--ollama-url", default="http://localhost:11434")
     parser.add_argument("--context-window", type=int, default=5,
                         help="Number of previous frames to include as context (default: 5)")
+    parser.add_argument("--hallucination-check", action="store_true",
+                        help="Enable hallucination detection and correction")
+    parser.add_argument("--max-retries", type=int, default=2,
+                        help="Max retries when hallucination detected (default: 2)")
 
     args = parser.parse_args()
 

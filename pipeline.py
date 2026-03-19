@@ -48,8 +48,8 @@ def step1_extract_frames(video_path: str, frames_dir: str) -> str:
     ], check=True)
     return manifest_path
 
-def step2_vision_describe(manifest_path: str, output_file: str):
-    subprocess.run([
+def step2_vision_describe(manifest_path: str, output_file: str, hallucination_check: bool = False):
+    cmd = [
         config.UPLOADER_PYTHON, "./src/steps/step2_qwen_vl.py",
         "--manifest",       manifest_path,
         "--model",          config.VISION_MODEL,
@@ -57,7 +57,10 @@ def step2_vision_describe(manifest_path: str, output_file: str):
         "--output-file",    output_file,
         "--ollama-url",     config.OLLAMA_URL,
         "--context-window", str(config.VISION_CONTEXT_WINDOW),
-    ], check=True)
+    ]
+    if hallucination_check:
+        cmd.append("--hallucination-check")
+    subprocess.run(cmd, check=True)
 
 def step3_transcribe_original(video_path: str, output_file: str):
     cmd = [
@@ -219,7 +222,7 @@ def run_pipeline(video_path: str):
     manifest = step1_extract_frames(video_path, frames_dir)
 
     print("\n─── Step 2  Vision frame descriptions ────────────────────────")
-    step2_vision_describe(manifest, frames_file)
+    step2_vision_describe(manifest, frames_file, hallucination_check=config.VISION_HALLUCINATION_CHECK)
 
     print("\n─── Step 3  Transcribe original audio ────────────────────────")
     step3_transcribe_original(video_path, transcript_file)

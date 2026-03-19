@@ -64,7 +64,7 @@ ruff check . --fix
 .venv/bin/python src/uploaders/interactive_uploader.py
 
 # Auto-uploader (for upload_queue/)
-.venv/bin/python src/uploaders/auto_uploader.py <folder>
+.venv/bin/python src/uploaders/yt_uploader.py <folder>
 ```
 
 ### Watching Logs
@@ -151,9 +151,10 @@ youtube_automation/
 │   │   ├── step7_transcribe_subtitles.py
 │   │   └── step8_burn_subtitles.py
 │   └── uploaders/          # Upload workers
+│       ├── yt_uploader.py
+│       ├── ig_uploader.py
 │       ├── yt_worker.py
 │       ├── ig_worker.py
-│       ├── auto_uploader.py
 │       └── interactive_uploader.py
 ├── scripts/
 │   └── auto_service.sh    # Auto-upload on boot
