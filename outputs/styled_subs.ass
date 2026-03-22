@@ -10,56 +10,63 @@ ScriptType: v4.00+
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Bebas Neue,120,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,1,0,5,-50,-50,250,1
+Style: Default,Oswald,120,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,1,0,5,-50,-50,250,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-Dialogue: 0,0:00:00.00,0:00:00.16,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}This{\r} {\c&HFFFFFF&}man {\c&HFFFFFF&}thought
-Dialogue: 0,0:00:00.16,0:00:00.34,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}This {\c&HAAFF00&}man{\r} {\c&HFFFFFF&}thought
-Dialogue: 0,0:00:00.34,0:00:00.56,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}This {\c&HFFFFFF&}man {\c&HAAFF00&}thought{\r}
-Dialogue: 0,0:00:00.56,0:00:00.70,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}he{\r} {\c&HFFFFFF&}was {\c&HFFFFFF&}just
-Dialogue: 0,0:00:00.70,0:00:00.80,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}he {\c&HAAFF00&}was{\r} {\c&HFFFFFF&}just
-Dialogue: 0,0:00:00.80,0:00:00.92,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}he {\c&HFFFFFF&}was {\c&HAAFF00&}just{\r}
-Dialogue: 0,0:00:00.92,0:00:01.22,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}tying{\r} {\c&HFFFFFF&}wire {\c&HFFFFFF&}until
-Dialogue: 0,0:00:01.22,0:00:01.44,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}tying {\c&HAAFF00&}wire{\r} {\c&HFFFFFF&}until
-Dialogue: 0,0:00:01.44,0:00:01.72,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}tying {\c&HFFFFFF&}wire {\c&HAAFF00&}until{\r}
-Dialogue: 0,0:00:01.72,0:00:01.86,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}the{\r} {\c&HFFFFFF&}steel {\c&HFFFFFF&}rods
-Dialogue: 0,0:00:01.86,0:00:02.10,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}the {\c&HAAFF00&}steel{\r} {\c&HFFFFFF&}rods
-Dialogue: 0,0:00:02.10,0:00:02.28,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}the {\c&HFFFFFF&}steel {\c&HAAFF00&}rods{\r}
-Dialogue: 0,0:00:02.28,0:00:02.60,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}moved{\r} {\c&HFFFFFF&}on {\c&HFFFFFF&}their
-Dialogue: 0,0:00:02.60,0:00:02.76,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}moved {\c&HAAFF00&}on{\r} {\c&HFFFFFF&}their
-Dialogue: 0,0:00:02.76,0:00:02.90,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}moved {\c&HFFFFFF&}on {\c&HAAFF00&}their{\r}
-Dialogue: 0,0:00:02.90,0:00:03.16,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}own.{\r} {\c&HFFFFFF&}He {\c&HFFFFFF&}twisted
-Dialogue: 0,0:00:03.52,0:00:03.60,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}own. {\c&HAAFF00&}He{\r} {\c&HFFFFFF&}twisted
-Dialogue: 0,0:00:03.60,0:00:03.88,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}own. {\c&HFFFFFF&}He {\c&HAAFF00&}twisted{\r}
-Dialogue: 0,0:00:03.88,0:00:04.18,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}tighter{\r} {\c&HFFFFFF&}and {\c&HFFFFFF&}fear,
-Dialogue: 0,0:00:04.18,0:00:04.36,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}tighter {\c&HAAFF00&}and{\r} {\c&HFFFFFF&}fear,
-Dialogue: 0,0:00:04.36,0:00:04.56,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}tighter {\c&HFFFFFF&}and {\c&HAAFF00&}fear,{\r}
-Dialogue: 0,0:00:04.68,0:00:04.74,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}but{\r} {\c&HFFFFFF&}something {\c&HFFFFFF&}grabbed
-Dialogue: 0,0:00:04.74,0:00:04.98,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}but {\c&HAAFF00&}something{\r} {\c&HFFFFFF&}grabbed
-Dialogue: 0,0:00:04.98,0:00:05.22,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}but {\c&HFFFFFF&}something {\c&HAAFF00&}grabbed{\r}
-Dialogue: 0,0:00:05.22,0:00:05.42,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}his{\r} {\c&HFFFFFF&}hands. {\c&HFFFFFF&}The
-Dialogue: 0,0:00:05.42,0:00:05.70,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}his {\c&HAAFF00&}hands.{\r} {\c&HFFFFFF&}The
-Dialogue: 0,0:00:06.04,0:00:06.12,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}his {\c&HFFFFFF&}hands. {\c&HAAFF00&}The{\r}
-Dialogue: 0,0:00:06.12,0:00:06.34,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}wire{\r} {\c&HFFFFFF&}locked {\c&HFFFFFF&}the
-Dialogue: 0,0:00:06.34,0:00:06.56,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}wire {\c&HAAFF00&}locked{\r} {\c&HFFFFFF&}the
-Dialogue: 0,0:00:06.56,0:00:06.72,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}wire {\c&HFFFFFF&}locked {\c&HAAFF00&}the{\r}
-Dialogue: 0,0:00:06.72,0:00:06.88,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}rods{\r} {\c&HFFFFFF&}in {\c&HFFFFFF&}place
-Dialogue: 0,0:00:06.88,0:00:07.06,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}rods {\c&HAAFF00&}in{\r} {\c&HFFFFFF&}place
-Dialogue: 0,0:00:07.06,0:00:07.22,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}rods {\c&HFFFFFF&}in {\c&HAAFF00&}place{\r}
-Dialogue: 0,0:00:07.22,0:00:07.74,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}instantly,{\r} {\c&HFFFFFF&}trapping {\c&HFFFFFF&}him
-Dialogue: 0,0:00:07.92,0:00:08.16,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}instantly, {\c&HAAFF00&}trapping{\r} {\c&HFFFFFF&}him
-Dialogue: 0,0:00:08.16,0:00:08.30,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}instantly, {\c&HFFFFFF&}trapping {\c&HAAFF00&}him{\r}
-Dialogue: 0,0:00:08.30,0:00:08.38,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}in{\r} {\c&HFFFFFF&}a {\c&HFFFFFF&}metallic
-Dialogue: 0,0:00:08.38,0:00:08.48,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}in {\c&HAAFF00&}a{\r} {\c&HFFFFFF&}metallic
-Dialogue: 0,0:00:08.48,0:00:08.80,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}in {\c&HFFFFFF&}a {\c&HAAFF00&}metallic{\r}
-Dialogue: 0,0:00:08.80,0:00:09.08,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}cage{\r} {\c&HFFFFFF&}before {\c&HFFFFFF&}a
-Dialogue: 0,0:00:09.08,0:00:09.40,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}cage {\c&HAAFF00&}before{\r} {\c&HFFFFFF&}a
-Dialogue: 0,0:00:09.40,0:00:09.56,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}cage {\c&HFFFFFF&}before {\c&HAAFF00&}a{\r}
-Dialogue: 0,0:00:09.56,0:00:09.70,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}green{\r} {\c&HFFFFFF&}check {\c&HFFFFFF&}mark
-Dialogue: 0,0:00:09.70,0:00:09.94,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}green {\c&HAAFF00&}check{\r} {\c&HFFFFFF&}mark
-Dialogue: 0,0:00:09.94,0:00:10.12,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}green {\c&HFFFFFF&}check {\c&HAAFF00&}mark{\r}
-Dialogue: 0,0:00:10.12,0:00:10.48,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}appeared,{\r} {\c&HFFFFFF&}proving {\c&HFFFFFF&}he
-Dialogue: 0,0:00:10.82,0:00:10.96,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}appeared, {\c&HAAFF00&}proving{\r} {\c&HFFFFFF&}he
-Dialogue: 0,0:00:10.96,0:00:11.14,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}appeared, {\c&HFFFFFF&}proving {\c&HAAFF00&}he{\r}
-Dialogue: 0,0:00:11.14,0:00:11.36,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}was...{\r}
+Dialogue: 0,0:00:00.00,0:00:00.16,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}This{\r} {\c&HFFFFFF&}man {\c&HFFFFFF&}found
+Dialogue: 0,0:00:00.16,0:00:00.36,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}This {\c&HAAFF00&}man{\r} {\c&HFFFFFF&}found
+Dialogue: 0,0:00:00.36,0:00:00.60,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}This {\c&HFFFFFF&}man {\c&HAAFF00&}found{\r}
+Dialogue: 0,0:00:00.60,0:00:00.78,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}a{\r} {\c&HFFFFFF&}sea {\c&HFFFFFF&}lion
+Dialogue: 0,0:00:00.78,0:00:00.90,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}a {\c&HAAFF00&}sea{\r} {\c&HFFFFFF&}lion
+Dialogue: 0,0:00:00.90,0:00:01.16,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}a {\c&HFFFFFF&}sea {\c&HAAFF00&}lion{\r}
+Dialogue: 0,0:00:01.16,0:00:01.52,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}staring{\r} {\c&HFFFFFF&}back {\c&HFFFFFF&}with
+Dialogue: 0,0:00:01.52,0:00:01.76,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}staring {\c&HAAFF00&}back{\r} {\c&HFFFFFF&}with
+Dialogue: 0,0:00:01.76,0:00:02.02,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}staring {\c&HFFFFFF&}back {\c&HAAFF00&}with{\r}
+Dialogue: 0,0:00:02.02,0:00:02.26,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}impossible{\r} {\c&HFFFFFF&}eyes. {\c&HFFFFFF&}Suddenly,
+Dialogue: 0,0:00:02.26,0:00:02.94,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}impossible {\c&HAAFF00&}eyes.{\r} {\c&HFFFFFF&}Suddenly,
+Dialogue: 0,0:00:03.24,0:00:03.56,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}impossible {\c&HFFFFFF&}eyes. {\c&HAAFF00&}Suddenly,{\r}
+Dialogue: 0,0:00:03.80,0:00:03.94,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}its{\r} {\c&HFFFFFF&}jaws {\c&HFFFFFF&}dropped
+Dialogue: 0,0:00:03.94,0:00:04.18,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}its {\c&HAAFF00&}jaws{\r} {\c&HFFFFFF&}dropped
+Dialogue: 0,0:00:04.18,0:00:04.46,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}its {\c&HFFFFFF&}jaws {\c&HAAFF00&}dropped{\r}
+Dialogue: 0,0:00:04.46,0:00:04.78,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}wide{\r} {\c&HFFFFFF&}open, {\c&HFFFFFF&}revealing
+Dialogue: 0,0:00:04.78,0:00:05.16,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}wide {\c&HAAFF00&}open,{\r} {\c&HFFFFFF&}revealing
+Dialogue: 0,0:00:05.32,0:00:05.52,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}wide {\c&HFFFFFF&}open, {\c&HAAFF00&}revealing{\r}
+Dialogue: 0,0:00:05.52,0:00:05.72,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}a{\r} {\c&HFFFFFF&}terrifying {\c&HFFFFFF&}secret
+Dialogue: 0,0:00:05.72,0:00:06.10,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}a {\c&HAAFF00&}terrifying{\r} {\c&HFFFFFF&}secret
+Dialogue: 0,0:00:06.10,0:00:06.58,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}a {\c&HFFFFFF&}terrifying {\c&HAAFF00&}secret{\r}
+Dialogue: 0,0:00:06.58,0:00:06.84,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}deep{\r} {\c&HFFFFFF&}underwater. {\c&HFFFFFF&}We
+Dialogue: 0,0:00:06.84,0:00:07.26,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}deep {\c&HAAFF00&}underwater.{\r} {\c&HFFFFFF&}We
+Dialogue: 0,0:00:07.60,0:00:07.68,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}deep {\c&HFFFFFF&}underwater. {\c&HAAFF00&}We{\r}
+Dialogue: 0,0:00:07.68,0:00:07.82,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}can{\r} {\c&HFFFFFF&}barely {\c&HFFFFFF&}breathe
+Dialogue: 0,0:00:07.82,0:00:08.12,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}can {\c&HAAFF00&}barely{\r} {\c&HFFFFFF&}breathe
+Dialogue: 0,0:00:08.12,0:00:08.38,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}can {\c&HFFFFFF&}barely {\c&HAAFF00&}breathe{\r}
+Dialogue: 0,0:00:08.38,0:00:08.58,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}as{\r} {\c&HFFFFFF&}that {\c&HFFFFFF&}silent
+Dialogue: 0,0:00:08.58,0:00:08.74,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}as {\c&HAAFF00&}that{\r} {\c&HFFFFFF&}silent
+Dialogue: 0,0:00:08.74,0:00:09.08,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}as {\c&HFFFFFF&}that {\c&HAAFF00&}silent{\r}
+Dialogue: 0,0:00:09.08,0:00:09.42,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}predator{\r} {\c&HFFFFFF&}locks {\c&HFFFFFF&}its
+Dialogue: 0,0:00:09.42,0:00:09.72,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}predator {\c&HAAFF00&}locks{\r} {\c&HFFFFFF&}its
+Dialogue: 0,0:00:09.72,0:00:10.00,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}predator {\c&HFFFFFF&}locks {\c&HAAFF00&}its{\r}
+Dialogue: 0,0:00:10.00,0:00:10.14,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}gaze{\r} {\c&HFFFFFF&}on {\c&HFFFFFF&}us.
+Dialogue: 0,0:00:10.14,0:00:10.38,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}gaze {\c&HAAFF00&}on{\r} {\c&HFFFFFF&}us.
+Dialogue: 0,0:00:10.38,0:00:10.56,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}gaze {\c&HFFFFFF&}on {\c&HAAFF00&}us.{\r}
+Dialogue: 0,0:00:10.74,0:00:10.78,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}The{\r} {\c&HFFFFFF&}water {\c&HFFFFFF&}ripples
+Dialogue: 0,0:00:10.78,0:00:11.04,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}The {\c&HAAFF00&}water{\r} {\c&HFFFFFF&}ripples
+Dialogue: 0,0:00:11.04,0:00:11.36,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}The {\c&HFFFFFF&}water {\c&HAAFF00&}ripples{\r}
+Dialogue: 0,0:00:11.36,0:00:11.72,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}violently,{\r} {\c&HFFFFFF&}and {\c&HFFFFFF&}one
+Dialogue: 0,0:00:12.04,0:00:12.12,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}violently, {\c&HAAFF00&}and{\r} {\c&HFFFFFF&}one
+Dialogue: 0,0:00:12.12,0:00:12.32,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}violently, {\c&HFFFFFF&}and {\c&HAAFF00&}one{\r}
+Dialogue: 0,0:00:12.32,0:00:12.56,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}wrong{\r} {\c&HFFFFFF&}move {\c&HFFFFFF&}could
+Dialogue: 0,0:00:12.56,0:00:12.86,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}wrong {\c&HAAFF00&}move{\r} {\c&HFFFFFF&}could
+Dialogue: 0,0:00:12.86,0:00:13.04,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}wrong {\c&HFFFFFF&}move {\c&HAAFF00&}could{\r}
+Dialogue: 0,0:00:13.04,0:00:13.28,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}kill{\r} {\c&HFFFFFF&}us {\c&HFFFFFF&}instantly.
+Dialogue: 0,0:00:13.28,0:00:13.42,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}kill {\c&HAAFF00&}us{\r} {\c&HFFFFFF&}instantly.
+Dialogue: 0,0:00:13.42,0:00:13.90,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}kill {\c&HFFFFFF&}us {\c&HAAFF00&}instantly.{\r}
+Dialogue: 0,0:00:14.08,0:00:14.26,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}Watch{\r} {\c&HFFFFFF&}closely {\c&HFFFFFF&}because
+Dialogue: 0,0:00:14.26,0:00:14.70,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}Watch {\c&HAAFF00&}closely{\r} {\c&HFFFFFF&}because
+Dialogue: 0,0:00:14.70,0:00:14.96,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}Watch {\c&HFFFFFF&}closely {\c&HAAFF00&}because{\r}
+Dialogue: 0,0:00:14.96,0:00:15.10,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}the{\r} {\c&HFFFFFF&}creature {\c&HFFFFFF&}isn't
+Dialogue: 0,0:00:15.10,0:00:15.34,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}the {\c&HAAFF00&}creature{\r} {\c&HFFFFFF&}isn't
+Dialogue: 0,0:00:15.34,0:00:15.68,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}the {\c&HFFFFFF&}creature {\c&HAAFF00&}isn't{\r}
+Dialogue: 0,0:00:15.68,0:00:15.94,Default,,0,0,0,,{\pos(490,1210)}{\c&HAAFF00&}acting{\r} {\c&HFFFFFF&}normal.
+Dialogue: 0,0:00:15.94,0:00:16.30,Default,,0,0,0,,{\pos(490,1210)}{\c&HFFFFFF&}acting {\c&HAAFF00&}normal.{\r}
