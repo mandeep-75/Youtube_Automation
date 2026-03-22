@@ -22,6 +22,7 @@ def detect_hallucination(client, image_path, model, description: str) -> tuple[b
         
         stream = client.generate(
             model=model,
+            think=False,
             prompt=check_prompt,
             keep_alive="15s",
             images=[image_path],
@@ -67,6 +68,7 @@ Any contradictions? Say CONSISTENT or INCONSISTENT in one word.'''
             keep_alive="15s",
             images=[image_path],
             stream=True,
+            think=False,
         )
         
         response_text = []
@@ -94,6 +96,7 @@ def describe_frame(client, image_path, model, prompt, context_prompt: Optional[s
     try:
         stream = client.generate(
             model=model,
+            think=False,
             prompt=final_prompt,
             keep_alive="15s",
             images=[image_path],

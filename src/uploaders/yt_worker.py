@@ -94,7 +94,9 @@ def generate_metadata(script_text: str) -> dict:
     
     response = client.chat(
         model=OLLAMA_MODEL,
-        messages=[{"role": "user", "content": prompt}]
+        messages=[{"role": "user", "content": prompt}],
+        think=False
+        
     )
     
     response_text = response["message"]["content"].strip()

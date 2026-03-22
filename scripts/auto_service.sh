@@ -65,107 +65,125 @@ fi
 mkdir -p "$QUEUE"
 mkdir -p "$UPLOADED"
 
-# ── Find video folder ───────────────────────────────────────────────────────
-CHOSEN=""
-FROM_QUEUE=false
-
-# Check upload_queue first
-for full in "$QUEUE"/*; do
-    if [ ! -d "$full" ]; then continue; fi
-    if [ -f "$full/final_video_mixed.mp4" ] || [ -f "$full/final_video_simple.mp4" ]; then
-        if [ -f "$full/script.txt" ]; then
-            CHOSEN="$full"
-            FROM_QUEUE=true
-            break
-        fi
+# ── Check if already uploaded today ─────────────────────────────────────────
+if [ -f "$LOG" ]; then
+    LAST_UPLOAD=$(cat "$LOG")
+    if [ "$LAST_UPLOAD" = "$TODAY" ]; then
+        echo "✅ Already uploaded a video today ($LAST_UPLOAD)"
+        echo "   Next upload will be tomorrow."
+        exit 0
     fi
-done
+fi
 
-# Check uploaded/ for pending uploads
-if [ -z "$CHOSEN" ]; then
-    for full in "$UPLOADED"/*; do
+# ── Find ONE video to upload ─────────────────────────────────────────────────
+find_and_upload() {
+    CHOSEN=""
+    FROM_QUEUE=false
+
+    # Check upload_queue first
+    for full in "$QUEUE"/*; do
         if [ ! -d "$full" ]; then continue; fi
         if [ -f "$full/final_video_mixed.mp4" ] || [ -f "$full/final_video_simple.mp4" ]; then
             if [ -f "$full/script.txt" ]; then
-                # Check pending uploads based on config
-                YT_PENDING=false
-                IG_PENDING=false
-
-                if [ "$YT_ENABLED" = "yes" ] && [ ! -f "$full/youtube_id.txt" ]; then
-                    YT_PENDING=true
-                fi
-                if [ "$IG_ENABLED" = "yes" ] && [ ! -f "$full/ig_id.txt" ]; then
-                    IG_PENDING=true
-                fi
-
-                if [ "$YT_PENDING" = true ] || [ "$IG_PENDING" = true ]; then
-                    CHOSEN="$full"
-                    break
-                fi
+                CHOSEN="$full"
+                FROM_QUEUE=true
+                break
             fi
         fi
     done
-fi
 
-if [ -z "$CHOSEN" ]; then
-    echo "ℹ️  No videos waiting for upload."
-    exit 0
-fi
+    # Check uploaded/ for pending uploads
+    if [ -z "$CHOSEN" ]; then
+        for full in "$UPLOADED"/*; do
+            if [ ! -d "$full" ]; then continue; fi
+            if [ -f "$full/final_video_mixed.mp4" ] || [ -f "$full/final_video_simple.mp4" ]; then
+                if [ -f "$full/script.txt" ]; then
+                    YT_PENDING=false
+                    IG_PENDING=false
 
-NAME=$(basename "$CHOSEN")
-echo "📹 Found: $NAME"
-echo ""
+                    if [ "$YT_ENABLED" = "yes" ] && [ ! -f "$full/youtube_id.txt" ]; then
+                        YT_PENDING=true
+                    fi
+                    if [ "$IG_ENABLED" = "yes" ] && [ ! -f "$full/ig_id.txt" ]; then
+                        IG_PENDING=true
+                    fi
 
-# ── Upload to YouTube ────────────────────────────────────────────────────────
-if [ "$YT_ENABLED" = "yes" ]; then
-    echo "🚀 YouTube upload..."
-    "$PYTHON" "$YT_UPLOADER" "$CHOSEN"
-    YT_EXIT=$?
+                    if [ "$YT_PENDING" = true ] || [ "$IG_PENDING" = true ]; then
+                        CHOSEN="$full"
+                        break
+                    fi
+                fi
+            fi
+        done
+    fi
+
+    if [ -z "$CHOSEN" ]; then
+        return 1
+    fi
+
+    NAME=$(basename "$CHOSEN")
+    echo "📹 Processing: $NAME"
     echo ""
-else
-    echo "⏭️  YouTube upload skipped (disabled)"
-    YT_EXIT=0
-fi
 
-# ── Upload to Instagram ───────────────────────────────────────────────────────
-if [ "$IG_ENABLED" = "yes" ]; then
-    echo "🚀 Instagram upload..."
-    "$PYTHON" "$IG_UPLOADER" "$CHOSEN"
-    IG_EXIT=$?
-    echo ""
-else
-    echo "⏭️  Instagram upload skipped (disabled)"
-    IG_EXIT=0
-fi
-
-# ── Check completion ─────────────────────────────────────────────────────────
-ALL_DONE=true
-PENDING_LIST=""
-
-if [ "$YT_ENABLED" = "yes" ] && [ ! -f "$CHOSEN/youtube_id.txt" ]; then
-    ALL_DONE=false
-    PENDING_LIST="$PENDING_LIST YouTube"
-fi
-
-if [ "$IG_ENABLED" = "yes" ] && [ ! -f "$CHOSEN/ig_id.txt" ]; then
-    ALL_DONE=false
-    PENDING_LIST="$PENDING_LIST Instagram"
-fi
-
-if [ "$ALL_DONE" = true ]; then
-    echo "$TODAY" > "$LOG"
-    if [ "$FROM_QUEUE" = true ]; then
-        mv "$CHOSEN" "$UPLOADED/$NAME"
-        echo "✅ All uploads complete! Moved → uploaded/$NAME"
+    # ── Upload to YouTube ────────────────────────────────────────────────────
+    if [ "$YT_ENABLED" = "yes" ]; then
+        echo "🚀 YouTube upload..."
+        "$PYTHON" "$YT_UPLOADER" "$CHOSEN"
+        YT_EXIT=$?
+        echo ""
     else
-        echo "✅ All uploads complete for $NAME"
+        echo "⏭️  YouTube upload skipped (disabled)"
+        YT_EXIT=0
     fi
-    echo "📅 Log updated → $TODAY"
-    exit 0
+
+    # ── Upload to Instagram ──────────────────────────────────────────────────
+    if [ "$IG_ENABLED" = "yes" ]; then
+        echo "🚀 Instagram upload..."
+        "$PYTHON" "$IG_UPLOADER" "$CHOSEN"
+        IG_EXIT=$?
+        echo ""
+    else
+        echo "⏭️  Instagram upload skipped (disabled)"
+        IG_EXIT=0
+    fi
+
+    # ── Check completion ─────────────────────────────────────────────────────
+    ALL_DONE=true
+    PENDING_LIST=""
+
+    if [ "$YT_ENABLED" = "yes" ] && [ ! -f "$CHOSEN/youtube_id.txt" ]; then
+        ALL_DONE=false
+        PENDING_LIST="$PENDING_LIST YouTube"
+    fi
+
+    if [ "$IG_ENABLED" = "yes" ] && [ ! -f "$CHOSEN/ig_id.txt" ]; then
+        ALL_DONE=false
+        PENDING_LIST="$PENDING_LIST Instagram"
+    fi
+
+    if [ "$ALL_DONE" = true ]; then
+        echo "$TODAY" > "$LOG"
+        if [ "$FROM_QUEUE" = true ]; then
+            mv "$CHOSEN" "$UPLOADED/$NAME"
+            echo "✅ All uploads complete! Moved → uploaded/$NAME"
+        else
+            echo "✅ All uploads complete for $NAME"
+        fi
+        echo "📅 Log updated → $TODAY"
+        return 0
+    else
+        echo "⚠️  Uploads pending:$PENDING_LIST - keeping in queue"
+        if [ "$FROM_QUEUE" = false ]; then
+            echo "   (in uploaded/ - will retry next run)"
+        fi
+        return 0
+    fi
+}
+
+# ── Process ONE video per day ────────────────────────────────────────────────
+if find_and_upload; then
+    echo "✅ Done - uploaded 1 video today"
 else
-    echo "ℹ️  Uploads pending:$PENDING_LIST - keeping in queue"
-    if [ "$FROM_QUEUE" = false ]; then
-        echo "   (in uploaded/ - will retry next run)"
-    fi
-    exit 0
+    echo "ℹ️  No videos waiting for upload."
 fi
+exit 0
