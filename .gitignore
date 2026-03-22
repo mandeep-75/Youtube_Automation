@@ -44,4 +44,4 @@ ig_session.json
 *.mp3
 thumbnails/
 auto_last_upload.txt
-outputs
+outputs/
