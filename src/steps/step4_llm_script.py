@@ -104,7 +104,7 @@ def generate_script(vision_text, transcript_text=None,
                     model=None, ollama_url=None):
 
     transcript_val = transcript_text.strip() if transcript_text else "[No audio script available]"
-    target_words = int(float(duration) * float(wps)) if float(duration) > 0 else 150
+    target_words = int(float(duration) * float(wps))
 
     effective_model = model if model else OLLAMA_MODEL
     effective_url = ollama_url if ollama_url else OLLAMA_URL

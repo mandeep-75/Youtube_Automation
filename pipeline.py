@@ -21,21 +21,19 @@ if not os.path.isfile(config.FASTER_WHISPER_PYTHON):
     )
 
 def get_video_duration(video_path: str) -> float:
-    """Get video duration using ffprobe."""
-    # Try local ffprobe first
+    """Get video duration using ffprobe. Raises if duration cannot be determined."""
     ffprobe_bin = os.path.join(config.PROJECT_ROOT, "tools", "ffprobe")
     if not (os.path.isfile(ffprobe_bin) and os.access(ffprobe_bin, os.X_OK)):
-        ffprobe_bin = "ffprobe" # Fallback to system path
+        ffprobe_bin = "ffprobe"
 
-    try:
-        result = subprocess.run([
-            ffprobe_bin, "-v", "error", "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1", video_path
-        ], capture_output=True, text=True, check=True)
-        return float(result.stdout.strip())
-    except Exception as e:
-        print(f"⚠️ Warning: Could not get duration for {video_path}: {e}")
-        return 0.0
+    result = subprocess.run([
+        ffprobe_bin, "-v", "error", "-show_entries", "format=duration",
+        "-of", "default=noprint_wrappers=1:nokey=1", video_path
+    ], capture_output=True, text=True, check=True)
+    duration = float(result.stdout.strip())
+    if duration <= 0:
+        raise ValueError(f"Invalid duration {duration} for video: {video_path}")
+    return duration
 
 def step1_extract_frames(video_path: str, frames_dir: str) -> str:
     os.makedirs(frames_dir, exist_ok=True)
