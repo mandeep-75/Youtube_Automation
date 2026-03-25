@@ -1,7 +1,6 @@
 import os
 import sys
 import logging
-from datetime import datetime
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOGS_DIR = os.path.join(PROJECT_ROOT, "logs")

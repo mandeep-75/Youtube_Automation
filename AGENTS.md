@@ -19,6 +19,18 @@ ruff check .
 ruff check . --fix
 ```
 
+### Type Checking
+```bash
+.venv/bin/python -m mypy src/  # if mypy installed
+```
+
+### Running Tests
+```bash
+# No tests currently exist - run manually via:
+.venv/bin/python -m pytest tests/        # if pytest installed
+.venv/bin/python tests/test_specific.py   # run specific test file
+```
+
 ### Running the Pipeline
 ```bash
 .venv/bin/python pipeline.py /path/to/video.mp4
@@ -54,41 +66,56 @@ tail -f logs/auto_upload.log
 - Standard library first, then third-party, then local
 - Explicit relative imports (`from src import config`)
 - Alphabetize within groups
+- Avoid wildcard imports (`from module import *`)
 
 ### Formatting
 - Max line length: 100 characters
 - 4 spaces for indentation (no tabs)
 - Trailing commas in multi-line structures
 - f-strings for string formatting
+- No semicolons at end of lines
 
 ### Type Hints
 - Required for all function signatures
 - Use `Optional[X]` instead of `X | None`
 - Example: `def extract_frames(video_path: str, interval_sec: float, output_dir: str) -> str:`
+- Use `List[X]`, `Dict[X, Y]` from typing (not built-in list/dict)
 
 ### Naming Conventions
 - Functions/variables: `snake_case`
 - Classes: `PascalCase`
 - Constants: `UPPER_SNAKE_CASE`
-- Private functions: prefix with underscore
+- Private functions/variables: prefix with underscore
+- Type variables: `PascalCase` (e.g., `T = TypeVar("T")`)
 
 ### Error Handling
 - Explicit exception types with descriptive messages
 - Catch specific exceptions when possible
+- Never catch `Exception` without re-raising or logging
 - Example: `raise Exception(f"Error opening video file: {video_path}")`
+- Use `try/except/finally` only when necessary
 
 ### Docstrings
-- Google-style for complex functions
+- Google-style for complex functions (Args, Returns, Raises)
+- Simple functions may omit docstrings
 - Put main execution behind `if __name__ == "__main__":`
+- Module-level docstrings for major modules
 
 ### Logging
-- `print()` for user-facing output
-- `src.logger` module for file logging
+- `print()` for user-facing output and CLI messages
+- `src.logger` module for file logging (use `get_logger(__name__)`)
+- INFO level for normal operations, WARNING for recoverable issues, ERROR for failures
 
 ### File Paths
-- `os.path.join()` for concatenation
-- `pathlib.Path` for modern handling
+- `os.path.join()` for concatenation (never `+` on paths)
+- `pathlib.Path` for modern path handling and globbing
 - Use config values (e.g., `config.PROJECT_ROOT`)
+- Always use `encoding="utf-8"` when opening text files
+
+### Performance
+- Use generators for large datasets
+- Close resources with context managers (`with` statements)
+- Avoid loading large files into memory unnecessarily
 
 ## Project Structure
 
@@ -96,11 +123,13 @@ tail -f logs/auto_upload.log
 youtube_automation/
 ├── pipeline.py              # Main orchestration
 ├── src/
+│   ├── __init__.py
 │   ├── config.py           # Pipeline settings
 │   ├── logger.py           # Logging utilities
 │   ├── upload_config.py    # Upload platform routing
 │   ├── watcher.py          # Auto-detect & process videos
 │   ├── steps/              # 8 pipeline steps
+│   │   ├── __init__.py
 │   │   ├── step1_extract_frames.py
 │   │   ├── step2_qwen_vl.py
 │   │   ├── step3_transcribe_original.py
@@ -110,6 +139,7 @@ youtube_automation/
 │   │   ├── step7_transcribe_subtitles.py
 │   │   └── step8_burn_subtitles.py
 │   └── uploaders/          # Upload workers
+│       ├── __init__.py
 │       ├── yt_uploader.py, ig_uploader.py
 │       ├── yt_worker.py, ig_worker.py
 │       └── interactive_uploader.py
@@ -132,9 +162,9 @@ youtube_automation/
 
 ### Adding a New Pipeline Step
 1. Create `src/steps/stepN_name.py`
-2. Add argparse CLI argument parsing
+2. Add argparse CLI argument parsing with `--` prefix for long options
 3. Output to configured output directory
-4. Update `pipeline.py`
+4. Update `pipeline.py` to call the new step
 
 ### Debugging a Failed Step
 1. Check `logs/pipeline.log`

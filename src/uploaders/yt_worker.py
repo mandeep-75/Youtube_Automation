@@ -23,16 +23,16 @@ src_dir = os.path.dirname(script_dir)
 project_root = os.path.dirname(src_dir)
 sys.path.insert(0, project_root)
 
-import json
-import pickle
-import ollama
+import json  # noqa: E402
+import pickle  # noqa: E402
+import ollama  # noqa: E402
 
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
-from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow  # noqa: E402
+from googleapiclient.discovery import build  # noqa: E402
+from googleapiclient.http import MediaFileUpload  # noqa: E402
+from google.auth.transport.requests import Request  # noqa: E402
 
-from src import config
+from src import config  # noqa: E402
 
 
 # ─────────────────────────────────────────────────────────────────────────────

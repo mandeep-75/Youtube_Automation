@@ -14,10 +14,7 @@ Setup:
 
 import os
 import sys
-import json
-import time
 from pathlib import Path
-from typing import Optional
 
 from src import config
 
@@ -131,7 +128,7 @@ def main() -> int:
         with open(id_file, "w") as f:
             f.write(media_id)
 
-        print(f"\n✅ SUCCESS! Reel uploaded")
+        print("\n✅ SUCCESS! Reel uploaded")
         print(f"   Media ID: {media_id}")
         return 0
     except Exception as e:

@@ -121,7 +121,7 @@ def main():
                     dest = os.path.join(PROCESSED_DIR, filename)
                     if not os.path.exists(dest):
                         shutil.move(filepath, dest)
-                        print(f"   → Moved to processed/")
+                        print("   → Moved to processed/")
                     continue
                 
                 if is_file_stable(filepath):
