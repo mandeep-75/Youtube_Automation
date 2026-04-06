@@ -9,8 +9,6 @@ import os
 from dotenv import load_dotenv
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# Load .env after PROJECT_ROOT is defined
 load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
 
@@ -27,21 +25,20 @@ OLLAMA_URL = "http://localhost:11434"
 
 FRAME_INTERVAL = "1.0"  # seconds between extracted frames (lower = more frames)
 
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. VISION MODEL  — visual frame description (via Ollama)
 # ─────────────────────────────────────────────────────────────────────────────
 
-VISION_MODEL = (
-    "qwen3.5:0.8b"  # Model name in Ollama (fast VL model with vision support)
-)
+VISION_MODEL = "qwen3.5:0.8b"  # Fast VL model with vision support (873M params)
 VISION_CONTEXT_WINDOW = 5  # Number of previous frames to include as context
 VISION_HALLUCINATION_CHECK = False  # Enable hallucination detection in step 2
 
-VISION_PROMPT = """Describe this image in 200 words . Only describe what you actually see. No speculation.Focus on main subject and his work."""
+VISION_PROMPT = """Describe this image in 200 words. Only describe what you actually see. No speculation. Focus on main subject and his work."""
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 3. WHISPER  — used in Step 3 (original audio) and Step 7 (TTS subtitles)
+# 3. WHISPER  — used in Step 3 (original audio) and Step 7 (subtitles)
 # ─────────────────────────────────────────────────────────────────────────────
 
 WHISPER_MODEL = "base"  # tiny | base | small | medium | large-v3
@@ -57,25 +54,50 @@ WHISPER_COMPUTE_TYPE = "int8"  # int8 | float16 | float32
 LLM_MODEL = "qwen3.5:9b"
 LLM_WORDS_PER_SECOND = 3  # Target words per second for narration
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 5. TTS  — Chatterbox voice synthesis
-# ─────────────────────────────────────────────────────────────────────────────
-
-TTS_REF_AUDIO = "./samples/me2.mp3"  # Primary reference voice clip
-
-# Voice characteristics
-TTS_EXAGGERATION = 0.6
-TTS_TEMPERATURE = 0.05
-TTS_CFG_WEIGHT = 0.5
-TTS_REPETITION_PENALTY = 1.2
-
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 6. MERGE  — video version audio settings (legacy, see section 9)
+# 5. TTS + MUSIC  — Choose between ACE-Step music or Chatterbox TTS
 # ─────────────────────────────────────────────────────────────────────────────
 
-ORIGINAL_AUDIO_VOLUME = 0.3  # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
-# Volume level for original audio in mixed version
+# Audio generation mode:
+# - True: Use ACE-Step 1.5 via ComfyUI (vocals + background music)
+# - False: Use Chatterbox TTS (voice only, no music)
+USE_ACE_MUSIC = True
+
+# ==== ACE-Step 1.5 Settings (when USE_ACE_MUSIC = True) ====
+
+COMFYUI_URL = "http://127.0.0.1:8000"
+COMFYUI_WORKFLOW_PATH = os.path.join(PROJECT_ROOT, "workflows", "ace_step_music.json")
+
+# Music generation defaults
+MUSIC_STYLE = """A powerful yet smooth modern ambient-pop track with a pleasant and uplifting atmosphere. Driven by warm ambient synth pads, a deep pulsing bassline, and crisp electronic drums instead of distorted guitars. The female vocal is soft and expressive, floating above the music with a dreamy tone. The track builds gradually from calm tension into a bright, emotional release, blending lo-fi textures and atmospheric sounds to create a relaxed but engaging listening experience."""
+MUSIC_BPM = 120
+MUSIC_KEYSCALE = "C minor"
+
+# ComfyUI output directory where generated audio files are saved
+COMFYUI_OUTPUT_DIR = os.environ.get(
+    "COMFYUI_OUTPUT_DIR", "/Users/mandeep/Downloads/comfy/output"
+)
+
+# ==== Chatterbox TTS Settings (when USE_ACE_MUSIC = False) ====
+
+# Chatterbox generates voice narration only (no background music)
+# Voice preset: "male", "female", or "neutral"
+CHATTERBOX_VOICE = "female"
+CHATTERBOX_PITCH = 0.0  # -1.0 to 1.0
+CHATTERBOX_SPEED = 1.0  # 0.5 to 2.0
+CHATTERBOX_EMOTION = "neutral"  # neutral, happy, sad, angry, fearful
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 6. MERGE  — video version audio settings
+# ─────────────────────────────────────────────────────────────────────────────
+
+# If True, mix generated audio with original video audio
+# If False, replace original audio entirely
+MERGE_MIX_AUDIO = False  # Default to False for clean output
+
+ORIGINAL_AUDIO_VOLUME = 0.3  # 0.0 to 1.0 (volume when mixing)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -83,7 +105,6 @@ ORIGINAL_AUDIO_VOLUME = 0.3  # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
 # ─────────────────────────────────────────────────────────────────────────────
 
 # CUSTOM SHORTS FONTS (Local TTF files in fonts/ directory):
-# Anton natively renders smaller than other fonts, so we give it a larger size to match visually.
 SUBTITLE_FONTS = [
     {"name": "Anton", "size": 120},
     {"name": "Bebas Neue", "size": 120},
@@ -102,21 +123,15 @@ SUBTITLE_Y_OFFSET = 250
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PYTHON INTERPRETERS  — one per virtual environment
-# Only change if your conda / venv paths differ from the defaults.
+# PYTHON INTERPRETERS  — unified venv
 # ─────────────────────────────────────────────────────────────────────────────
 
-
 UNIFIED_PYTHON = os.path.join(PROJECT_ROOT, ".venv", "bin", "python")
-
-CHATTERBOX_PYTHON = UNIFIED_PYTHON
 FASTER_WHISPER_PYTHON = UNIFIED_PYTHON
-UPLOADER_PYTHON = UNIFIED_PYTHON
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 9. UPLOADER SETTINGS
-# Note: Upload routing config moved to upload_config.py
 # ─────────────────────────────────────────────────────────────────────────────
 
 YOUTUBE_SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
