@@ -31,7 +31,9 @@ FRAME_INTERVAL = "1.0"  # seconds between extracted frames (lower = more frames)
 # 2. VISION MODEL  — visual frame description (via Ollama)
 # ─────────────────────────────────────────────────────────────────────────────
 
-VISION_MODEL = "qwen3-vl:2b"  # Model name in Ollama (must be a VL/vision model)
+VISION_MODEL = (
+    "qwen3.5:0.8b"  # Model name in Ollama (fast VL model with vision support)
+)
 VISION_CONTEXT_WINDOW = 5  # Number of previous frames to include as context
 VISION_HALLUCINATION_CHECK = False  # Enable hallucination detection in step 2
 
@@ -97,6 +99,22 @@ SUBTITLE_ITALIC = False
 SUBTITLE_POSITION = "center"  # top, center, bottom
 SUBTITLE_X_OFFSET = -50
 SUBTITLE_Y_OFFSET = 250
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 5.5 BACKGROUND MUSIC  — ACE-Step 1.5 via ComfyUI
+# ─────────────────────────────────────────────────────────────────────────────
+
+COMFYUI_URL = "http://127.0.0.1:8000"
+COMFYUI_API_URL = f"{COMFYUI_URL}/api"
+COMFYUI_WORKFLOW_PATH = os.path.join(PROJECT_ROOT, "workflows", "ace_step_music.json")
+
+# Music generation settings
+MUSIC_STYLE = "epic cinematic"  # Default style (can be overridden by LLM)
+MUSIC_DURATION_FACTOR = 1.2  # Music should be ~20% longer than video to allow trimming
+MUSIC_VOLUME = 0.25  # Background music volume (0.0 to 1.0)
+MUSIC_FADE_IN = 0.5  # Fade in duration in seconds
+MUSIC_FADE_OUT = 1.0  # Fade out duration in seconds
 
 
 # ─────────────────────────────────────────────────────────────────────────────
