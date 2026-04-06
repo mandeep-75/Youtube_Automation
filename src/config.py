@@ -31,7 +31,9 @@ FRAME_INTERVAL = "1.0"  # seconds between extracted frames (lower = more frames)
 # 2. VISION MODEL  — visual frame description (via Ollama)
 # ─────────────────────────────────────────────────────────────────────────────
 
-VISION_MODEL = "qwen3-vl:2b"  # Model name in Ollama (must be a VL/vision model)
+VISION_MODEL = (
+    "qwen3.5:0.8b"  # Model name in Ollama (fast VL model with vision support)
+)
 VISION_CONTEXT_WINDOW = 5  # Number of previous frames to include as context
 VISION_HALLUCINATION_CHECK = False  # Enable hallucination detection in step 2
 
