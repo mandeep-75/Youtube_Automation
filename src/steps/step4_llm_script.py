@@ -10,7 +10,8 @@ from src import config
 OLLAMA_MODEL = config.LLM_MODEL
 OLLAMA_URL = config.OLLAMA_URL
 
-UNIFIED_PROMPT = """You are a songwriter creating lyrics for a modern ambient-pop song with soft female vocals.
+# Prompt for ACE music mode - generates lyrics with section markers
+LYRICS_PROMPT = """You are a songwriter creating lyrics for a modern ambient-pop song with soft female vocals.
 
 MUSIC STYLE:
 {music_style}
@@ -70,12 +71,97 @@ Target word count: {target_words} words.
 Do not exceed this length.
 """
 
+# Prompt for TTS mode - generates regular narration script (not lyrics)
+SCRIPT_PROMPT = """You are a viral YouTube Shorts scriptwriter who specializes in high-retention cinematic storytelling.
+
+Your narration should feel like a friend telling an unbelievable real story directly to the camera late at night — intense, curious, and impossible to scroll past.
+
+INPUT DATA
+
+VIDEO DURATION: {duration} seconds
+TARGET WORD COUNT: {target_words} words
+AVERAGE SPEECH RATE: {wps} words per second
+
+VISUAL SEQUENCE (chronological frame descriptions):
+{vision_text}
+
+ORIGINAL DIALOGUE (optional):
+{transcript_text}
+
+IMPORTANT CONTEXT
+
+The visual descriptions represent frames from one continuous video in chronological order.
+
+Do not mention frames or describe them individually.
+
+Instead:
+• Combine all visuals into one flowing narrative
+• Infer actions, reactions, and emotions
+• Tell the story naturally as events unfold
+
+Use dialogue only if it strengthens the story.
+
+TONE & STYLE
+
+The voice should feel:
+• Cinematic
+• Conversational
+• High-energy
+
+Write using short, punchy sentences to maintain fast pacing.
+
+The story must remain YouTube-friendly and advertiser safe.
+
+Avoid:
+• Profanity
+• Hate speech
+• Sexual content
+• Political messaging
+
+STORY STRUCTURE
+
+Hook (first sentence)
+
+The first sentence must immediately stop the scroll.
+
+It must begin with one of these phrases:
+"This man..."
+"This woman..."
+"This..."
+
+Example style:
+"This man thought he found something normal until it suddenly moved."
+
+WRITING RULES
+
+• Write one continuous paragraph
+• Do not use bullet points in the script
+• Do not add labels or timestamps
+• Do not repeat the visual descriptions word-for-word
+• Focus on action, reactions, and suspense
+• Maintain fast pacing for Shorts
+
+LENGTH & PACING
+
+The script must match the video duration.
+
+Target word count: {target_words} words.
+Do not exceed this length.
+
+OUTPUT FORMAT
+
+Return only the final narration script as plain text.
+
+Do not include explanations or formatting.
+"""
+
 
 def generate_script(
     vision_text,
     transcript_text=None,
     duration=0.0,
     wps=2.5,
+    use_ace_music=True,
     music_style=None,
     model=None,
     ollama_url=None,
@@ -90,14 +176,25 @@ def generate_script(
     effective_model = model if model else OLLAMA_MODEL
     effective_url = ollama_url if ollama_url else OLLAMA_URL
 
-    prompt_content = UNIFIED_PROMPT.format(
-        duration=duration,
-        wps=wps,
-        target_words=target_words,
-        transcript_text=transcript_val,
-        vision_text=vision_text.strip(),
-        music_style=effective_music_style,
-    )
+    # Select prompt based on audio mode
+    if use_ace_music:
+        prompt_template = LYRICS_PROMPT
+        prompt_content = prompt_template.format(
+            duration=duration,
+            target_words=target_words,
+            transcript_text=transcript_val,
+            vision_text=vision_text.strip(),
+            music_style=effective_music_style,
+        )
+    else:
+        prompt_template = SCRIPT_PROMPT
+        prompt_content = prompt_template.format(
+            duration=duration,
+            wps=wps,
+            target_words=target_words,
+            transcript_text=transcript_val,
+            vision_text=vision_text.strip(),
+        )
 
     print(f"[step4_llm_script] Calling Ollama model: {effective_model}...")
 
@@ -164,6 +261,18 @@ if __name__ == "__main__":
     parser.add_argument("--output", required=True)
     parser.add_argument("--duration", type=float, default=0.0)
     parser.add_argument("--wps", type=float, default=2.5)
+    parser.add_argument(
+        "--use-ace-music",
+        action="store_true",
+        default=True,
+        help="Generate lyrics for ACE music mode (default: True)",
+    )
+    parser.add_argument(
+        "--no-ace-music",
+        dest="use_ace_music",
+        action="store_false",
+        help="Generate regular script for TTS mode",
+    )
     parser.add_argument("--music-style", default=None)
     parser.add_argument("--model", default=None)
     parser.add_argument("--ollama-url", default=None)
@@ -183,6 +292,7 @@ if __name__ == "__main__":
         transcript_text=transcript_data,
         duration=args.duration,
         wps=args.wps,
+        use_ace_music=args.use_ace_music,
         music_style=args.music_style,
         model=args.model,
         ollama_url=args.ollama_url,

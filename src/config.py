@@ -56,29 +56,48 @@ LLM_WORDS_PER_SECOND = 3  # Target words per second for narration
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 5. TTS + MUSIC  — ACE-Step 1.5 via ComfyUI
-# Script becomes lyrics, ACE-Step generates vocals + background music
+# 5. TTS + MUSIC  — Choose between ACE-Step music or Chatterbox TTS
 # ─────────────────────────────────────────────────────────────────────────────
+
+# Audio generation mode:
+# - True: Use ACE-Step 1.5 via ComfyUI (vocals + background music)
+# - False: Use Chatterbox TTS (voice only, no music)
+USE_ACE_MUSIC = True
+
+# ==== ACE-Step 1.5 Settings (when USE_ACE_MUSIC = True) ====
 
 COMFYUI_URL = "http://127.0.0.1:8000"
 COMFYUI_WORKFLOW_PATH = os.path.join(PROJECT_ROOT, "workflows", "ace_step_music.json")
 
 # Music generation defaults
-MUSIC_STYLE = """A powerful yet smooth modern ambient-pop track with a pleasant and uplifting atmosphere. Driven by warm ambient synth pads, a deep pulsing bassline, and crisp electronic drums instead of distorted guitars. The female vocal is soft and expressive, floating above the music with a dreamy tone. The track builds gradually from calm tension into a bright, emotional release, blending lo-fi textures and atmospheric sounds to create a relaxed but engaging listening experience."""  # Default style
-MUSIC_BPM = 120  # Beats per minute
-MUSIC_KEYSCALE = "C minor"  # Musical key
+MUSIC_STYLE = """A powerful yet smooth modern ambient-pop track with a pleasant and uplifting atmosphere. Driven by warm ambient synth pads, a deep pulsing bassline, and crisp electronic drums instead of distorted guitars. The female vocal is soft and expressive, floating above the music with a dreamy tone. The track builds gradually from calm tension into a bright, emotional release, blending lo-fi textures and atmospheric sounds to create a relaxed but engaging listening experience."""
+MUSIC_BPM = 120
+MUSIC_KEYSCALE = "C minor"
 
 # ComfyUI output directory where generated audio files are saved
 COMFYUI_OUTPUT_DIR = os.environ.get(
     "COMFYUI_OUTPUT_DIR", "/Users/mandeep/Downloads/comfy/output"
 )
 
+# ==== Chatterbox TTS Settings (when USE_ACE_MUSIC = False) ====
+
+# Chatterbox generates voice narration only (no background music)
+# Voice preset: "male", "female", or "neutral"
+CHATTERBOX_VOICE = "female"
+CHATTERBOX_PITCH = 0.0  # -1.0 to 1.0
+CHATTERBOX_SPEED = 1.0  # 0.5 to 2.0
+CHATTERBOX_EMOTION = "neutral"  # neutral, happy, sad, angry, fearful
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 6. MERGE  — video version audio settings
 # ─────────────────────────────────────────────────────────────────────────────
 
-ORIGINAL_AUDIO_VOLUME = 0.3  # 0.0 to 1.0 (volume in mixed version)
+# If True, mix generated audio with original video audio
+# If False, replace original audio entirely
+MERGE_MIX_AUDIO = False  # Default to False for clean output
+
+ORIGINAL_AUDIO_VOLUME = 0.3  # 0.0 to 1.0 (volume when mixing)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
