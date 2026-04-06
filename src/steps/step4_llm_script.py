@@ -30,8 +30,6 @@ IMPORTANT CONTEXT
 
 The visual descriptions represent frames from one continuous video in chronological order.
 
-Reconstruct the full scene as if you are watching the entire video unfold in real time.
-
 Do not mention frames or describe them individually.
 
 Instead:
@@ -45,9 +43,7 @@ TONE & STYLE
 
 The voice should feel:
 • Cinematic
-• Dramatic
 • Conversational
-• Mysterious
 • High-energy
 
 Write using short, punchy sentences to maintain fast pacing.
@@ -56,7 +52,6 @@ The story must remain YouTube-friendly and advertiser safe.
 
 Avoid:
 • Profanity
-• Graphic violence
 • Hate speech
 • Sexual content
 • Political messaging

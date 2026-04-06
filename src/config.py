@@ -35,7 +35,7 @@ VISION_MODEL  = "qwen3.5:0.8b" # Model name in Ollama
 VISION_CONTEXT_WINDOW = 5  # Number of previous frames to include as context
 VISION_HALLUCINATION_CHECK = False  # Enable hallucination detection in step 2
 
-VISION_PROMPT = """Describe this image in 2-3 short sentences. Only describe what you actually see. No speculation."""
+VISION_PROMPT = """Describe this image in 200 words . Only describe what you actually see. No speculation.Focus on main subject and his work."""
 
 
 
@@ -60,7 +60,7 @@ LLM_WORDS_PER_SECOND = 3    # Target words per second for narration
 # 5. TTS  — Chatterbox voice synthesis
 # ─────────────────────────────────────────────────────────────────────────────
 
-TTS_REF_AUDIO = "./samples/me.mp3"  # Primary reference voice clip
+TTS_REF_AUDIO = "./samples/me2.mp3"  # Primary reference voice clip
 
 # Voice characteristics
 TTS_EXAGGERATION      = 0.6
