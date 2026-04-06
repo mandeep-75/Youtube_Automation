@@ -4,29 +4,30 @@
 
 ---
 
-## ⚡ Quick Start (first time only)
+## Quick Start (first time only)
 
 ```bash
-# 1. Pull the two Ollama models
-ollama pull qwen3-vl:2b
-ollama pull jaahas/qwen3.5-uncensored:9b
+# 1. Pull the Ollama models
+ollama pull qwen3.5:0.8b
+ollama pull qwen3.5:9b
 
-# 2. Build all Python environments (one command)
-bash setup_all_venvs.sh
+# 2. Create Python venv and install dependencies
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
 
 # 3. Authenticate YouTube (opens browser once)
-.venv/bin/python src/uploaders/interactive_uploader.py
+.venv/bin/python -m src.uploaders.interactive_uploader
 ```
 
 That's it. Never run setup again unless you delete `.venv/`.
 
 ---
 
-## 🗺️ How the whole system works
+## How the whole system works
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  Drop raw video in yt_inbox/                        │
+│  Drop raw video in yt_inbox/inputs/                 │
 └─────────────────┬───────────────────────────────────┘
                   │
                   ▼
@@ -44,11 +45,11 @@ That's it. Never run setup again unless you delete `.venv/`.
 
 ---
 
-## 🎬 How to Use
+## How to Use
 
 ### 1. Drop a Video to Process
 
-Drop your raw video in `yt_inbox/` (or use the desktop symlink).
+Drop your raw video in `yt_inbox/inputs/`.
 
 The watcher automatically:
 - Detects new video
@@ -72,24 +73,24 @@ Move the processed folder to `upload_queue/`. Folder must contain:
 
 ---
 
-## 📤 Manual Upload
+## Manual Upload
 
 ```bash
-.venv/bin/python src/uploaders/interactive_uploader.py
+.venv/bin/python -m src.uploaders.interactive_uploader
 ```
 
 ---
 
-## 📁 Folder Structure
+## Folder Structure
 
 ```
 youtube_automation/
 ├── pipeline.py              # Run manually to process a video
-├── config.py               # ALL settings live here
-├── setup_all_venvs.sh      # First-time setup
+├── requirements.txt         # All Python dependencies
+├── config.py                # ALL settings live here
 │
 ├── yt_inbox/               # ← DROP VIDEOS HERE
-│   ├── inputs/             # Raw videos (create if needed)
+│   ├── inputs/             # Raw videos
 │   ├── outputs/           # Processed videos
 │   │   └── <video_name>/
 │   │       ├── final_video_mixed.mp4   # Original + TTS audio
@@ -104,17 +105,13 @@ youtube_automation/
 │
 ├── src/
 │   ├── config.py
-│   ├── logger.py
+│   ├── upload_config.py
 │   ├── watcher.py         # Auto-detects & processes new videos
 │   ├── steps/            # 8 pipeline steps
-│   └── uploaders/
-│       ├── yt_uploader.py
-│       ├── ig_uploader.py
-│       ├── yt_worker.py
-│       └── ig_worker.py
+│   └── uploaders/        # YouTube & Instagram uploaders
 │
 ├── scripts/
-│   └── auto_service.sh    # Auto-upload on boot
+│   └── auto_service.sh   # Auto-upload on boot
 │
 ├── logs/
 │   ├── pipeline.log
@@ -122,51 +119,71 @@ youtube_automation/
 │   ├── ig_upload.log
 │   └── error.log
 │
-└── .venv/                # Python environment
+└── .venv/                # Python environment (Python 3.14)
 ```
-
-**Desktop:**
-- `~/Desktop/yt_inbox` → symlink to project `yt_inbox/`
-- `~/Desktop/watcher.command` → runs the watcher
 
 ---
 
-## 🔧 Commands
+## Commands
 
 ```bash
 # Run watcher (auto-processes new videos)
-bash scripts/watch.sh
-# Or double-click watcher.command on Desktop
+.venv/bin/python -m src.watcher
 
 # Process a video manually
 .venv/bin/python pipeline.py /path/to/video.mp4
+
+# Run pipeline with TTS instead of ACE music
+.venv/bin/python pipeline.py --use-tts /path/to/video.mp4
 
 # Auto-upload (runs automatically on boot)
 bash scripts/auto_service.sh
 
 # Manual upload
-.venv/bin/python src/uploaders/interactive_uploader.py
+.venv/bin/python -m src.uploaders.interactive_uploader
 ```
 
 ---
 
-## 📝 Logging
+## Linting & Type Checking
+
+```bash
+# Lint
+.venv/bin/ruff check .
+
+# Type check
+.venv/bin/mypy .
+```
+
+---
+
+## Logging
 
 ```bash
 tail -f logs/pipeline.log
-tail -f logs/auto_upload.log
+tail -f logs/yt_upload.log
 tail -f logs/error.log
 ```
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 | Problem | Fix |
 |---------|-----|
-| `venv not found` error | Run `bash setup_all_venvs.sh` |
+| `venv not found` error | Run `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt` |
 | Ollama connection refused | Run `ollama serve` in a terminal |
 | YouTube auth fails | Delete `youtube_token.pickle` and re-run upload |
 | Auto-upload not running | Check `logs/error.log` |
-| Video not processing | Make sure it's in `yt_inbox/` (not subfolders) |
+| Video not processing | Make sure it's in `yt_inbox/inputs/` (not subfolders) |
 | Video re-processed | Already in `yt_inbox/outputs/` - watcher skips it |
+
+---
+
+## Requirements
+
+- Python 3.14
+- FFmpeg (install via `brew install ffmpeg`)
+- Ollama running locally with models:
+  - `qwen3.5:0.8b` (vision)
+  - `qwen3.5:9b` (LLM)
