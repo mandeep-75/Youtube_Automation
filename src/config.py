@@ -25,28 +25,27 @@ OLLAMA_URL = "http://localhost:11434"
 # 1. FRAME EXTRACTION
 # ─────────────────────────────────────────────────────────────────────────────
 
-FRAME_INTERVAL = "1.0"          # seconds between extracted frames (lower = more frames)
+FRAME_INTERVAL = "1.0"  # seconds between extracted frames (lower = more frames)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. VISION MODEL  — visual frame description (via Ollama)
 # ─────────────────────────────────────────────────────────────────────────────
 
-VISION_MODEL  = "qwen3.5:0.8b" # Model name in Ollama
+VISION_MODEL = "qwen3-vl:2b"  # Model name in Ollama (must be a VL/vision model)
 VISION_CONTEXT_WINDOW = 5  # Number of previous frames to include as context
 VISION_HALLUCINATION_CHECK = False  # Enable hallucination detection in step 2
 
 VISION_PROMPT = """Describe this image in 200 words . Only describe what you actually see. No speculation.Focus on main subject and his work."""
 
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. WHISPER  — used in Step 3 (original audio) and Step 7 (TTS subtitles)
 # ─────────────────────────────────────────────────────────────────────────────
 
-WHISPER_MODEL        = "base"          # tiny | base | small | medium | large-v3
-WHISPER_LANG         = None            # e.g. "en" to force English, or None for auto-detect
-WHISPER_BEAM_SIZE    = 5
-WHISPER_COMPUTE_TYPE = "int8"          # int8 | float16 | float32
+WHISPER_MODEL = "base"  # tiny | base | small | medium | large-v3
+WHISPER_LANG = None  # e.g. "en" to force English, or None for auto-detect
+WHISPER_BEAM_SIZE = 5
+WHISPER_COMPUTE_TYPE = "int8"  # int8 | float16 | float32
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -54,7 +53,7 @@ WHISPER_COMPUTE_TYPE = "int8"          # int8 | float16 | float32
 # ─────────────────────────────────────────────────────────────────────────────
 
 LLM_MODEL = "qwen3.5:9b"
-LLM_WORDS_PER_SECOND = 3    # Target words per second for narration
+LLM_WORDS_PER_SECOND = 3  # Target words per second for narration
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 5. TTS  — Chatterbox voice synthesis
@@ -63,9 +62,9 @@ LLM_WORDS_PER_SECOND = 3    # Target words per second for narration
 TTS_REF_AUDIO = "./samples/me2.mp3"  # Primary reference voice clip
 
 # Voice characteristics
-TTS_EXAGGERATION      = 0.6
-TTS_TEMPERATURE       = 0.05
-TTS_CFG_WEIGHT        = 0.5
+TTS_EXAGGERATION = 0.6
+TTS_TEMPERATURE = 0.05
+TTS_CFG_WEIGHT = 0.5
 TTS_REPETITION_PENALTY = 1.2
 
 
@@ -73,8 +72,8 @@ TTS_REPETITION_PENALTY = 1.2
 # 6. MERGE  — video version audio settings (legacy, see section 9)
 # ─────────────────────────────────────────────────────────────────────────────
 
-ORIGINAL_AUDIO_VOLUME = 0.3    # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
-                                # Volume level for original audio in mixed version
+ORIGINAL_AUDIO_VOLUME = 0.3  # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
+# Volume level for original audio in mixed version
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -86,19 +85,18 @@ ORIGINAL_AUDIO_VOLUME = 0.3    # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
 SUBTITLE_FONTS = [
     {"name": "Anton", "size": 120},
     {"name": "Bebas Neue", "size": 120},
-    {"name": "Oswald", "size": 120}
+    {"name": "Oswald", "size": 120},
 ]
-SUBTITLE_FONT_COLOR     = "#FFFFFF"
+SUBTITLE_FONT_COLOR = "#FFFFFF"
 SUBTITLE_HIGHLIGHT_COLOR = "#00FFAA"
-SUBTITLE_OUTLINE_COLOR   = "#000000"
-SUBTITLE_OUTLINE_WIDTH   = 1
-SUBTITLE_MAX_WORDS      = 3
-SUBTITLE_BOLD           = True
-SUBTITLE_ITALIC         = False
-SUBTITLE_POSITION       = "center" # top, center, bottom
-SUBTITLE_X_OFFSET       = -50
-SUBTITLE_Y_OFFSET       = 250
-
+SUBTITLE_OUTLINE_COLOR = "#000000"
+SUBTITLE_OUTLINE_WIDTH = 1
+SUBTITLE_MAX_WORDS = 3
+SUBTITLE_BOLD = True
+SUBTITLE_ITALIC = False
+SUBTITLE_POSITION = "center"  # top, center, bottom
+SUBTITLE_X_OFFSET = -50
+SUBTITLE_Y_OFFSET = 250
 
 
 # ─────────────────────────────────────────────────────────────────────────────
