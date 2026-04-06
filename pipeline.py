@@ -10,12 +10,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 from src import config
 
 # Validate environment
-if not os.path.isfile(config.CHATTERBOX_PYTHON):
-    print(
-        f"⚠️ Warning: Chatterbox venv not found at {config.CHATTERBOX_PYTHON}. Using current interpreter."
-    )
-    config.CHATTERBOX_PYTHON = sys.executable
-
 if not os.path.isfile(config.FASTER_WHISPER_PYTHON):
     raise FileNotFoundError(
         f"\n[pipeline] faster_whisper venv not found at:\n  {config.FASTER_WHISPER_PYTHON}\n"
@@ -55,7 +49,7 @@ def step1_extract_frames(video_path: str, frames_dir: str) -> str:
     manifest_path = os.path.join(frames_dir, "manifest.json")
     subprocess.run(
         [
-            config.CHATTERBOX_PYTHON,
+            config.UNIFIED_PYTHON,
             "./src/steps/step1_extract_frames.py",
             "--video-file",
             video_path,
@@ -73,7 +67,7 @@ def step2_vision_describe(
     manifest_path: str, output_file: str, hallucination_check: bool = False
 ):
     cmd = [
-        config.UPLOADER_PYTHON,
+        config.UNIFIED_PYTHON,
         "./src/steps/step2_qwen_vl.py",
         "--manifest",
         manifest_path,
@@ -117,7 +111,7 @@ def step4_llm_script(
     frames_file: str, transcript_file: str, script_output: str, duration: float
 ):
     cmd = [
-        config.UPLOADER_PYTHON,
+        config.UNIFIED_PYTHON,
         "./src/steps/step4_llm_script.py",
         "--input",
         frames_file,
@@ -137,85 +131,25 @@ def step4_llm_script(
     subprocess.run(cmd, check=True)
 
 
-def step5_tts(script_file: str, voice_output: str):
-    ref_audio = config.TTS_REF_AUDIO
-    print(f"🎤 Using TTS reference audio: {ref_audio}")
-    subprocess.run(
-        [
-            config.CHATTERBOX_PYTHON,
-            "./src/steps/step5_tts.py",
-            "--script",
-            script_file,
-            "--output",
-            voice_output,
-            "--ref-audio",
-            ref_audio,
-            "--exaggeration",
-            str(config.TTS_EXAGGERATION),
-            "--temperature",
-            str(config.TTS_TEMPERATURE),
-            "--cfg-weight",
-            str(config.TTS_CFG_WEIGHT),
-            "--repetition-penalty",
-            str(config.TTS_REPETITION_PENALTY),
-        ],
-        check=True,
-    )
-
-
-def step5_5_generate_bgm(
-    script_file: str,
-    duration: float,
-    output_path: str,
-    comfyui_url: str = None,
-):
-    """Generate background music using ACE-Step 1.5 via ComfyUI."""
+def step5_tts(script_file: str, voice_output: str, duration: float):
+    """
+    Generate narration with background music using ACE-Step 1.5.
+    The script becomes the lyrics, and ACE-Step generates vocals + music.
+    """
+    print(f"🎵 Generating narration with ACE-Step 1.5...")
     cmd = [
         config.UNIFIED_PYTHON,
-        "./src/steps/step5_5_bgm.py",
+        "./src/steps/step5_tts.py",
         "--script",
         script_file,
         "--duration",
         f"{duration:.2f}",
         "--output",
-        output_path,
+        voice_output,
         "--infer-style",
+        "--comfyui-url",
+        config.COMFYUI_URL,
     ]
-    if comfyui_url:
-        cmd += ["--comfyui-url", comfyui_url]
-
-    print(f"🎵 Generating background music via ACE-Step 1.5...")
-    subprocess.run(cmd, check=True)
-
-
-def step5_6_mix_audio(
-    narration_path: str,
-    music_path: str,
-    output_path: str,
-    narration_volume: float = 1.0,
-    music_volume: float = 0.25,
-):
-    """Mix TTS narration with background music."""
-    cmd = [
-        config.UNIFIED_PYTHON,
-        "./src/steps/step5_6_mix_audio.py",
-        "--narration",
-        narration_path,
-        "--music",
-        music_path,
-        "--output",
-        output_path,
-        "--narration-volume",
-        str(narration_volume),
-        "--music-volume",
-        str(music_volume),
-        "--fade-in",
-        str(config.MUSIC_FADE_IN),
-        "--fade-out",
-        str(config.MUSIC_FADE_OUT),
-    ]
-
-    print(f"🎛️  Mixing narration with background music...")
     subprocess.run(cmd, check=True)
 
 
@@ -317,11 +251,8 @@ def step8_burn_subtitles(video_path: str, subtitle_path: str, output_path: str):
 
 def sanitize_filename(name: str) -> str:
     """Remove or replace characters that are invalid in filesystem paths."""
-    # Replace spaces with underscores, remove invalid chars
     name = re.sub(r'[<>:"/\\|?*]', "_", name)
-    # Remove leading/trailing dots and spaces
     name = name.strip(". ")
-    # Ensure not empty
     if not name:
         name = "unnamed_video"
     return name
@@ -338,15 +269,11 @@ def cleanup_intermediate_files(*files: str) -> None:
                 print(f"   ⚠️  Could not remove {f}: {e}")
 
 
-def run_pipeline(video_path: str, with_bgm: bool = True):
+def run_pipeline(video_path: str):
     """
     Run the full video processing pipeline.
-
-    Args:
-        video_path: Path to input video
-        with_bgm: Whether to generate background music (requires ComfyUI + ACE-Step)
+    Step 5 uses ACE-Step 1.5 to generate narration (with vocals) + background music.
     """
-    # Use full filename (including tags and extension) for the output directory
     video_name = os.path.basename(video_path)
     video_name = sanitize_filename(video_name)
     out_dir = os.path.join(config.PROJECT_ROOT, "yt_inbox", "outputs", video_name)
@@ -357,18 +284,13 @@ def run_pipeline(video_path: str, with_bgm: bool = True):
     transcript_file = os.path.join(out_dir, "transcript.txt")
     script_file = os.path.join(out_dir, "script.txt")
     voice_file = os.path.join(out_dir, "voice.wav")
-    bgm_file = os.path.join(out_dir, "bgm.wav")
-    mixed_audio = os.path.join(out_dir, "mixed_audio.wav")
 
-    # Two video versions (mixed and simple)
     video_mixed = os.path.join(out_dir, "video_mixed.mp4")
     video_simple = os.path.join(out_dir, "video_simple.mp4")
 
-    # Subtitles for each version
     srt_mixed = os.path.join(out_dir, "subtitles_mixed.srt")
     srt_simple = os.path.join(out_dir, "subtitles_simple.srt")
 
-    # Final videos for each version
     final_video_mixed = os.path.join(out_dir, "final_video_mixed.mp4")
     final_video_simple = os.path.join(out_dir, "final_video_simple.mp4")
 
@@ -390,45 +312,17 @@ def run_pipeline(video_path: str, with_bgm: bool = True):
     duration = get_video_duration(video_path)
     step4_llm_script(frames_file, transcript_file, script_file, duration)
 
-    print("\n─── Step 5  Text-to-speech ───────────────────────────────────")
-    step5_tts(script_file, voice_file)
+    print("\n─── Step 5  Generate narration + music (ACE-Step 1.5) ──────")
+    step5_tts(script_file, voice_file, duration)
 
-    # Step 5.5 - Generate background music (optional)
-    if with_bgm:
-        print("\n─── Step 5.5  Generate background music ──────────────────────")
-        try:
-            step5_5_generate_bgm(
-                script_file=script_file,
-                duration=duration,
-                output_path=bgm_file,
-                comfyui_url=config.COMFYUI_URL,
-            )
-
-            print("\n─── Step 5.6  Mix audio with background music ───────────────")
-            step5_6_mix_audio(
-                narration_path=voice_file,
-                music_path=bgm_file,
-                output_path=mixed_audio,
-                narration_volume=1.0,
-                music_volume=config.MUSIC_VOLUME,
-            )
-            # Use mixed audio for the simple version
-            audio_for_simple = mixed_audio
-        except Exception as e:
-            print(f"⚠️ Background music generation failed: {e}")
-            print("   Falling back to TTS-only audio...")
-            audio_for_simple = voice_file
-    else:
-        audio_for_simple = voice_file
-
-    print("\n─── Step 6  Merge TTS audio onto video ───────────────────────")
-    print("   [Mixed version] Original + TTS audio...")
+    print("\n─── Step 6  Merge audio onto video ────────────────────────────")
+    print("   [Mixed version] Original + ACE audio...")
     step6_merge_av(video_path, voice_file, video_mixed, mix_audio=True)
 
-    print("   [Simple version] TTS (with/without BGM)...")
-    step6_merge_av(video_path, audio_for_simple, video_simple, mix_audio=False)
+    print("   [Simple version] ACE audio only...")
+    step6_merge_av(video_path, voice_file, video_simple, mix_audio=False)
 
-    print("\n─── Step 7  Transcribe TTS for subtitles ─────────────────────")
+    print("\n─── Step 7  Transcribe for subtitles ─────────────────────────")
     print("   [Mixed version] Transcribing...")
     step7_transcribe_subtitles(video_mixed, srt_mixed)
     print("   [Simple version] Transcribing...")
@@ -440,7 +334,6 @@ def run_pipeline(video_path: str, with_bgm: bool = True):
     print("   [Simple version] Burning subtitles...")
     step8_burn_subtitles(video_simple, srt_simple, final_video_simple)
 
-    # Clean up intermediate files (video + subtitle files used for burning)
     cleanup_intermediate_files(video_mixed, video_simple, srt_mixed, srt_simple)
 
     print(f"\n✅ Finished processing: {video_path}")
@@ -453,15 +346,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="YouTube automation pipeline")
     parser.add_argument("videos", nargs="+", help="Input video file(s)")
-    parser.add_argument(
-        "--no-bgm", action="store_true", help="Skip background music generation"
-    )
     args = parser.parse_args()
 
     any_errors = False
     for video in args.videos:
         try:
-            run_pipeline(video, with_bgm=not args.no_bgm)
+            run_pipeline(video)
         except Exception as e:
             print(f"\n❌ Error processing {video}: {e}")
             any_errors = True

@@ -9,8 +9,6 @@ import os
 from dotenv import load_dotenv
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# Load .env after PROJECT_ROOT is defined
 load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
 
@@ -27,21 +25,20 @@ OLLAMA_URL = "http://localhost:11434"
 
 FRAME_INTERVAL = "1.0"  # seconds between extracted frames (lower = more frames)
 
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. VISION MODEL  — visual frame description (via Ollama)
 # ─────────────────────────────────────────────────────────────────────────────
 
-VISION_MODEL = (
-    "qwen3.5:0.8b"  # Model name in Ollama (fast VL model with vision support)
-)
+VISION_MODEL = "qwen3.5:0.8b"  # Fast VL model with vision support (873M params)
 VISION_CONTEXT_WINDOW = 5  # Number of previous frames to include as context
 VISION_HALLUCINATION_CHECK = False  # Enable hallucination detection in step 2
 
-VISION_PROMPT = """Describe this image in 200 words . Only describe what you actually see. No speculation.Focus on main subject and his work."""
+VISION_PROMPT = """Describe this image in 200 words. Only describe what you actually see. No speculation. Focus on main subject and his work."""
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 3. WHISPER  — used in Step 3 (original audio) and Step 7 (TTS subtitles)
+# 3. WHISPER  — used in Step 3 (original audio) and Step 7 (subtitles)
 # ─────────────────────────────────────────────────────────────────────────────
 
 WHISPER_MODEL = "base"  # tiny | base | small | medium | large-v3
@@ -57,25 +54,26 @@ WHISPER_COMPUTE_TYPE = "int8"  # int8 | float16 | float32
 LLM_MODEL = "qwen3.5:9b"
 LLM_WORDS_PER_SECOND = 3  # Target words per second for narration
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 5. TTS  — Chatterbox voice synthesis
-# ─────────────────────────────────────────────────────────────────────────────
-
-TTS_REF_AUDIO = "./samples/me2.mp3"  # Primary reference voice clip
-
-# Voice characteristics
-TTS_EXAGGERATION = 0.6
-TTS_TEMPERATURE = 0.05
-TTS_CFG_WEIGHT = 0.5
-TTS_REPETITION_PENALTY = 1.2
-
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 6. MERGE  — video version audio settings (legacy, see section 9)
+# 5. TTS + MUSIC  — ACE-Step 1.5 via ComfyUI
+# Script becomes lyrics, ACE-Step generates vocals + background music
 # ─────────────────────────────────────────────────────────────────────────────
 
-ORIGINAL_AUDIO_VOLUME = 0.3  # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
-# Volume level for original audio in mixed version
+COMFYUI_URL = "http://127.0.0.1:8000"
+COMFYUI_WORKFLOW_PATH = os.path.join(PROJECT_ROOT, "workflows", "ace_step_music.json")
+
+# Music generation defaults
+MUSIC_STYLE = "epic cinematic ambient pop"  # Default style
+MUSIC_BPM = 120  # Beats per minute
+MUSIC_KEYSCALE = "C minor"  # Musical key
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 6. MERGE  — video version audio settings
+# ─────────────────────────────────────────────────────────────────────────────
+
+ORIGINAL_AUDIO_VOLUME = 0.3  # 0.0 to 1.0 (volume in mixed version)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -83,7 +81,6 @@ ORIGINAL_AUDIO_VOLUME = 0.3  # 0.0 to 1.0 (e.g., 0.1 = 10% volume)
 # ─────────────────────────────────────────────────────────────────────────────
 
 # CUSTOM SHORTS FONTS (Local TTF files in fonts/ directory):
-# Anton natively renders smaller than other fonts, so we give it a larger size to match visually.
 SUBTITLE_FONTS = [
     {"name": "Anton", "size": 120},
     {"name": "Bebas Neue", "size": 120},
@@ -102,37 +99,15 @@ SUBTITLE_Y_OFFSET = 250
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 5.5 BACKGROUND MUSIC  — ACE-Step 1.5 via ComfyUI
+# PYTHON INTERPRETERS  — unified venv
 # ─────────────────────────────────────────────────────────────────────────────
-
-COMFYUI_URL = "http://127.0.0.1:8000"
-COMFYUI_API_URL = f"{COMFYUI_URL}/api"
-COMFYUI_WORKFLOW_PATH = os.path.join(PROJECT_ROOT, "workflows", "ace_step_music.json")
-
-# Music generation settings
-MUSIC_STYLE = "epic cinematic"  # Default style (can be overridden by LLM)
-MUSIC_DURATION_FACTOR = 1.2  # Music should be ~20% longer than video to allow trimming
-MUSIC_VOLUME = 0.25  # Background music volume (0.0 to 1.0)
-MUSIC_FADE_IN = 0.5  # Fade in duration in seconds
-MUSIC_FADE_OUT = 1.0  # Fade out duration in seconds
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# PYTHON INTERPRETERS  — one per virtual environment
-# Only change if your conda / venv paths differ from the defaults.
-# ─────────────────────────────────────────────────────────────────────────────
-
 
 UNIFIED_PYTHON = os.path.join(PROJECT_ROOT, ".venv", "bin", "python")
-
-CHATTERBOX_PYTHON = UNIFIED_PYTHON
 FASTER_WHISPER_PYTHON = UNIFIED_PYTHON
-UPLOADER_PYTHON = UNIFIED_PYTHON
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 9. UPLOADER SETTINGS
-# Note: Upload routing config moved to upload_config.py
 # ─────────────────────────────────────────────────────────────────────────────
 
 YOUTUBE_SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
