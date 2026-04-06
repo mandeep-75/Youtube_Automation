@@ -1,32 +1,30 @@
-# Unified venv requirements
-# All dependencies in one venv
+# Unified venv requirements - all dependencies in one venv
 
 # === Core ML/TTS ===
-chatterbox-tts==0.1.6
-torch==2.6.0
-torchaudio==2.6.0
-setuptools
+chatterbox-tts
+torch
+torchaudio
 
 # === Transcription ===
-faster-whisper==1.1.1
-ctranslate2==4.7.1
+faster-whisper
+ctranslate2
 
 # === Vision & LLM ===
 ollama
 tqdm
 
 # === Video/Image Processing ===
-opencv-python==4.11.0.86
+opencv-python
 Pillow
-imageio-ffmpeg==0.5.1
+imageio-ffmpeg
 
 # === Audio Processing ===
-librosa==0.11.0
-soundfile==0.13.1
+librosa
+soundfile
 
 # === Subtitles ===
-pysubs2==1.7.2
-srt==3.5.3
+pysubs2
+srt
 
 # === Uploaders ===
 google-api-python-client
@@ -36,8 +34,12 @@ instagrapi
 playwright
 
 # === Utilities ===
-requests==2.32.5
+requests
 python-dotenv
 
 # === FFmpeg (install separately) ===
 # brew install ffmpeg
+
+# === Linting/Type checking (for development) ===
+ruff
+mypy
