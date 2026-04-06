@@ -121,6 +121,8 @@ def step4_llm_script(
         f"{duration:.2f}",
         "--wps",
         str(config.LLM_WORDS_PER_SECOND),
+        "--music-style",
+        config.MUSIC_STYLE,
         "--model",
         config.LLM_MODEL,
         "--ollama-url",
@@ -136,7 +138,7 @@ def step5_tts(script_file: str, voice_output: str, duration: float):
     Generate narration with background music using ACE-Step 1.5.
     The script becomes the lyrics, and ACE-Step generates vocals + music.
     """
-    print(f"🎵 Generating narration with ACE-Step 1.5...")
+    print("🎵 Generating narration with ACE-Step 1.5...")
     cmd = [
         config.UNIFIED_PYTHON,
         "./src/steps/step5_tts.py",
@@ -146,7 +148,8 @@ def step5_tts(script_file: str, voice_output: str, duration: float):
         f"{duration:.2f}",
         "--output",
         voice_output,
-        "--infer-style",
+        "--style",
+        config.MUSIC_STYLE,
         "--comfyui-url",
         config.COMFYUI_URL,
     ]
@@ -285,13 +288,8 @@ def run_pipeline(video_path: str):
     script_file = os.path.join(out_dir, "script.txt")
     voice_file = os.path.join(out_dir, "voice.wav")
 
-    video_mixed = os.path.join(out_dir, "video_mixed.mp4")
     video_simple = os.path.join(out_dir, "video_simple.mp4")
-
-    srt_mixed = os.path.join(out_dir, "subtitles_mixed.srt")
     srt_simple = os.path.join(out_dir, "subtitles_simple.srt")
-
-    final_video_mixed = os.path.join(out_dir, "final_video_mixed.mp4")
     final_video_simple = os.path.join(out_dir, "final_video_simple.mp4")
 
     print(f"\n🚀 Processing video: {video_path}")
@@ -316,29 +314,18 @@ def run_pipeline(video_path: str):
     step5_tts(script_file, voice_file, duration)
 
     print("\n─── Step 6  Merge audio onto video ────────────────────────────")
-    print("   [Mixed version] Original + ACE audio...")
-    step6_merge_av(video_path, voice_file, video_mixed, mix_audio=True)
-
-    print("   [Simple version] ACE audio only...")
     step6_merge_av(video_path, voice_file, video_simple, mix_audio=False)
 
     print("\n─── Step 7  Transcribe for subtitles ─────────────────────────")
-    print("   [Mixed version] Transcribing...")
-    step7_transcribe_subtitles(video_mixed, srt_mixed)
-    print("   [Simple version] Transcribing...")
     step7_transcribe_subtitles(video_simple, srt_simple)
 
     print("\n─── Step 8  Burn subtitles ───────────────────────────────────")
-    print("   [Mixed version] Burning subtitles...")
-    step8_burn_subtitles(video_mixed, srt_mixed, final_video_mixed)
-    print("   [Simple version] Burning subtitles...")
     step8_burn_subtitles(video_simple, srt_simple, final_video_simple)
 
-    cleanup_intermediate_files(video_mixed, video_simple, srt_mixed, srt_simple)
+    cleanup_intermediate_files(video_simple, srt_simple)
 
     print(f"\n✅ Finished processing: {video_path}")
-    print(f"   Mixed video:  {final_video_mixed}")
-    print(f"   Simple video: {final_video_simple}")
+    print(f"   Output: {final_video_simple}")
 
 
 if __name__ == "__main__":

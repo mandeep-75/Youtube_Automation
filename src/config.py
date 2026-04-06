@@ -64,9 +64,14 @@ COMFYUI_URL = "http://127.0.0.1:8000"
 COMFYUI_WORKFLOW_PATH = os.path.join(PROJECT_ROOT, "workflows", "ace_step_music.json")
 
 # Music generation defaults
-MUSIC_STYLE = "epic cinematic ambient pop"  # Default style
+MUSIC_STYLE = """A powerful yet smooth modern ambient-pop track with a pleasant and uplifting atmosphere. Driven by warm ambient synth pads, a deep pulsing bassline, and crisp electronic drums instead of distorted guitars. The female vocal is soft and expressive, floating above the music with a dreamy tone. The track builds gradually from calm tension into a bright, emotional release, blending lo-fi textures and atmospheric sounds to create a relaxed but engaging listening experience."""  # Default style
 MUSIC_BPM = 120  # Beats per minute
 MUSIC_KEYSCALE = "C minor"  # Musical key
+
+# ComfyUI output directory where generated audio files are saved
+COMFYUI_OUTPUT_DIR = os.environ.get(
+    "COMFYUI_OUTPUT_DIR", "/Users/mandeep/Downloads/comfy/output"
+)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
