@@ -70,7 +70,13 @@ COMFYUI_URL = "http://127.0.0.1:8000"
 COMFYUI_WORKFLOW_PATH = os.path.join(PROJECT_ROOT, "workflows", "ace_step_music.json")
 
 # Music generation defaults
-MUSIC_STYLE = """A powerful yet smooth modern ambient-pop track with a pleasant and uplifting atmosphere. Driven by warm ambient synth pads, a deep pulsing bassline, and crisp electronic drums instead of distorted guitars. The female vocal is soft and expressive, floating above the music with a dreamy tone. The track builds gradually from calm tension into a bright, emotional release, blending lo-fi textures and atmospheric sounds to create a relaxed but engaging listening experience."""
+MUSIC_STYLE = """A smooth but energetic modern ambient-pop / rap track with a pleasant and uplifting atmosphere.
+Driven by warm ambient synth pads, a deep pulsing bassline, and crisp electronic drums instead of distorted guitars.
+The vocals are clear and prominent, featuring a female lead who alternates between melodic singing and rhythmic rap
+verses. The rap delivery is confident and smooth, sitting tightly with the beat while the sung sections feel airy
+and emotional. The track gradually builds from a calm, atmospheric intro into a brighter and more powerful chorus,
+blending lo-fi textures, atmospheric sound design, and modern hip-hop rhythms to create a relaxed but engaging
+listening experience."""
 MUSIC_BPM = 120
 MUSIC_KEYSCALE = "C minor"
 
