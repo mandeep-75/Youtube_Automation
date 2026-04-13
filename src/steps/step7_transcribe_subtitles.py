@@ -16,6 +16,7 @@ DEFAULT_COMPUTE = "int8"
 
 try:
     import imageio_ffmpeg
+
     FFMPEG_BIN = imageio_ffmpeg.get_ffmpeg_exe()
 except Exception:
     FFMPEG_BIN = shutil.which("ffmpeg") or "ffmpeg"
@@ -36,15 +37,19 @@ def has_audio(video_path: str) -> bool:
         result = subprocess.run(
             [
                 ffprobe,
-                "-v", "error",
-                "-select_streams", "a",
-                "-show_entries", "stream=codec_type",
-                "-of", "csv=p=0",
-                video_path
+                "-v",
+                "error",
+                "-select_streams",
+                "a",
+                "-show_entries",
+                "stream=codec_type",
+                "-of",
+                "csv=p=0",
+                video_path,
             ],
             capture_output=True,
             text=True,
-            timeout=15
+            timeout=15,
         )
 
         return bool(result.stdout.strip())
@@ -59,20 +64,19 @@ def extract_audio_wav(video_path: str, wav_path: str) -> None:
     cmd = [
         FFMPEG_BIN,
         "-y",
-        "-i", video_path,
+        "-i",
+        video_path,
         "-vn",
-        "-ac", "1",
-        "-ar", "16000",
-        "-f", "wav",
-        wav_path
+        "-ac",
+        "1",
+        "-ar",
+        "16000",
+        "-f",
+        "wav",
+        wav_path,
     ]
 
-    result = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        timeout=300
-    )
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
 
     if result.returncode != 0:
         raise RuntimeError(result.stderr)
@@ -100,7 +104,6 @@ def clean_segments(words):
     prev_end = None
 
     for w in words:
-
         text = w["text"].strip()
 
         if not text:
@@ -119,11 +122,7 @@ def clean_segments(words):
             if gap > 5:
                 continue
 
-        cleaned.append({
-            "start": start,
-            "end": end,
-            "text": text
-        })
+        cleaned.append({"start": start, "end": end, "text": text})
 
         prev_end = end
 
@@ -136,7 +135,7 @@ def transcribe(
     device: str = DEFAULT_DEVICE,
     compute_type: str = DEFAULT_COMPUTE,
     language=None,
-    beam_size: int = 5
+    beam_size: int = 5,
 ):
 
     if not has_audio(video_path):
@@ -147,24 +146,16 @@ def transcribe(
     wav_path = os.path.join(tmp_dir, "audio.wav")
 
     try:
-
         print("Extracting audio...")
         extract_audio_wav(video_path, wav_path)
 
         print("Loading model:", model_size)
-        model = WhisperModel(
-            model_size,
-            device=device,
-            compute_type=compute_type
-        )
+        model = WhisperModel(model_size, device=device, compute_type=compute_type)
 
         print("Transcribing...")
 
         segments_iter, info = model.transcribe(
-            wav_path,
-            language=language,
-            beam_size=beam_size,
-            word_timestamps=True
+            wav_path, language=language, beam_size=beam_size, word_timestamps=True
         )
 
         print("Language:", info.language)
@@ -172,40 +163,30 @@ def transcribe(
         words = []
 
         for segment in segments_iter:
-
             if segment.words:
-
                 for word in segment.words:
-
                     text = word.word.strip()
 
                     # remove punctuation only
                     if text in {".", ",", "!", "?"}:
                         continue
 
-                    words.append({
-                        "start": word.start,
-                        "end": word.end,
-                        "text": text
-                    })
+                    words.append({"start": word.start, "end": word.end, "text": text})
 
             else:
-
                 text = segment.text.strip()
 
                 if text:
-                    words.append({
-                        "start": segment.start,
-                        "end": segment.end,
-                        "text": text
-                    })
+                    words.append(
+                        {"start": segment.start, "end": segment.end, "text": text}
+                    )
 
         print("Words detected:", len(words))
 
         return words
 
     finally:
-
+        del model
         shutil.rmtree(tmp_dir, ignore_errors=True)
         gc.collect()
 
@@ -215,15 +196,12 @@ def segments_to_srt(segments: List[dict[str, Any]], srt_path: str) -> None:
     lines = []
 
     for i, seg in enumerate(segments, start=1):
-
         start_ts = seconds_to_srt(seg["start"])
         end_ts = seconds_to_srt(seg["end"])
 
         text = seg["text"]
 
-        lines.append(
-            f"{i}\n{start_ts} --> {end_ts}\n{text}\n"
-        )
+        lines.append(f"{i}\n{start_ts} --> {end_ts}\n{text}\n")
 
     with open(srt_path, "w", encoding="utf-8") as f:
         f.write("\n\n".join(lines))
@@ -237,7 +215,7 @@ def transcribe_and_export_srt(
     language=None,
     srt_path=None,
     beam_size=5,
-    compute_type=DEFAULT_COMPUTE
+    compute_type=DEFAULT_COMPUTE,
 ):
 
     segments = transcribe(
@@ -245,13 +223,12 @@ def transcribe_and_export_srt(
         model_size=model_size,
         language=language,
         beam_size=beam_size,
-        compute_type=compute_type
+        compute_type=compute_type,
     )
 
     segments = clean_segments(segments)
 
     if srt_path:
-
         os.makedirs(os.path.dirname(srt_path) or ".", exist_ok=True)
 
         segments_to_srt(segments, srt_path)
@@ -262,7 +239,6 @@ def transcribe_and_export_srt(
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--video", required=True)
@@ -280,5 +256,5 @@ if __name__ == "__main__":
         language=args.language,
         srt_path=args.srt,
         beam_size=args.beam_size,
-        compute_type=args.compute_type
+        compute_type=args.compute_type,
     )

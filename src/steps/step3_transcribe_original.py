@@ -17,6 +17,7 @@ if os.path.isfile(_LOCAL_FFMPEG) and os.access(_LOCAL_FFMPEG, os.X_OK):
 else:
     try:
         import imageio_ffmpeg
+
         FFMPEG_BIN = imageio_ffmpeg.get_ffmpeg_exe()
     except Exception:
         FFMPEG_BIN = shutil.which("ffmpeg") or "ffmpeg"
@@ -28,9 +29,21 @@ def _has_audio(video_path: str) -> bool:
         ffprobe = shutil.which("ffprobe") or "ffprobe"
     try:
         result = subprocess.run(
-            [ffprobe, "-v", "error", "-select_streams", "a",
-             "-show_entries", "stream=codec_type", "-of", "csv=p=0", video_path],
-            capture_output=True, text=True, timeout=15,
+            [
+                ffprobe,
+                "-v",
+                "error",
+                "-select_streams",
+                "a",
+                "-show_entries",
+                "stream=codec_type",
+                "-of",
+                "csv=p=0",
+                video_path,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=15,
         )
         return bool(result.stdout.strip())
     except Exception:
@@ -39,8 +52,18 @@ def _has_audio(video_path: str) -> bool:
 
 def _extract_audio(video_path: str, wav_path: str) -> None:
     cmd = [
-        FFMPEG_BIN, "-y", "-i", video_path,
-        "-vn", "-ac", "1", "-ar", "16000", "-f", "wav", wav_path,
+        FFMPEG_BIN,
+        "-y",
+        "-i",
+        video_path,
+        "-vn",
+        "-ac",
+        "1",
+        "-ar",
+        "16000",
+        "-f",
+        "wav",
+        wav_path,
     ]
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     if result.returncode != 0:
@@ -62,7 +85,9 @@ def transcribe_to_txt(
     compute_type: str = "int8",
 ) -> str:
     if not _has_audio(video_path):
-        print("[transcribe_original] ⚠️  No audio stream found – writing empty transcript.")
+        print(
+            "[transcribe_original] ⚠️  No audio stream found – writing empty transcript."
+        )
         os.makedirs(os.path.dirname(os.path.abspath(output_path)) or ".", exist_ok=True)
         with open(output_path, "w", encoding="utf-8") as f:
             pass  # Create empty file
@@ -84,8 +109,10 @@ def transcribe_to_txt(
             beam_size=beam_size,
             word_timestamps=False,
         )
-        print(f"[transcribe_original] Detected language: {info.language} "
-              f"({info.language_probability:.2f})")
+        print(
+            f"[transcribe_original] Detected language: {info.language} "
+            f"({info.language_probability:.2f})"
+        )
 
         lines = []
         for seg in segments_iter:
@@ -96,21 +123,24 @@ def transcribe_to_txt(
         with open(output_path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines) + "\n")
 
-        print(f"[transcribe_original] ✅ Transcript saved → {output_path} ({len(lines)} segments)")
+        print(
+            f"[transcribe_original] ✅ Transcript saved → {output_path} ({len(lines)} segments)"
+        )
         return output_path
 
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
+        del model
         gc.collect()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--video",        required=True)
-    parser.add_argument("--output",       required=True)
-    parser.add_argument("--model",        default="base")
-    parser.add_argument("--language",     default=None)
-    parser.add_argument("--beam-size",    type=int, default=5)
+    parser.add_argument("--video", required=True)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--model", default="base")
+    parser.add_argument("--language", default=None)
+    parser.add_argument("--beam-size", type=int, default=5)
     parser.add_argument("--compute-type", default="int8")
     args = parser.parse_args()
 

@@ -31,9 +31,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 from src import config
 
 # Validate environment
-if not os.path.isfile(config.FASTER_WHISPER_PYTHON):
+if not os.path.isfile(config.PIPELINE_PYTHON):
     raise FileNotFoundError(
-        f"\n[pipeline] faster_whisper venv not found at:\n  {config.FASTER_WHISPER_PYTHON}\n"
+        f"\n[pipeline] venv not found at:\n  {config.PIPELINE_PYTHON}\n"
         "Please ensure the virtual environment is set up correctly."
     )
 
@@ -91,7 +91,7 @@ def step1_extract_frames(video_path: str, frames_dir: str) -> str:
     manifest_path = os.path.join(frames_dir, "manifest.json")
     subprocess.run(
         [
-            config.UNIFIED_PYTHON,
+            config.PIPELINE_PYTHON,
             "./src/steps/step1_extract_frames.py",
             "--video-file",
             video_path,
@@ -108,7 +108,6 @@ def step1_extract_frames(video_path: str, frames_dir: str) -> str:
 def step2_vision_describe(
     manifest_path: str,
     output_file: str,
-    hallucination_check: bool = False,
 ) -> None:
     """
     Describe frames using vision-language model.
@@ -116,10 +115,9 @@ def step2_vision_describe(
     Args:
         manifest_path: Path to frames manifest
         output_file: Where to save frame descriptions
-        hallucination_check: Enable hallucination detection
     """
     cmd = [
-        config.UNIFIED_PYTHON,
+        config.PIPELINE_PYTHON,
         "./src/steps/step2_qwen_vl.py",
         "--manifest",
         manifest_path,
@@ -134,8 +132,6 @@ def step2_vision_describe(
         "--context-window",
         str(config.VISION_CONTEXT_WINDOW),
     ]
-    if hallucination_check:
-        cmd.append("--hallucination-check")
     subprocess.run(cmd, check=True)
 
 
@@ -148,7 +144,7 @@ def step3_transcribe_original(video_path: str, output_file: str) -> None:
         output_file: Where to save transcription
     """
     cmd = [
-        config.FASTER_WHISPER_PYTHON,
+        config.PIPELINE_PYTHON,
         "./src/steps/step3_transcribe_original.py",
         "--video",
         video_path,
@@ -184,7 +180,7 @@ def step4_llm_script(
         use_ace_music: If True, generate lyrics with section markers
     """
     cmd = [
-        config.UNIFIED_PYTHON,
+        config.PIPELINE_PYTHON,
         "./src/steps/step4_llm_script.py",
         "--input",
         frames_file,
@@ -223,7 +219,7 @@ def step5_ace_music(script_file: str, voice_output: str, duration: float) -> Non
     """
     print("🎵 Generating narration with ACE-Step 1.5 (vocals + music)...")
     cmd = [
-        config.UNIFIED_PYTHON,
+        config.PIPELINE_PYTHON,
         "./src/steps/step5_ace_music.py",
         "--script",
         script_file,
@@ -241,17 +237,17 @@ def step5_ace_music(script_file: str, voice_output: str, duration: float) -> Non
 
 def step5_tts(script_file: str, voice_output: str, duration: float) -> None:
     """
-    Generate narration using Chatterbox TTS (voice only, no music).
+    Generate narration using MLX Qwen3-TTS (voice only, no music).
 
     Args:
         script_file: Path to the script file
         voice_output: Where to save generated audio
         duration: Target duration in seconds (used for progress indication)
     """
-    print("🎤 Generating narration with Piper TTS...")
+    print("🎤 Generating narration with MLX Qwen3-TTS...")
     cmd = [
-        config.UNIFIED_PYTHON,
-        "./src/steps/step5_tts.py",
+        config.PIPELINE_PYTHON,
+        "./src/steps/step5_mlx_tts.py",
         "--script",
         script_file,
         "--duration",
@@ -281,7 +277,7 @@ def step6_merge_av(
         mix_audio = config.MERGE_MIX_AUDIO
 
     cmd = [
-        config.FASTER_WHISPER_PYTHON,
+        config.PIPELINE_PYTHON,
         "./src/steps/step6_merge_av.py",
         "--video",
         video_path,
@@ -306,7 +302,7 @@ def step7_transcribe_subtitles(video_path: str, srt_path: str) -> None:
         srt_path: Where to save SRT subtitles
     """
     cmd = [
-        config.FASTER_WHISPER_PYTHON,
+        config.PIPELINE_PYTHON,
         "./src/steps/step7_transcribe_subtitles.py",
         "--video",
         video_path,
@@ -351,7 +347,7 @@ def step8_burn_subtitles(
 
     print(f"🔤 Using subtitle font: {font_name} (Size: {font_size})")
     cmd = [
-        config.FASTER_WHISPER_PYTHON,
+        config.PIPELINE_PYTHON,
         "./src/steps/step8_burn_subtitles.py",
         video_path,
         subtitle_path,
@@ -465,9 +461,7 @@ def run_pipeline(video_path: str, use_ace_music: bool = None) -> None:
     manifest = step1_extract_frames(video_path, frames_dir)
 
     print("\n─── Step 2  Vision frame descriptions ────────────────────────")
-    step2_vision_describe(
-        manifest, frames_file, hallucination_check=config.VISION_HALLUCINATION_CHECK
-    )
+    step2_vision_describe(manifest, frames_file)
 
     print("\n─── Step 3  Transcribe original audio ────────────────────────")
     step3_transcribe_original(video_path, transcript_file)
@@ -483,7 +477,9 @@ def run_pipeline(video_path: str, use_ace_music: bool = None) -> None:
         step5_tts(script_file, voice_file, duration)
 
     print("\n─── Step 6  Merge audio onto video ────────────────────────────")
-    step6_merge_av(video_path, voice_file, video_simple, mix_audio=False)
+    step6_merge_av(
+        video_path, voice_file, video_simple, mix_audio=config.MERGE_MIX_AUDIO
+    )
 
     print("\n─── Step 7  Transcribe for subtitles ─────────────────────────")
     step7_transcribe_subtitles(video_simple, srt_simple)
@@ -505,13 +501,12 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    python pipeline.py video.mp4                      # Use ACE music (default)
-    python pipeline.py --ace-music video.mp4          # Explicitly use ACE music
-    python pipeline.py --use-tts video.mp4            # Use Chatterbox TTS
+    python pipeline.py video.mp4                      # Use MLX Qwen3-TTS (default)
+    python pipeline.py --ace-music video.mp4          # Use ACE-Step 1.5 music
 
 Audio Modes:
-    --ace-music   ACE-Step 1.5: vocals + background music (default)
-    --use-tts     Chatterbox TTS: voice narration only
+    --ace-music   ACE-Step 1.5: vocals + background music
+    --use-tts     MLX Qwen3-TTS: voice narration only (default)
         """,
     )
     parser.add_argument(
@@ -529,10 +524,21 @@ Audio Modes:
         "--use-tts",
         action="store_true",
         default=None,
-        help="Use Chatterbox TTS for voice-only narration",
+        help="Use MLX Qwen3-TTS for voice-only narration",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        default=False,
+        help="Enable debug mode (limits frame extraction, faster testing)",
     )
 
     args = parser.parse_args()
+
+    # Enable debug mode if flag is set (overrides config)
+    if args.debug:
+        config.DEBUG_MODE = True
+        print("🐛 Debug mode enabled")
 
     # Determine audio mode from flags
     # --use-tts overrides --ace-music if both specified
