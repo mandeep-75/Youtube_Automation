@@ -1,0 +1,1 @@
+ Look at the edge of the dynamic island cut out.  This is the Promotion XDR display at the sub-pixel level.  You are looking at the individual red, green, and blue sub-pixels,  and the entire array is overlaid with a separate grid  that is almost certainly the touch sensor.  They have perfectly terminated the pixel array at the edge.  No wasted components.

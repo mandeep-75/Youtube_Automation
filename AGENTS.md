@@ -121,7 +121,8 @@ youtube_automation/
 │   │   ├── step2_qwen_vl.py
 │   │   ├── step3_transcribe_original.py
 │   │   ├── step4_llm_script.py
-│   │   ├── step5_tts.py
+│   │   ├── step5_mlx_tts.py        # MLX Qwen3-TTS (voice only)
+│   │   ├── step5_ace_music.py     # ACE-Step 1.5 (vocals + music)
 │   │   ├── step6_merge_av.py
 │   │   ├── step7_transcribe_subtitles.py
 │   │   └── step8_burn_subtitles.py
@@ -149,7 +150,7 @@ youtube_automation/
 ## Key Dependencies
 - **Vision**: `ollama`, `qwen3.5:0.8b` model
 - **Transcription**: `faster-whisper` (base model)
-- **TTS**: `rho-tts[qwen]` (Qwen3-TTS)
+- **TTS**: `mlx-audio` (MLX Qwen3-TTS for Apple Silicon)
 - **Video**: `opencv-python`, `Pillow`, `imageio-ffmpeg`
 - **Upload**: `google-api-python-client`, `instagrapi`
 - **LLM**: `ollama` with `qwen3.5:9b` model

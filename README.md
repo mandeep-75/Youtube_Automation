@@ -6,7 +6,7 @@
 
 - **Vision**: Ollama + Qwen3.5:0.8b for frame analysis
 - **LLM**: Ollama + Qwen3.5:9b for script generation
-- **TTS**: Chatterbox TTS for AI voice narration
+- **TTS**: MLX Qwen3-TTS (Apple Silicon) for AI voice narration
 - **Transcription**: Faster-Whisper (base model)
 - **Video Processing**: OpenCV, Pillow, imageio-ffmpeg, FFmpeg
 - **Upload**: google-api-python-client (YouTube), instagrapi (Instagram)

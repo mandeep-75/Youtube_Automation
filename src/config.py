@@ -19,7 +19,7 @@ load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 OLLAMA_URL = "http://localhost:11434"
 
 # Debug mode for faster testing
-DEBUG_MODE = False  # Set to True to enable debug features
+DEBUG_MODE = True # Set to True to enable debug features
 DEBUG_MAX_FRAMES = 2  # Maximum frames to extract in step 1 (only when DEBUG_MODE=True)
 
 # Use direct imports instead of subprocess for pipeline steps
@@ -31,7 +31,7 @@ USE_DIRECT_IMPORTS = False  # Set to True for faster execution
 # 1. FRAME EXTRACTION
 # ─────────────────────────────────────────────────────────────────────────────
 
-FRAME_INTERVAL = "1.0"  # seconds between extracted frames (lower = more frames)
+FRAME_INTERVAL = "2.0"  # seconds between extracted frames (lower = more frames)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

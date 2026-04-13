@@ -1,8 +1,8 @@
 # Unified venv requirements - all dependencies in one venv
 
 # === Core ML/TTS ===
-piper-onnx
 huggingface-hub
+mlx-audio
 
 # === Transcription ===
 faster-whisper
