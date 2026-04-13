@@ -18,14 +18,16 @@ Python-based video processing pipeline that converts raw videos into narrated, s
 # Run full pipeline manually
 .venv/bin/python pipeline.py /path/to/video.mp4
 
+# Run with debug mode (limits frames, faster testing)
+.venv/bin/python pipeline.py --debug /path/to/video.mp4
+
 # Run a single step
 .venv/bin/python -m src.steps.step1_extract_frames --video-file video.mp4 --interval 2.0 --output-dir outputs/frames
 
 # Note: Pipeline steps use config.PIPELINE_PYTHON interpreter
 
 # Watch logs
-tail -f logs/pipeline.log
-tail -f logs/error.log
+tail -f logs/pipeline_YYYYMMDD.log
 ```
 
 No pytest configuration exists. Tests are not yet set up.
@@ -116,6 +118,9 @@ youtube_automation/
 │   ├── config.py           # All settings (edit this file)
 │   ├── upload_config.py    # Upload routing configuration
 │   ├── watcher.py          # Auto-detects & processes new videos
+│   ├── utils/              # Shared utilities
+│   │   ├── ffmpeg.py       # FFmpeg detection helpers
+│   │   └── logger.py       # Logging utilities
 │   ├── steps/              # 8-step pipeline
 │   │   ├── step1_extract_frames.py
 │   │   ├── step2_qwen_vl.py
@@ -127,23 +132,17 @@ youtube_automation/
 │   │   ├── step7_transcribe_subtitles.py
 │   │   └── step8_burn_subtitles.py
 │   └── uploaders/          # YouTube & Instagram uploaders
-│       ├── yt_uploader.py
-│       ├── ig_uploader.py
-│       ├── yt_worker.py    # YouTube upload worker
-│       ├── ig_worker.py   # Instagram upload worker
-│       └── logger.py      # Logging utility
 ├── yt_inbox/              # Drop raw videos here (watched by watcher.py)
-│   ├── inputs/             # Raw videos
 │   ├── outputs/            # Processed videos (auto-created)
 │   │   └── <video_name>/
 │   ├── processed/           # Original videos after processing
 │   └── failed/             # Videos that failed
 ├── upload_queue/           # Videos ready for upload
 ├── uploaded/              # Successfully uploaded videos
-├── logs/                   # Pipeline and upload logs
+├── logs/                   # Pipeline logs (pipeline_YYYYMMDD.log)
 ├── fonts/                  # Subtitle font files (TTF)
-├── samples/                # TTS reference audio (e.g., me.mp3)
-├── tools/                  # Local tools (e.g., ffmpeg)
+├── samples/                # TTS reference audio (me.mp3)
+├── tools/                  # Local tools (ffmpeg)
 └── requirements.txt        # All dependencies
 ```
 
@@ -187,3 +186,29 @@ for chunk in stream:
         response_text.append(token)
 result = "".join(response_text).strip()
 ```
+
+## Agent-Specific Notes
+
+### Import Style
+Always use `from src import config` in step scripts—not `from config import`:
+```python
+# ✅ Correct (used throughout project)
+from src import config
+
+# ❌ Wrong (will fail at runtime)
+from config import SOME_VAR
+```
+
+### Debug Mode
+Two ways to enable:
+- CLI flag: `python pipeline.py --debug video.mp4`
+- Config: set `DEBUG_MODE = True` in `src/config.py`
+
+### Output Filenames
+Pipeline creates `final_video_ace.mp4` or `final_video_tts.mp4` (not `mixed`/`simple`).
+
+### Config Matters
+- `FRAME_INTERVAL` defaults to 2.0 seconds
+- `DEBUG_MAX_FRAMES` limits extracted frames in debug mode (currently 2)
+- `USE_ACE_MUSIC` toggles between ACE-Step (True) and MLX TTS (False)
+- `DEBUG_MODE` enabled by default for faster testing
