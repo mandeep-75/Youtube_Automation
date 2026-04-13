@@ -30,7 +30,7 @@ Step 8 → Burn subtitles into video
 - **Auto-upload**: Runs on boot + every 24 hours (one video per day)
 - **YouTube + Instagram**: Upload to both platforms
 - **Original audio option**: Mix original audio with TTS
-- **Hallucination detection**: Validates frame descriptions against images
+- **Debug mode**: Faster testing with limited frame extraction
 
 ## Quick Start
 
@@ -55,6 +55,9 @@ python3 -m venv .venv
 
 # Process a video manually
 .venv/bin/python pipeline.py /path/to/video.mp4
+
+# Process with debug mode (faster, for testing)
+.venv/bin/python pipeline.py --debug /path/to/video.mp4
 
 # Auto-upload
 bash scripts/auto_service.sh
