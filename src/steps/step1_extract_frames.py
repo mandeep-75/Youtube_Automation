@@ -8,7 +8,10 @@ from datetime import timedelta
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from config import DEBUG_MODE, DEBUG_MAX_FRAMES
+from src import config
+
+DEBUG_MODE = config.DEBUG_MODE
+DEBUG_MAX_FRAMES = config.DEBUG_MAX_FRAMES
 
 
 def extract_frames(video_path: str, interval_sec: float, output_dir: str) -> str:
