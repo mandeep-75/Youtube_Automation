@@ -18,12 +18,11 @@ load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
 OLLAMA_URL = "http://localhost:11434"
 
-# Debug mode for faster testing
-DEBUG_MODE = True # Set to True to enable debug features
+# Debug mode for faster testing (set False for production)
+DEBUG_MODE = True
 DEBUG_MAX_FRAMES = 2  # Maximum frames to extract in step 1 (only when DEBUG_MODE=True)
 
 # Use direct imports instead of subprocess for pipeline steps
-# Direct imports are faster but require all steps to be importable
 USE_DIRECT_IMPORTS = False  # Set to True for faster execution
 
 
@@ -72,7 +71,6 @@ LLM_WORDS_PER_SECOND = 4  # Target words per second for narration
 USE_ACE_MUSIC = False  # Default: use MLX Qwen3-TTS
 
 # ==== ACE-Step 1.5 Settings (when USE_ACE_MUSIC = True) ====
-
 COMFYUI_URL = "http://127.0.0.1:8000"
 COMFYUI_WORKFLOW_PATH = os.path.join(PROJECT_ROOT, "workflows", "ace_step_music.json")
 
@@ -92,25 +90,19 @@ COMFYUI_OUTPUT_DIR = os.environ.get(
     "COMFYUI_OUTPUT_DIR", "/Users/mandeep/Downloads/comfy/output"
 )
 
-# ==== Qwen3-TTS Settings (when USE_ACE_MUSIC = False) ====
-# DEPRECATED: Using Piper TTS instead (see below)
-
 # ==== MLX Qwen3-TTS Settings ====
 # Apple Silicon optimized TTS with voice cloning
-# Model: mlx-community/Qwen3-TTS-12Hz-1.7B-Base-8bit
 MLX_TTS_MODEL = "mlx-community/Qwen3-TTS-12Hz-1.7B-Base-8bit"
 MLX_TTS_REF_AUDIO = os.path.join(PROJECT_ROOT, "samples", "me.mp3")
 MLX_TTS_SAMPLE_RATE = 24000  # Default output sample rate
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 6. MERGE  — video version audio settings
+# 6. MERGE  — video + audio settings
 # ─────────────────────────────────────────────────────────────────────────────
 
 # If True, mix generated audio with original video audio
-# If False, replace original audio entirely
-MERGE_MIX_AUDIO = False  # Default to False for clean output
-
+MERGE_MIX_AUDIO = False
 ORIGINAL_AUDIO_VOLUME = 0.3  # 0.0 to 1.0 (volume when mixing)
 
 
