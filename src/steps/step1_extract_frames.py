@@ -1,8 +1,14 @@
 import os
+import sys
 import argparse
 import json
 import cv2
 from datetime import timedelta
+
+sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+from config import DEBUG_MODE, DEBUG_MAX_FRAMES
 
 
 def extract_frames(video_path: str, interval_sec: float, output_dir: str) -> str:
@@ -19,17 +25,22 @@ def extract_frames(video_path: str, interval_sec: float, output_dir: str) -> str
     frame_interval = max(int(fps * interval_sec), 1)
     entries = []
     frame_count = 0
-    saved_count = 0
 
     success, frame = cap.read()
     while success:
         if frame_count % frame_interval == 0:
+            # Debug mode: stop after max frames
+            if DEBUG_MODE and len(entries) >= DEBUG_MAX_FRAMES:
+                print(
+                    f"DEBUG: Stopping frame extraction at {DEBUG_MAX_FRAMES} frames (debug mode)"
+                )
+                break
+
             time_sec = frame_count / fps
             timestamp = str(timedelta(seconds=int(time_sec)))
-            frame_filename = os.path.join(output_dir, f"frame_{saved_count:05d}.png")
+            frame_filename = os.path.join(output_dir, f"frame_{frame_count:05d}.png")
             cv2.imwrite(frame_filename, frame)
             entries.append({"path": frame_filename, "timestamp": timestamp})
-            saved_count += 1
         success, frame = cap.read()
         frame_count += 1
 
@@ -39,7 +50,8 @@ def extract_frames(video_path: str, interval_sec: float, output_dir: str) -> str
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(entries, f, indent=2)
 
-    print(f"Extracted {saved_count} frames to '{output_dir}'")
+    mode_str = " (debug mode)" if DEBUG_MODE else ""
+    print(f"Extracted {len(entries)} frames to '{output_dir}'{mode_str}")
     print(f"Manifest saved to: {manifest_path}")
     return manifest_path
 

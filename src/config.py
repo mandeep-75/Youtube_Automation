@@ -18,6 +18,10 @@ load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
 OLLAMA_URL = "http://localhost:11434"
 
+# Debug mode for faster testing
+DEBUG_MODE = False  # Set to True to enable debug features
+DEBUG_MAX_FRAMES = 10  # Maximum frames to extract in step 1 (only when DEBUG_MODE=True)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 1. FRAME EXTRACTION
@@ -32,7 +36,6 @@ FRAME_INTERVAL = "1.0"  # seconds between extracted frames (lower = more frames)
 
 VISION_MODEL = "qwen3.5:0.8b"  # Fast VL model with vision support (873M params)
 VISION_CONTEXT_WINDOW = 5  # Number of previous frames to include as context
-VISION_HALLUCINATION_CHECK = False  # Enable hallucination detection in step 2
 
 VISION_PROMPT = """Describe this image in 200 words. Only describe what you actually see. No speculation. Focus on main subject and his work."""
 
@@ -61,8 +64,8 @@ LLM_WORDS_PER_SECOND = 4  # Target words per second for narration
 
 # Audio generation mode:
 # - True: Use ACE-Step 1.5 via ComfyUI (vocals + background music)
-# - False: Use Chatterbox TTS (voice only, no music)
-USE_ACE_MUSIC = False
+# - False: Use MLX Qwen3-TTS (voice only, no music)
+USE_ACE_MUSIC = False  # Default: use MLX Qwen3-TTS
 
 # ==== ACE-Step 1.5 Settings (when USE_ACE_MUSIC = True) ====
 
@@ -88,12 +91,12 @@ COMFYUI_OUTPUT_DIR = os.environ.get(
 # ==== Qwen3-TTS Settings (when USE_ACE_MUSIC = False) ====
 # DEPRECATED: Using Piper TTS instead (see below)
 
-# ==== Piper TTS Settings ====
-# Fast, lightweight, local neural text to speech
-# Voice models: https://github.com/rhasspy/piper#voices
-PIPER_VOICE = "en_US-joe-medium"
-PIPER_DOWNLOAD_DIR = os.path.join(PROJECT_ROOT, "models", "piper")
-PIPER_SAMPLE_RATE = 22050  # Default output sample rate
+# ==== MLX Qwen3-TTS Settings ====
+# Apple Silicon optimized TTS with voice cloning
+# Model: mlx-community/Qwen3-TTS-12Hz-1.7B-Base-8bit
+MLX_TTS_MODEL = "mlx-community/Qwen3-TTS-12Hz-1.7B-Base-8bit"
+MLX_TTS_REF_AUDIO = os.path.join(PROJECT_ROOT, "samples", "me.mp3")
+MLX_TTS_SAMPLE_RATE = 24000  # Default output sample rate
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -130,11 +133,10 @@ SUBTITLE_Y_OFFSET = 250
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PYTHON INTERPRETERS  — unified venv
+# PYTHON INTERPRETER  — unified venv
 # ─────────────────────────────────────────────────────────────────────────────
 
-UNIFIED_PYTHON = os.path.join(PROJECT_ROOT, ".venv", "bin", "python")
-FASTER_WHISPER_PYTHON = UNIFIED_PYTHON
+PIPELINE_PYTHON = os.path.join(PROJECT_ROOT, ".venv", "bin", "python")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
