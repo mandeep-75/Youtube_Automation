@@ -1,15 +1,11 @@
 """
-Step 5: TTS Generation using Chatterbox.
-Generates voice narration from script text using Chatterbox TTS.
-No background music - clean voice output only.
+Step 5: TTS Generation using Piper TTS.
+Fast, lightweight, local neural text to speech.
 """
 
 import argparse
 import os
 import sys
-
-import torchaudio as ta
-import torch
 
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -17,61 +13,90 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from src import config
 
 
+def download_voice(voice: str, download_dir: str) -> tuple[str, str]:
+    """Download voice model from HuggingFace if not present."""
+    model_path = os.path.join(download_dir, f"{voice}.onnx")
+    config_path = os.path.join(download_dir, f"{voice}.onnx.json")
+
+    if os.path.exists(model_path) and os.path.exists(config_path):
+        if os.path.getsize(model_path) > 1000:
+            return model_path, config_path
+
+    os.makedirs(download_dir, exist_ok=True)
+
+    parts = voice.split("-")
+    if len(parts) >= 4:
+        region = f"{parts[0]}_{parts[1]}"
+        voice_name = parts[2]
+        quality = parts[3] if len(parts) > 3 else "medium"
+    else:
+        region = "en_US"
+        voice_name = "joe"
+        quality = "medium"
+
+    path = f"en/{region}/{voice_name}/{quality}"
+
+    repo_id = "rhasspy/piper-voices"
+
+    print(f"[piper-tts] Downloading voice: {voice}")
+
+    from huggingface_hub import hf_hub_download
+
+    for ext in [".onnx", ".onnx.json"]:
+        filename = f"{voice}{ext}"
+        dest = os.path.join(download_dir, filename)
+        if not os.path.exists(dest) or os.path.getsize(dest) < 100:
+            print(f"[piper-tts] Downloading {filename}...")
+            downloaded = hf_hub_download(
+                repo_id=repo_id,
+                filename=f"{path}/{filename}",
+            )
+            import shutil
+
+            real_path = os.path.realpath(downloaded)
+            shutil.copy(real_path, dest)
+            print(f"[piper-tts] Saved to: {dest}")
+
+    return model_path, config_path
+
+
 def generate_tts(
     script_text: str,
     output_path: str,
-    audio_prompt_path: str = None,
-    voice: str = "female",
-    pitch: float = 0.0,
-    speed: float = 1.0,
-    emotion: str = "neutral",
+    voice: str = None,
+    download_dir: str = None,
 ) -> str:
     """
-    Generate TTS audio using Chatterbox Turbo.
-
-    Args:
-        script_text: Text to synthesize
-        output_path: Where to save the output audio
-        audio_prompt_path: Reference audio for voice cloning
-        voice: Voice preset (male, female, neutral)
-        pitch: Pitch adjustment (-1.0 to 1.0)
-        speed: Speech speed (0.5 to 2.0)
-        emotion: Emotion preset (neutral, happy, sad, angry, fearful)
-
-    Returns:
-        Path to the generated audio file
+    Generate TTS audio using Piper TTS via piper-onnx.
     """
-    from chatterbox.tts_turbo import ChatterboxTurboTTS
+    from piper_onnx import Piper
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"[chatterbox-tts] Using device: {device}")
+    voice = voice or config.PIPER_VOICE
+    download_dir = download_dir or config.PIPER_DOWNLOAD_DIR
 
-    print("[chatterbox-tts] Loading Chatterbox Turbo model...")
-    model = ChatterboxTurboTTS.from_pretrained(device=device)
+    print(f"[piper-tts] Using voice: {voice}")
+    print(f"[piper-tts] Download directory: {download_dir}")
 
-    # Use config audio prompt or default sample
-    if audio_prompt_path is None or not os.path.exists(audio_prompt_path):
-        audio_prompt_path = os.path.join(config.PROJECT_ROOT, "samples", "me.mp3")
-        if not os.path.exists(audio_prompt_path):
-            raise FileNotFoundError(
-                "No audio prompt found. Please provide a reference audio file "
-                "or place one at samples/me.mp3"
-            )
+    model_path, config_path = download_voice(voice, download_dir)
 
-    print(f"[chatterbox-tts] Using audio prompt: {audio_prompt_path}")
+    piper = Piper(model_path, config_path)
 
-    # Clean script text - remove any section markers if present
-    clean_script = _clean_script(script_text)
+    cleaned_script = _clean_script(script_text)
+    print(f"[piper-tts] Generating {len(cleaned_script)} chars of speech...")
 
-    print(f"[chatterbox-tts] Generating {len(clean_script)} chars of speech...")
-    wav = model.generate(clean_script, audio_prompt_path=audio_prompt_path)
+    audio, sample_rate = piper.create(cleaned_script)
 
-    # Ensure output directory exists
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
 
-    # Save as WAV
-    ta.save(output_path, wav, model.sr)
-    print(f"[chatterbox-tts] ✅ Audio saved to: {output_path}")
+    import wave
+
+    with wave.open(output_path, "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(sample_rate)
+        wf.writeframes((audio * 32767).astype("int16").tobytes())
+
+    print(f"[piper-tts] Audio saved to: {output_path}")
 
     return output_path
 
@@ -80,57 +105,37 @@ def _clean_script(script_text: str) -> str:
     """Remove section markers and extra formatting from script."""
     import re
 
-    # Remove section markers like [Verse], [Chorus], [Bridge], etc.
     cleaned = re.sub(r"\[(Verse|Chorus|Bridge|Pre-Chorus)\].*?\n", "", script_text)
-    # Remove extra newlines
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
     return cleaned.strip()
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Generate narration using Chatterbox TTS"
-    )
+    parser = argparse.ArgumentParser(description="Generate narration using Piper TTS")
     parser.add_argument("--script", required=True, help="Input script text file")
     parser.add_argument(
-        "--duration", type=float, required=True, help="Duration in seconds"
+        "--duration",
+        type=float,
+        help="Target duration (unused, kept for compatibility)",
     )
     parser.add_argument(
         "--output", default="outputs/voice.wav", help="Output audio file"
     )
     parser.add_argument(
-        "--audio-prompt",
-        default=None,
-        help="Reference audio for voice cloning",
-    )
-    parser.add_argument(
         "--voice",
-        default=config.CHATTERBOX_VOICE,
-        help="Voice preset (male, female, neutral)",
+        default=config.PIPER_VOICE,
+        help="Piper voice model name",
     )
     parser.add_argument(
-        "--pitch",
-        type=float,
-        default=config.CHATTERBOX_PITCH,
-        help="Pitch adjustment (-1.0 to 1.0)",
-    )
-    parser.add_argument(
-        "--speed",
-        type=float,
-        default=config.CHATTERBOX_SPEED,
-        help="Speech speed (0.5 to 2.0)",
-    )
-    parser.add_argument(
-        "--emotion",
-        default=config.CHATTERBOX_EMOTION,
-        help="Emotion preset (neutral, happy, sad, angry, fearful)",
+        "--download-dir",
+        default=config.PIPER_DOWNLOAD_DIR,
+        help="Directory to download voice models",
     )
 
     args = parser.parse_args()
 
-    # Read script text
     if not os.path.exists(args.script):
-        print(f"[chatterbox-tts] ❌ Error: Script file not found: {args.script}")
+        print(f"[piper-tts] Error: Script file not found: {args.script}")
         sys.exit(1)
 
     with open(args.script, "r", encoding="utf-8") as f:
@@ -140,12 +145,9 @@ if __name__ == "__main__":
         generate_tts(
             script_text=script_text,
             output_path=args.output,
-            audio_prompt_path=args.audio_prompt,
             voice=args.voice,
-            pitch=args.pitch,
-            speed=args.speed,
-            emotion=args.emotion,
+            download_dir=args.download_dir,
         )
     except Exception as e:
-        print(f"[chatterbox-tts] ❌ Error: {e}")
+        print(f"[piper-tts] Error: {e}")
         sys.exit(1)

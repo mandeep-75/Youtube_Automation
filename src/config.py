@@ -52,7 +52,7 @@ WHISPER_COMPUTE_TYPE = "int8"  # int8 | float16 | float32
 # ─────────────────────────────────────────────────────────────────────────────
 
 LLM_MODEL = "qwen3.5:9b"
-LLM_WORDS_PER_SECOND = 3  # Target words per second for narration
+LLM_WORDS_PER_SECOND = 4  # Target words per second for narration
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -62,7 +62,7 @@ LLM_WORDS_PER_SECOND = 3  # Target words per second for narration
 # Audio generation mode:
 # - True: Use ACE-Step 1.5 via ComfyUI (vocals + background music)
 # - False: Use Chatterbox TTS (voice only, no music)
-USE_ACE_MUSIC = True
+USE_ACE_MUSIC = False
 
 # ==== ACE-Step 1.5 Settings (when USE_ACE_MUSIC = True) ====
 
@@ -85,14 +85,15 @@ COMFYUI_OUTPUT_DIR = os.environ.get(
     "COMFYUI_OUTPUT_DIR", "/Users/mandeep/Downloads/comfy/output"
 )
 
-# ==== Chatterbox TTS Settings (when USE_ACE_MUSIC = False) ====
+# ==== Qwen3-TTS Settings (when USE_ACE_MUSIC = False) ====
+# DEPRECATED: Using Piper TTS instead (see below)
 
-# Chatterbox generates voice narration only (no background music)
-# Voice preset: "male", "female", or "neutral"
-CHATTERBOX_VOICE = "female"
-CHATTERBOX_PITCH = 0.0  # -1.0 to 1.0
-CHATTERBOX_SPEED = 1.0  # 0.5 to 2.0
-CHATTERBOX_EMOTION = "neutral"  # neutral, happy, sad, angry, fearful
+# ==== Piper TTS Settings ====
+# Fast, lightweight, local neural text to speech
+# Voice models: https://github.com/rhasspy/piper#voices
+PIPER_VOICE = "en_US-joe-medium"
+PIPER_DOWNLOAD_DIR = os.path.join(PROJECT_ROOT, "models", "piper")
+PIPER_SAMPLE_RATE = 22050  # Default output sample rate
 
 
 # ─────────────────────────────────────────────────────────────────────────────

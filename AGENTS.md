@@ -149,7 +149,7 @@ youtube_automation/
 ## Key Dependencies
 - **Vision**: `ollama`, `qwen3.5:0.8b` model
 - **Transcription**: `faster-whisper` (base model)
-- **TTS**: `chatterbox-tts`
+- **TTS**: `rho-tts[qwen]` (Qwen3-TTS)
 - **Video**: `opencv-python`, `Pillow`, `imageio-ffmpeg`
 - **Upload**: `google-api-python-client`, `instagrapi`
 - **LLM**: `ollama` with `qwen3.5:9b` model

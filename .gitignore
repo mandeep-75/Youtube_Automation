@@ -13,6 +13,7 @@ client_secret.json
 
 # ── Model checkpoints (large binaries – use Git LFS or download script) ──
 checkpoints/
+models/
 
 # ── Generated outputs ─────────────────────────────────────────────────────
 yt_inbox/outputs/

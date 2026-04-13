@@ -1,9 +1,8 @@
 # Unified venv requirements - all dependencies in one venv
 
 # === Core ML/TTS ===
-chatterbox-tts
-torch
-torchaudio
+piper-onnx
+huggingface-hub
 
 # === Transcription ===
 faster-whisper

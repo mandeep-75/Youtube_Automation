@@ -248,7 +248,7 @@ def step5_tts(script_file: str, voice_output: str, duration: float) -> None:
         voice_output: Where to save generated audio
         duration: Target duration in seconds (used for progress indication)
     """
-    print("🎤 Generating narration with Chatterbox TTS (voice only)...")
+    print("🎤 Generating narration with Piper TTS...")
     cmd = [
         config.UNIFIED_PYTHON,
         "./src/steps/step5_tts.py",

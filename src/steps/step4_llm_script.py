@@ -67,8 +67,8 @@ TONE & STYLE
 
 LENGTH
 
-Target word count: {target_words} words.
-Do not exceed this length.
+Target word count: approximately {target_words} words.
+Aim to meet or come close to this target.
 """
 
 # Prompt for TTS mode - generates regular narration script (not lyrics)
@@ -145,8 +145,8 @@ LENGTH & PACING
 
 The script must match the video duration.
 
-Target word count: {target_words} words.
-Do not exceed this length.
+Target word count: approximately {target_words} words.
+Aim to meet or come close to this target.
 
 OUTPUT FORMAT
 
