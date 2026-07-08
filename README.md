@@ -1,76 +1,57 @@
 # YouTube Automation Pipeline
 
-> Turn any raw video into a narrated, subtitled, AI-voiced YouTube Short — then upload it automatically every day.
+Turn raw video into narrated, subtitled YouTube Shorts.
 
-## Tech Stack
+## Requirements
 
-- **Vision**: Ollama + Qwen3.5:0.8b for frame analysis
-- **LLM**: Ollama + Qwen3.5:9b for script generation
-- **TTS**: MLX Qwen3-TTS (Apple Silicon) for AI voice narration
-- **Transcription**: Faster-Whisper (base model)
-- **Video Processing**: OpenCV, Pillow, imageio-ffmpeg, FFmpeg
-- **Upload**: google-api-python-client (YouTube), instagrapi (Instagram)
-
-## 8-Step Pipeline
-
-```
-Step 1 → Extract frames at 2-second intervals
-Step 2 → Describe each frame with Qwen VL
-Step 3 → Transcribe original audio with Whisper
-Step 4 → Generate narration script with LLM
-Step 5 → Generate TTS audio
-Step 6 → Merge video + audio
-Step 7 → Transcribe for subtitles
-Step 8 → Burn subtitles into video
-```
-
-## Features
-
-- **Auto-processing**: Watcher detects new videos and runs the full pipeline
-- **Auto-upload**: Runs on boot + every 24 hours (one video per day)
-- **YouTube + Instagram**: Upload to both platforms
-- **Original audio option**: Mix original audio with TTS
-- **Debug mode**: Faster testing with limited frame extraction
+- Python 3.14+
+- [FFmpeg](https://ffmpeg.org) (`brew install ffmpeg`)
+- [Ollama](https://ollama.ai) running locally with models: `qwen3.5:0.8b`, `qwen3.5:9b`
 
 ## Quick Start
 
 ```bash
-# Pull Ollama models
-ollama pull qwen3.5:0.8b
-ollama pull qwen3.5:9b
+# Setup
+make setup              # create venv + install deps
+make models             # pull Ollama models
+make check              # verify everything is ready
 
-# Setup Python environment
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+# Process a video
+make run VIDEO=video.mp4
 
-# Authenticate YouTube
-.venv/bin/python -m src.uploaders.interactive_uploader
+# Debug mode (2 frames only, faster)
+make dev VIDEO=video.mp4
 ```
 
-## Commands
+## Pipeline
 
-```bash
-# Run watcher (auto-processes new videos)
-.venv/bin/python -m src.watcher
+1. **Extract & describe frames** — extract frames at 2s intervals, describe with Qwen VL
+2. **Transcribe & generate script** — transcribe original audio, write narration script
+3. **Generate TTS audio** — Kitten TTS (ONNX-based, CPU-optimized)
+4. **Render final video** — merge A/V, transcribe for subtitles, burn them in
 
-# Process a video manually
-.venv/bin/python pipeline.py /path/to/video.mp4
+Output: `yt_inbox/outputs/<video_name>/final_video.mp4`
 
-# Process with debug mode (faster, for testing)
-.venv/bin/python pipeline.py --debug /path/to/video.mp4
+## Configuration
 
-# Auto-upload
-bash scripts/auto_service.sh
+All settings in `src/config.py`:
+- `FRAME_INTERVAL` — frame extraction rate (default: 2.0s)
+- `VISION_MODEL` / `LLM_MODEL` — Ollama models
+- `WHISPER_MODEL` — transcription model size
+- `SUBTITLE_FONTS` — font selection for burn-in
+- `DEBUG_MODE` — set `True` for faster testing (2 frames)
 
-# Lint
-.venv/bin/ruff check .
+## Project Structure
 
-# Type check
-.venv/bin/mypy .
 ```
-
-## Requirements
-
-- Python 3.14
-- FFmpeg (`brew install ffmpeg`)
-- Ollama running locally with `qwen3.5:0.8b` and `qwen3.5:9b` models
+├── pipeline.py             # Main entry point
+├── Makefile                # Convenience commands
+├── src/
+│   ├── config.py           # All settings
+│   ├── steps/              # 8 pipeline step scripts
+│   └── utils/              # FFmpeg helpers, logger
+├── yt_inbox/outputs/       # Processed output per video
+├── fonts/                  # Subtitle font files (TTF)
+├── samples/                # TTS reference audio (me.mp3)
+└── tools/                  # FFmpeg + setup checker
+```

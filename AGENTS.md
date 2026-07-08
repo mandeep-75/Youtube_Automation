@@ -1,214 +1,63 @@
 # AGENTS.md — YouTube Automation Pipeline
 
-## Project Overview
-Python-based video processing pipeline that converts raw videos into narrated, subtitled YouTube Shorts with auto-upload. Located at `/Users/mandeep/development/youtube_automation`.
-
-## Build / Lint / Test Commands
+## Commands
 
 ```bash
-# Python environment (always use this venv)
-.venv/bin/python
-
-# Linting
-.venv/bin/ruff check .
-
-# Type checking
-.venv/bin/mypy .
-
-# Run full pipeline manually
-.venv/bin/python pipeline.py /path/to/video.mp4
-
-# Run with debug mode (limits frames, faster testing)
-.venv/bin/python pipeline.py --debug /path/to/video.mp4
-
-# Run a single step
-.venv/bin/python -m src.steps.step1_extract_frames --video-file video.mp4 --interval 2.0 --output-dir outputs/frames
-
-# Note: Pipeline steps use config.PIPELINE_PYTHON interpreter
-
-# Watch logs
-tail -f logs/pipeline_YYYYMMDD.log
+make setup              # .venv + pip install -r requirements.txt
+make models             # pull ollama models: qwen3.5:0.8b, qwen3.5:9b
+make check              # verify env with tools/check_setup.py
+make lint               # .venv/bin/ruff check .
+make typecheck          # .venv/bin/mypy .
+make run VIDEO=x.mp4    # full pipeline
+make dev VIDEO=x.mp4    # debug mode (2 frames)
+make run VIDEO=x.mp4 SCRIPT_REF="--script-ref ref.txt"  # with reference script for tone
+.venv/bin/python pipeline.py --debug --script-ref ref.txt video.mp4
+.venv/bin/python src/steps/step1_analyze.py --video-file x.mp4 --interval 2.0 --output-dir frames --frames-file frames.txt
+tail -f logs/pipeline_*.log
 ```
 
-No pytest configuration exists. Tests are not yet set up.
+No pytest. No tests at all.
 
-## Code Style Guidelines
+## Architecture
 
-### Python Version & Environment
-- Python 3.x via `.venv` (located at `.venv/bin/python`)
-- All dependencies in `requirements.txt` (unified venv approach)
+- `pipeline.py` is the entrypoint — calls 4 step scripts as subprocesses via `config.PIPELINE_PYTHON` (`.venv/bin/python`)
+- Each step script is standalone (can run independently) and does `sys.path.insert` to reach project root
+- `src/config.py` is mutable — `pipeline.py` sets `config.DEBUG_MODE = True` at runtime before steps execute
+- `src/utils/` is empty — no helpers there despite README claiming otherwise
+- Config values set at module import, read by steps at runtime
 
-### Formatting
-- 4-space indentation
-- snake_case for functions and variables
-- PascalCase for classes
-- Max line length: ~100 characters (wrap when practical)
+## Step outputs
 
-### Imports
-Standard library first, then third-party, then local:
-```python
-import os
-import argparse
-import json
-from datetime import timedelta
+| Step | Produces |
+|------|----------|
+| 1 analyze | `yt_inbox/<name>/frames/` (PNGs), `frames.txt` (timestamped descriptions) |
+| 2 script | `yt_inbox/<name>/transcript.txt`, `script.txt`, `script.thinking.txt` |
+| 3 tts | `yt_inbox/<name>/voice.wav` |
+| 4 render | `yt_inbox/<name>/<name>.mp4` (final video) |
 
-import cv2
-from tqdm import tqdm
+All files for a video live inside `yt_inbox/<video_name>/`. Intermediates and final video are in the same folder.
 
-from src.config import PROJECT_ROOT
-```
+## Quirks & gotchas
 
-### Type Hints
-Use type hints for function parameters and return values:
-```python
-def extract_frames(video_path: str, interval_sec: float, output_dir: str) -> str:
-def detect_hallucination(client, image_path, model, description: str) -> tuple[bool, str]:
-```
-Use `Optional[X]` from `typing` when a parameter can be `None`.
+- **FFmpeg resolution order:** `tools/ffmpeg` → `imageio_ffmpeg` → system `$PATH`. Same for ffprobe.
+- **Ollama must be running** at `http://localhost:11434`. Pipeline will fail silently-ish without it.
+- **Whisper model downloads** on first `faster-whisper` use (auto, ~150MB for `base`).
+- **`--script-ref`** feeds a reference script into the LLM prompt to influence tone/style. Pass any text file path.
+- **Python 3.11+** (Makefile uses `python3.11 -m venv`; README says 3.14+).
+- **No `pathlib`** — codebase uses `os.path` exclusively.
+- **`FRAME_INTERVAL`** is a string `"2.0"` in config (passed as CLI arg), not a float.
 
-### Docstrings
-Include docstrings for public functions and complex logic:
-```python
-def detect_hallucination(client, image_path, model, description: str) -> tuple[bool, str]:
-    """
-    Verify a frame description against the image to detect hallucinations.
-    
-    Returns:
-        Tuple of (is_hallucinated: bool, corrected_description: str)
-    """
-```
+## Key config knobs (`src/config.py`)
 
-### Error Handling
-- Use specific exception types when possible
-- Include context in error messages:
-```python
-raise Exception(f"Error opening video file: {video_path}")
-except Exception as e:
-    print(f"\n⚠️ Hallucination check failed: {e}")
-    return False, description
-```
-
-### CLI Scripts
-- Use `argparse` with `--long-form` arguments
-- Use `action="store_true"` for boolean flags
-- Provide help text for all arguments
-
-### Logging & Output
-- Use `tqdm` for progress bars in batch processing
-- Use emoji prefix for console status messages (e.g., `🚀`, `✅`, `⚠️`, `🔍`)
-- Flush print output when streaming: `print(..., flush=True)`
-
-### File Paths
-- Use `os.path` for path operations (not `pathlib`)
-- Use `os.path.join()` to construct paths
-- Use `exist_ok=True` for `os.makedirs()`
-- Define `PROJECT_ROOT` in config and use relative paths from there
-
-### Configuration
-- All settings centralized in `src/config.py`
-- Use `os.environ.get("KEY", default)` for environment variables
-- Load `.env` with `python-dotenv` in config
-
-## Project Structure
-
-```
-youtube_automation/
-├── pipeline.py             # Main entry point for video processing
-├── src/
-│   ├── config.py           # All settings (edit this file)
-│   ├── upload_config.py    # Upload routing configuration
-│   ├── watcher.py          # Auto-detects & processes new videos
-│   ├── utils/              # Shared utilities
-│   │   ├── ffmpeg.py       # FFmpeg detection helpers
-│   │   └── logger.py       # Logging utilities
-│   ├── steps/              # 8-step pipeline
-│   │   ├── step1_extract_frames.py
-│   │   ├── step2_qwen_vl.py
-│   │   ├── step3_transcribe_original.py
-│   │   ├── step4_llm_script.py
-│   │   ├── step5_mlx_tts.py        # MLX Qwen3-TTS (voice only)
-│   │   ├── step5_ace_music.py     # ACE-Step 1.5 (vocals + music)
-│   │   ├── step6_merge_av.py
-│   │   ├── step7_transcribe_subtitles.py
-│   │   └── step8_burn_subtitles.py
-│   └── uploaders/          # YouTube & Instagram uploaders
-├── yt_inbox/              # Drop raw videos here (watched by watcher.py)
-│   ├── outputs/            # Processed videos (auto-created)
-│   │   └── <video_name>/
-│   ├── processed/           # Original videos after processing
-│   └── failed/             # Videos that failed
-├── upload_queue/           # Videos ready for upload
-├── uploaded/              # Successfully uploaded videos
-├── logs/                   # Pipeline logs (pipeline_YYYYMMDD.log)
-├── fonts/                  # Subtitle font files (TTF)
-├── samples/                # TTS reference audio (me.mp3)
-├── tools/                  # Local tools (ffmpeg)
-└── requirements.txt        # All dependencies
-```
-
-## Key Dependencies
-- **Vision**: `ollama`, `qwen3.5:0.8b` model
-- **Transcription**: `faster-whisper` (base model)
-- **TTS**: `mlx-audio` (MLX Qwen3-TTS for Apple Silicon)
-- **Video**: `opencv-python`, `Pillow`, `imageio-ffmpeg`
-- **Upload**: `google-api-python-client`, `instagrapi`
-- **LLM**: `ollama` with `qwen3.5:9b` model
-
-## External Services
-- Ollama runs locally at `http://localhost:11434`
-- YouTube API credentials in `client_secret.json`
-- Instagram credentials via environment variables
-
-## Common Patterns
-
-### Frame Processing Loop
-```python
-for entry in tqdm(entries, desc="Describing Frames"):
-    image_path = entry["path"]
-    timestamp = entry["timestamp"]
-    # ... process
-```
-
-### Manifest-Based Pipelines
-Steps communicate via JSON manifests in output directories:
-```python
-with open(manifest_path, "w", encoding="utf-8") as f:
-    json.dump(entries, f, indent=2)
-```
-
-### Streaming LLM Responses
-```python
-stream = client.generate(model=model, prompt=prompt, images=[image_path], stream=True)
-response_text = []
-for chunk in stream:
-    token = chunk.get("response", "")
-    if token:
-        response_text.append(token)
-result = "".join(response_text).strip()
-```
-
-## Agent-Specific Notes
-
-### Import Style
-Always use `from src import config` in step scripts—not `from config import`:
-```python
-# ✅ Correct (used throughout project)
-from src import config
-
-# ❌ Wrong (will fail at runtime)
-from config import SOME_VAR
-```
-
-### Debug Mode
-Two ways to enable:
-- CLI flag: `python pipeline.py --debug video.mp4`
-- Config: set `DEBUG_MODE = True` in `src/config.py`
-
-### Output Filenames
-Pipeline creates `final_video_ace.mp4` or `final_video_tts.mp4` (not `mixed`/`simple`).
-
-### Config Matters
-- `FRAME_INTERVAL` defaults to 2.0 seconds
-- `DEBUG_MAX_FRAMES` limits extracted frames in debug mode (currently 2)
-- `USE_ACE_MUSIC` toggles between ACE-Step (True) and MLX TTS (False)
-- `DEBUG_MODE` enabled by default for faster testing
+| Setting | Default | Notes |
+|---------|---------|-------|
+| `DEBUG_MODE` | `False` | Set `True` → `DEBUG_MAX_FRAMES=2` frames extracted |
+| `FRAME_INTERVAL` | `"2.0"` | String, passed to argparse |
+| `VISION_MODEL` | `qwen3.5:0.8b` | Ollama vision model |
+| `LLM_MODEL` | `qwen3.5:9b` | Ollama text model for script gen |
+| `LLM_WORDS_PER_SECOND` | `4` | Target pacing for generated script |
+| `WHISPER_MODEL` | `base` | faster-whisper model size |
+| `TTS_VOICE` | `"Hugo"` | Also `"Rosie"` (commented out in config) |
+| `TTS_SPEED` | `1.2` | |
+| `SUBTITLE_MAX_WORDS` | `3` | Words per subtitle chunk |
+| `SUBTITLE_POSITION` | `"center"` | Also `"top"` / `"bottom"` |

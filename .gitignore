@@ -16,7 +16,7 @@ checkpoints/
 models/
 
 # ── Generated outputs ─────────────────────────────────────────────────────
-yt_inbox/outputs/
+yt_inbox/*/
 yt_inbox/processed/
 yt_inbox/failed/
 
