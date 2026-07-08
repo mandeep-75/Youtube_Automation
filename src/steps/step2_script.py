@@ -1,8 +1,8 @@
-import os
-import sys
 import gc
+import os
 import shutil
 import subprocess
+import sys
 import tempfile
 
 from faster_whisper import WhisperModel
@@ -19,6 +19,7 @@ if os.path.isfile(_LOCAL_FFMPEG) and os.access(_LOCAL_FFMPEG, os.X_OK):
 else:
     try:
         import imageio_ffmpeg
+
         FFMPEG_BIN = imageio_ffmpeg.get_ffmpeg_exe()
     except Exception:
         FFMPEG_BIN = shutil.which("ffmpeg") or "ffmpeg"
@@ -34,9 +35,21 @@ def _ffprobe_path() -> str:
 def _has_audio(video_path: str) -> bool:
     try:
         result = subprocess.run(
-            [_ffprobe_path(), "-v", "error", "-select_streams", "a",
-             "-show_entries", "stream=codec_type", "-of", "csv=p=0", video_path],
-            capture_output=True, text=True, timeout=15,
+            [
+                _ffprobe_path(),
+                "-v",
+                "error",
+                "-select_streams",
+                "a",
+                "-show_entries",
+                "stream=codec_type",
+                "-of",
+                "csv=p=0",
+                video_path,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=15,
         )
         return bool(result.stdout.strip())
     except Exception:
@@ -59,15 +72,38 @@ def transcribe_original(video_path: str, output_path: str) -> str:
     tmp = tempfile.mkdtemp(prefix="orig_audio_")
     wav = os.path.join(tmp, "audio.wav")
     try:
-        subprocess.run([FFMPEG_BIN, "-y", "-i", video_path, "-vn", "-ac", "1",
-                        "-ar", "16000", "-f", "wav", wav],
-                       capture_output=True, text=True, timeout=300, check=True)
+        subprocess.run(
+            [
+                FFMPEG_BIN,
+                "-y",
+                "-i",
+                video_path,
+                "-vn",
+                "-ac",
+                "1",
+                "-ar",
+                "16000",
+                "-f",
+                "wav",
+                wav,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=300,
+            check=True,
+        )
 
-        model = WhisperModel(config.WHISPER_MODEL, device="auto",
-                             compute_type=config.WHISPER_COMPUTE_TYPE)
-        segments, info = model.transcribe(wav, language=config.WHISPER_LANG,
-                                          beam_size=config.WHISPER_BEAM_SIZE,
-                                          word_timestamps=False)
+        model = WhisperModel(
+            config.WHISPER_MODEL,
+            device="auto",
+            compute_type=config.WHISPER_COMPUTE_TYPE,
+        )
+        segments, info = model.transcribe(
+            wav,
+            language=config.WHISPER_LANG,
+            beam_size=config.WHISPER_BEAM_SIZE,
+            word_timestamps=False,
+        )
         lines = [f"[{_format_ts(s.start)}] {s.text.strip()}" for s in segments]
         os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
         with open(output_path, "w", encoding="utf-8") as f:
@@ -76,7 +112,7 @@ def transcribe_original(video_path: str, output_path: str) -> str:
         return output_path
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
-        if 'model' in locals():
+        if "model" in locals():
             del model
         gc.collect()
 
@@ -137,12 +173,7 @@ Hook (first sentence)
 The first sentence must immediately stop the scroll.
 
 It must begin with one of these phrases:
-"This man..."
-"This woman..."
 "This..."
-
-Example style:
-"This man thought he found something normal until it suddenly moved."
 
 WRITING RULES
 
@@ -173,7 +204,13 @@ Do not include explanations or formatting.
 """
 
 
-def generate_script(frames_file: str, transcript_file: str, script_file: str, duration: float, script_ref: str | None = None) -> None:
+def generate_script(
+    frames_file: str,
+    transcript_file: str,
+    script_file: str,
+    duration: float,
+    script_ref: str | None = None,
+) -> None:
     with open(frames_file, "r", encoding="utf-8") as f:
         vision_data = f.read()
 
@@ -182,8 +219,9 @@ def generate_script(frames_file: str, transcript_file: str, script_file: str, du
         with open(transcript_file, "r", encoding="utf-8") as f:
             transcript_data = f.read()
 
-    transcript_val = (transcript_data.strip() if transcript_data
-                       else "[No audio script available]")
+    transcript_val = (
+        transcript_data.strip() if transcript_data else "[No audio script available]"
+    )
 
     ref_text = "[No reference script provided]"
     if script_ref and os.path.isfile(script_ref):
@@ -193,19 +231,25 @@ def generate_script(frames_file: str, transcript_file: str, script_file: str, du
     target_words = int(duration * config.LLM_WORDS_PER_SECOND)
 
     prompt = SCRIPT_PROMPT.format(
-        duration=duration, wps=config.LLM_WORDS_PER_SECOND,
-        target_words=target_words, transcript_text=transcript_val,
-        vision_text=vision_data.strip(), ref_text=ref_text,
+        duration=duration,
+        wps=config.LLM_WORDS_PER_SECOND,
+        target_words=target_words,
+        transcript_text=transcript_val,
+        vision_text=vision_data.strip(),
+        ref_text=ref_text,
     )
 
     import ollama
+
     print(f"[script] Calling Ollama {config.LLM_MODEL}...")
     client = ollama.Client(host=config.OLLAMA_URL)
     stream = client.chat(
         model=config.LLM_MODEL,
         messages=[{"role": "user", "content": prompt}],
-        think=False, options={"num_predict": 4000, "num_ctx": 8192},
-        keep_alive=0, stream=True,
+        think=False,
+        options={"num_predict": 4000, "num_ctx": 8192},
+        keep_alive=0,
+        stream=True,
     )
 
     response_text = []
@@ -253,14 +297,23 @@ def generate_script(frames_file: str, transcript_file: str, script_file: str, du
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--video", required=True)
     parser.add_argument("--frames-file", required=True)
     parser.add_argument("--transcript-file", required=True)
     parser.add_argument("--script-file", required=True)
     parser.add_argument("--duration", type=float, required=True)
-    parser.add_argument("--script-ref", type=str, help="Reference script for tone/inspiration")
+    parser.add_argument(
+        "--script-ref", type=str, help="Reference script for tone/inspiration"
+    )
     args = parser.parse_args()
 
     transcribe_original(args.video, args.transcript_file)
-    generate_script(args.frames_file, args.transcript_file, args.script_file, args.duration, script_ref=args.script_ref)
+    generate_script(
+        args.frames_file,
+        args.transcript_file,
+        args.script_file,
+        args.duration,
+        script_ref=args.script_ref,
+    )
