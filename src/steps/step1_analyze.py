@@ -23,7 +23,7 @@ def extract_frames(video_path: str, interval_sec: float, output_dir: str) -> str
         raise Exception("Could not read FPS from video")
 
     frame_interval = max(int(fps * interval_sec), 1)
-    entries = []
+    entries: list[dict[str, str]] = []
     frame_count = 0
 
     success, frame = cap.read()
@@ -88,7 +88,6 @@ def describe_frames(manifest_path: str, output_file: str) -> None:
             except Exception as e:
                 description = f"[Error: {e}]"
 
-            print(f"\n[{timestamp}]\n{description}\n")
             f.write(f"{timestamp} - {description}\n")
             f.flush()
 

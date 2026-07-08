@@ -1,4 +1,5 @@
 import os
+
 from dotenv import load_dotenv
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -14,7 +15,7 @@ DEBUG_MAX_FRAMES = 2
 FRAME_INTERVAL = "2.0"
 
 VISION_MODEL = "qwen3.5:0.8b"
-VISION_PROMPT = """Describe this image in 200 words. Only describe what you actually see. No speculation. Focus on main subject and his work."""
+VISION_PROMPT = """Describe this image briefly in 2-3 sentences. Only what you see. Focus on main subject and action."""
 
 WHISPER_MODEL = "base"
 WHISPER_LANG = None
@@ -28,10 +29,14 @@ TTS_MODEL = "KittenML/kitten-tts-mini-0.8"
 TTS_VOICE = "Hugo"
 TTS_SPEED = 1.2
 
+PORTRAIT_WIDTH = 1080
+PORTRAIT_HEIGHT = 1920
+PORTRAIT_BG_COLOR = "#000000"
+
 SUBTITLE_FONTS = [
-    {"name": "Anton", "size": 120},
-    {"name": "Bebas Neue", "size": 120},
-    {"name": "Oswald", "size": 120},
+    {"name": "Anton", "size": 150},
+    {"name": "Bebas Neue", "size": 150},
+    {"name": "Oswald", "size": 150},
 ]
 SUBTITLE_FONT_COLOR = "#FFFFFF"
 SUBTITLE_HIGHLIGHT_COLOR = "#00FFAA"

@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import tempfile
 
-from faster_whisper import WhisperModel
+from faster_whisper import WhisperModel  # type: ignore[import-untyped]
 
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -17,7 +17,7 @@ _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 _FFMPEG = os.path.join(_PROJECT_ROOT, "tools", "ffmpeg")
 if not (os.path.isfile(_FFMPEG) and os.access(_FFMPEG, os.X_OK)):
     try:
-        import imageio_ffmpeg
+        import imageio_ffmpeg  # type: ignore[import-untyped]
         _FFMPEG = imageio_ffmpeg.get_ffmpeg_exe()
     except Exception:
         _FFMPEG = shutil.which("ffmpeg") or "ffmpeg"
@@ -144,19 +144,41 @@ def _fmt_srt(seconds: float) -> str:
     return f"{h:02d}:{m:02d}:{s:02d},{millis:03d}"
 
 
+def _video_dimensions(path: str) -> tuple[int, int]:
+    r = subprocess.run([_ffprobe_path(), "-v", "error", "-select_streams", "v:0",
+                        "-show_entries", "stream=width,height",
+                        "-of", "csv=s=x:p=0", path],
+                       capture_output=True, text=True, timeout=15)
+    parts = r.stdout.strip().split("x")
+    return int(parts[0]), int(parts[1])
+
+
 def burn_subs(video_path: str, srt_path: str, output_path: str) -> None:
+    in_w, in_h = _video_dimensions(video_path)
+    needs_portrait = in_w > in_h
+
+    if needs_portrait:
+        portrait_scale = config.PORTRAIT_WIDTH / in_w
+        print(f"[render] Landscape → portrait (scale={portrait_scale:.3f})")
+    else:
+        portrait_scale = 1.0
+
     font = random.choice(config.SUBTITLE_FONTS) if isinstance(config.SUBTITLE_FONTS, list) else config.SUBTITLE_FONTS
     if isinstance(font, dict):
-        font_name, font_size = font["name"], font.get("size", 36)
+        font_name = str(font["name"])
+        size_val = font.get("size", 36)
+        font_size = float(size_val) if isinstance(size_val, (int, float)) else 36.0
     else:
-        font_name, font_size = font, 36
+        font_name = str(font)
+        font_size = 36.0
 
-    print(f"[render] Font: {font_name} ({font_size})")
+    font_size *= portrait_scale
+    print(f"[render] Font: {font_name} ({font_size:.1f})")
     import pysubs2
     subs = pysubs2.load(srt_path)
     ass = pysubs2.SSAFile()
-    ass.info["PlayResX"] = 1080
-    ass.info["PlayResY"] = 1920
+    ass.info["PlayResX"] = str(config.PORTRAIT_WIDTH)
+    ass.info["PlayResY"] = str(config.PORTRAIT_HEIGHT)
 
     style = pysubs2.SSAStyle()
     style.fontname = font_name
@@ -167,23 +189,23 @@ def burn_subs(video_path: str, srt_path: str, output_path: str) -> None:
         h = h.lstrip("#")
         return pysubs2.Color(int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
 
-    style.primary_color = _rgb(config.SUBTITLE_FONT_COLOR)
-    style.secondary_color = _rgb(config.SUBTITLE_HIGHLIGHT_COLOR)
-    style.outline_color = _rgb(config.SUBTITLE_OUTLINE_COLOR)
+    style.primarycolor = _rgb(config.SUBTITLE_FONT_COLOR)  # type: ignore[attr-defined]
+    style.secondarycolor = _rgb(config.SUBTITLE_HIGHLIGHT_COLOR)  # type: ignore[attr-defined]
+    style.outlinecolor = _rgb(config.SUBTITLE_OUTLINE_COLOR)  # type: ignore[attr-defined]
     style.outline = config.SUBTITLE_OUTLINE_WIDTH * scale
     style.shadow = 0
     style.bold = config.SUBTITLE_BOLD
     style.italic = config.SUBTITLE_ITALIC
-    style.alignment = {"top": 8, "center": 5, "bottom": 2}.get(config.SUBTITLE_POSITION, 5)
-    style.marginl = config.SUBTITLE_X_OFFSET
-    style.marginr = config.SUBTITLE_X_OFFSET
-    style.marginv = config.SUBTITLE_Y_OFFSET
+    style.alignment = pysubs2.Alignment({"top": 8, "center": 5, "bottom": 2}.get(config.SUBTITLE_POSITION, 5))
+    style.marginl = int(config.SUBTITLE_X_OFFSET * portrait_scale)
+    style.marginr = int(config.SUBTITLE_X_OFFSET * portrait_scale)
+    style.marginv = int(config.SUBTITLE_Y_OFFSET * portrait_scale)
     ass.styles["Default"] = style
 
     base = _ass_color(config.SUBTITLE_FONT_COLOR)
     highlight = _ass_color(config.SUBTITLE_HIGHLIGHT_COLOR)
 
-    all_words = []
+    all_words: list[dict[str, str | int]] = []
     for line in subs:
         t = line.plaintext.strip()
         if t:
@@ -195,18 +217,24 @@ def burn_subs(video_path: str, srt_path: str, output_path: str) -> None:
             parts = []
             for j, w in enumerate(chunk):
                 if j == i:
-                    parts.append("{\\c" + highlight + "}" + w["text"] + "{\\r}")
+                    parts.append("{\\c" + highlight + "}" + str(w["text"]) + "{\\r}")
                 else:
-                    parts.append("{\\c" + base + "}" + w["text"])
+                    parts.append("{\\c" + base + "}" + str(w["text"]))
             ass.events.append(
-                pysubs2.SSAEvent(start=cur["start"], end=cur["end"], text=" ".join(parts))
+                pysubs2.SSAEvent(start=int(cur["start"]), end=int(cur["end"]), text=" ".join(parts))
             )
 
     ass_path = srt_path.replace(".srt", ".ass")
     ass.save(ass_path)
 
+    pw = config.PORTRAIT_WIDTH
+    ph = config.PORTRAIT_HEIGHT
+    bg = config.PORTRAIT_BG_COLOR
+    vf = (f"scale={pw}:{ph}:force_original_aspect_ratio=decrease,"
+          f"pad={pw}:{ph}:(ow-iw)/2:(oh-ih)/2:color={bg},"
+          f"subtitles='{ass_path}':fontsdir='{os.path.join(_PROJECT_ROOT, 'fonts')}'")
     _run([_FFMPEG, "-y", "-i", video_path,
-          "-vf", f"subtitles='{ass_path}':fontsdir='{os.path.join(_PROJECT_ROOT, 'fonts')}'",
+          "-vf", vf,
           "-c:a", "copy", output_path])
     print(f"[render] Final → {output_path}")
 

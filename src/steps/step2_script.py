@@ -5,7 +5,7 @@ import subprocess
 import sys
 import tempfile
 
-from faster_whisper import WhisperModel
+from faster_whisper import WhisperModel  # type: ignore[import-untyped]
 
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -18,7 +18,7 @@ if os.path.isfile(_LOCAL_FFMPEG) and os.access(_LOCAL_FFMPEG, os.X_OK):
     FFMPEG_BIN = _LOCAL_FFMPEG
 else:
     try:
-        import imageio_ffmpeg
+        import imageio_ffmpeg  # type: ignore[import-untyped]
 
         FFMPEG_BIN = imageio_ffmpeg.get_ffmpeg_exe()
     except Exception:
@@ -117,90 +117,46 @@ def transcribe_original(video_path: str, output_path: str) -> str:
         gc.collect()
 
 
-SCRIPT_PROMPT = """You are a viral YouTube Shorts scriptwriter who specializes in high-retention cinematic storytelling.
+SCRIPT_PROMPT = """You are a YouTube Shorts narrator. Your job is to describe what is happening in the video clearly and naturally — as if you are watching it with a friend and explaining it in real time.
 
-Your narration should feel like a friend telling an unbelievable real story directly to the camera late at night — intense, curious, and impossible to scroll past.
-
-INPUT DATA
+INPUT
 
 VIDEO DURATION: {duration} seconds
 TARGET WORD COUNT: {target_words} words
 AVERAGE SPEECH RATE: {wps} words per second
 
-VISUAL SEQUENCE (chronological frame descriptions):
+FRAME DESCRIPTIONS (in chronological order):
 {vision_text}
 
-ORIGINAL DIALOGUE (optional):
+ORIGINAL AUDIO (if any):
 {transcript_text}
 
-REFERENCE SCRIPT (optional):
+REFERENCE SCRIPT (for tone guidance):
 {ref_text}
 
-IMPORTANT CONTEXT
+GUIDELINES
 
-The visual descriptions represent frames from one continuous video in chronological order.
+1. HOOK — Begin with "This..." followed by a straightforward description of the main action or subject visible in the opening moments. Be direct. Do not invent drama or mystery that is not present in the video.
 
-Do not mention frames or describe them individually.
+2. NARRATIVE FLOW — Describe the scene in a natural order that matches the video timeline. Start with what is most noticeable, then move through what happens or what is revealed as the video progresses. End when the video ends.
 
-Instead:
-• Combine all visuals into one flowing narrative
-• Infer actions, reactions, and emotions
-• Tell the story naturally as events unfold
+3. VOICE & STYLE — Write in a conversational, spoken style. Use short, punchy sentences that are easy to read aloud. Avoid formal documentary tone or news reporter cadence. The narration should feel like someone describing what they are seeing in real time.
 
-Use dialogue only if it strengthens the story.
+4. WHAT TO FOCUS ON — Focus on the main subject and the primary action. Do not list every object, color, or background detail. If the frame descriptions repeat details across consecutive frames, mention that detail once and move on. Prioritize what is most visually prominent.
 
-TONE & STYLE
+5. ACCURACY — Only describe what is actually visible. Do not invent causes, locations, backstory, or events that are not shown. If context is unclear, simply describe what is in frame without speculating.
 
-The voice should feel:
-• Cinematic
-• Conversational
-• High-energy
+6. ENDING — End naturally when the video ends. Do not add commentary, conclusions, or forced twists. Let the final visual speak for itself.
 
-Write using short, punchy sentences to maintain fast pacing.
+7. SAFETY — Keep content YouTube-friendly. No profanity, hate speech, sexual content, or political messaging.
 
-The story must remain YouTube-friendly and advertiser safe.
+8. FORMATTING — Write as one continuous paragraph. No bullet points, numbered lists, timestamps, or labels. No explanations outside the narration.
 
-Avoid:
-• Profanity
-• Hate speech
-• Sexual content
-• Political messaging
+9. WORD COUNT — Aim for approximately {target_words} words to match the {duration}-second video at {wps} words per second.
 
-STORY STRUCTURE
+10. REFERENCE SCRIPT — If a reference script is provided, match its general tone, pacing, and energy. Do not copy its content or phrasing.
 
-Hook (first sentence)
-
-The first sentence must immediately stop the scroll.
-
-It must begin with one of these phrases:
-"This..."
-
-WRITING RULES
-
-• Write one continuous paragraph
-• Do not use bullet points in the script
-• Do not add labels or timestamps
-• Do not repeat the visual descriptions word-for-word
-• Focus on action, reactions, and suspense
-• Maintain fast pacing for Shorts
-
-REFERENCE SCRIPT GUIDANCE
-
-If a reference script is provided above, match its tone, pacing, and style — do not copy its content.
-Emulate the energy, sentence structure, and delivery style.
-
-LENGTH & PACING
-
-The script must match the video duration.
-
-Target word count: approximately {target_words} words.
-Aim to meet or come close to this target.
-
-OUTPUT FORMAT
-
-Return only the final narration script as plain text.
-
-Do not include explanations or formatting.
+OUTPUT: Return only the final narration as plain text with no additional formatting or commentary.
 """
 
 
@@ -227,6 +183,7 @@ def generate_script(
     if script_ref and os.path.isfile(script_ref):
         with open(script_ref, "r", encoding="utf-8") as f:
             ref_text = f.read().strip()
+        print(f"[script] Reference text loaded ({len(ref_text)} chars): {ref_text[:200]}")
 
     target_words = int(duration * config.LLM_WORDS_PER_SECOND)
 
@@ -239,6 +196,11 @@ def generate_script(
         ref_text=ref_text,
     )
 
+    prompt_file = script_file.replace(".txt", ".prompt.txt")
+    with open(prompt_file, "w", encoding="utf-8") as f:
+        f.write(prompt)
+    print(f"[script] Full prompt saved to {prompt_file}")
+
     import ollama
 
     print(f"[script] Calling Ollama {config.LLM_MODEL}...")
@@ -247,7 +209,7 @@ def generate_script(
         model=config.LLM_MODEL,
         messages=[{"role": "user", "content": prompt}],
         think=False,
-        options={"num_predict": 4000, "num_ctx": 8192},
+        options={"num_predict": 2048, "num_ctx": 8192, "repeat_penalty": 1.3, "temperature": 0.7},
         keep_alive=0,
         stream=True,
     )

@@ -8,8 +8,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from src import config
 
 
-def generate_tts(script_text: str, output_path: str, voice: str = None, speed: float = None) -> str:
-    from kittentts import KittenTTS
+def generate_tts(script_text: str, output_path: str, voice: str | None = None, speed: float | None = None) -> str:
+    from kittentts import KittenTTS  # type: ignore[import-untyped]
 
     voice = voice or config.TTS_VOICE
     speed = speed if speed is not None else config.TTS_SPEED
