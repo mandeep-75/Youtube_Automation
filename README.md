@@ -55,3 +55,6 @@ All settings in `src/config.py`:
 ├── samples/                # TTS reference audio (me.mp3)
 └── tools/                  # FFmpeg + setup checker
 ```
+
+---
+*Auto-sync: 2026-07-26 11:03*
