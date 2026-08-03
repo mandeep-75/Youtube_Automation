@@ -84,12 +84,19 @@ def run_pipeline(video_path: str, script_ref: str | None = None) -> None:
         cmd.extend(["--script-ref", script_ref])
     subprocess.run(cmd, check=True)
 
-    print("\n─── Step 3  TTS audio ───────────────────────────────────")
-    subprocess.run([
+    print("\n─── Step 3  TTS audio (Qwen3 voice clone) ───────────────")
+    cmd = [
         py, os.path.join(steps, "step3_tts.py"),
         "--script", script_file,
         "--output", voice_file,
-    ], check=True)
+    ]
+    if config.TTS_REF_AUDIO:
+        cmd.extend(["--ref-audio", config.TTS_REF_AUDIO])
+    ref_text_file = getattr(config, "TTS_REF_TEXT_FILE", "")
+    if ref_text_file and os.path.exists(ref_text_file):
+        with open(ref_text_file, "r", encoding="utf-8") as f:
+            cmd.extend(["--ref-text", f.read().strip()])
+    subprocess.run(cmd, check=True)
 
     print("\n─── Step 4  Render (merge + subs + burn) ────────────────")
     subprocess.run([
@@ -112,6 +119,7 @@ if __name__ == "__main__":
 
     if args.debug:
         config.DEBUG_MODE = True
+        os.environ["PIPELINE_DEBUG"] = "1"
         print("🐛 Debug mode enabled")
 
     any_errors = False

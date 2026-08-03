@@ -1,0 +1,46 @@
+[project]
+name = "youtube-automation"
+version = "0.1.0"
+description = "YouTube automation pipeline for processing videos into narrated, subtitled YouTube Shorts"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "huggingface-hub",
+    "onnxruntime",
+    "faster-whisper",
+    "ctranslate2",
+    "ollama",
+    "tqdm",
+    "opencv-python",
+    "pillow",
+    "imageio-ffmpeg",
+    "librosa",
+    "soundfile",
+    "pysubs2",
+    "srt",
+    "requests",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "mypy",
+]
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true

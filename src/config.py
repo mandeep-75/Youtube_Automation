@@ -25,9 +25,10 @@ WHISPER_COMPUTE_TYPE = "int8"
 LLM_MODEL = "qwen3.5:9b"
 LLM_WORDS_PER_SECOND = 4
 
-TTS_MODEL = "KittenML/kitten-tts-mini-0.8"
-TTS_VOICE = "Hugo"
+TTS_PYTHON = ".venv/bin/python"
 TTS_SPEED = 1.2
+TTS_REF_AUDIO = "samples/voice_ref.mp3"
+TTS_REF_TEXT_FILE = "samples/voice_ref.txt"
 
 PORTRAIT_WIDTH = 1080
 PORTRAIT_HEIGHT = 1920

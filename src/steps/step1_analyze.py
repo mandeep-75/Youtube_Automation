@@ -29,7 +29,8 @@ def extract_frames(video_path: str, interval_sec: float, output_dir: str) -> str
     success, frame = cap.read()
     while success:
         if frame_count % frame_interval == 0:
-            if config.DEBUG_MODE and len(entries) >= config.DEBUG_MAX_FRAMES:
+            debug = config.DEBUG_MODE or os.environ.get("PIPELINE_DEBUG") == "1"
+            if debug and len(entries) >= config.DEBUG_MAX_FRAMES:
                 print(f"DEBUG: Stopping at {config.DEBUG_MAX_FRAMES} frames")
                 break
             time_sec = frame_count / fps

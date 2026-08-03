@@ -63,6 +63,36 @@ lint:
 typecheck:
 	$(PYTHON) -m mypy .
 
+# ─── Qwen3-TTS (voice clone) ──────────────────────────────────────────────────
+
+QWEEN_TTS_PY = .venv-qwen3-tts/bin/python
+QWEEN_TTS_PIP = .venv-qwen3-tts/bin/pip
+QWEEN_TTS_DIR = models/qwen3-tts
+
+.PHONY: tts-all tts-setup tts-models
+
+tts-all: tts-setup tts-models
+
+tts-setup: $(QWEEN_TTS_DIR)
+$(QWEEN_TTS_DIR):
+	@echo "  Creating qwen3-tts venv..."; \
+	python3 -m venv .venv-qwen3-tts && \
+	$(QWEEN_TTS_PIP) install -U "qwen-tts" "huggingface_hub[cli]" 2>&1 | tail -3 && \
+	echo "  \033[32m✓\033[0m  qwen-tts installed"; \
+	mkdir -p $(QWEEN_TTS_DIR)
+
+tts-models: | $(QWEEN_TTS_DIR)
+	@echo "  \033[1mQwen3-TTS models\033[0m"; \
+	for model in Qwen3-TTS-Tokenizer-12Hz Qwen3-TTS-12Hz-1.7B-Base; do \
+		if [ -f "$(QWEEN_TTS_DIR)/$$model/model.safetensors" ]; then \
+			echo "  \033[32m✓\033[0m  $$model"; \
+		else \
+			echo "  \033[33m↓\033[0m  Downloading $$model..."; \
+			$(QWEEN_TTS_PY) -m huggingface_hub.commands.download Qwen/$$model --local-dir $(QWEEN_TTS_DIR)/$$model 2>&1 | tail -1 && \
+			echo "  \033[32m✓\033[0m  $$model"; \
+		fi; \
+	done
+
 clean:
 	@rm -rf yt_inbox/*/ logs/pipeline_*.log && \
 	echo "  \033[32m✓\033[0m  Cleaned outputs and logs"

@@ -13,8 +13,24 @@ make dev VIDEO=x.mp4    # debug mode (2 frames)
 make run VIDEO=x.mp4 SCRIPT_REF="--script-ref ref.txt"  # with reference script for tone
 .venv/bin/python pipeline.py --debug --script-ref ref.txt video.mp4
 .venv/bin/python src/steps/step1_analyze.py --video-file x.mp4 --interval 2.0 --output-dir frames --frames-file frames.txt
+.venv-qwen3-tts/bin/python -c "from qwen_tts import Qwen3TTSModel"
 tail -f logs/pipeline_*.log
 ```
+
+## Qwen3-TTS (voice clone)
+
+```bash
+make tts-all              # create .venv-qwen3-tts + download models
+make tts-setup            # venv + pip install qwen-tts
+make tts-models           # download tokenizer + 1.7B-Base to models/qwen3-tts/
+```
+
+| Model | Path |
+|-------|------|
+| Tokenizer | `models/qwen3-tts/Qwen3-TTS-Tokenizer-12Hz/` |
+| Voice Clone (1.7B) | `models/qwen3-tts/Qwen3-TTS-12Hz-1.7B-Base/` |
+
+Python: `.venv-qwen3-tts/bin/python` (Python 3.14) or `.venv/bin/python` (Python 3.11, used by pipeline). flash-attn not available on macOS (no CUDA).
 
 No pytest. No tests at all.
 
@@ -57,7 +73,8 @@ All files for a video live inside `yt_inbox/<video_name>/`. Intermediates and fi
 | `LLM_MODEL` | `qwen3.5:9b` | Ollama text model for script gen |
 | `LLM_WORDS_PER_SECOND` | `4` | Target pacing for generated script |
 | `WHISPER_MODEL` | `base` | faster-whisper model size |
-| `TTS_VOICE` | `"Hugo"` | Also `"Rosie"` (commented out in config) |
 | `TTS_SPEED` | `1.2` | |
+| `TTS_REF_AUDIO` | `"voice_ref.wav"` | Reference audio for voice clone |
+| `TTS_REF_TEXT` | `""` | Transcript of reference audio |
 | `SUBTITLE_MAX_WORDS` | `3` | Words per subtitle chunk |
 | `SUBTITLE_POSITION` | `"center"` | Also `"top"` / `"bottom"` |
